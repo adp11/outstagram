@@ -1,0 +1,23 @@
+1. npx create-react-app superchat-firebase
+2. npm install eslint --save-dev -> npm init @eslint/config
+3. "rules": {
+        "linebreak-style": "off",
+        "no-console": "error",
+        "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }]
+    }
+
+4. npm install --save-dev style-loader css-loader
+5. {
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.validate": ["javascript"]
+}
+
+6. set up tailwind
+npm install -D tailwindcss
+npx tailwindcss init
+"build:css": "tailwind build -i src/style.css -o dist/style.css --watch"
+<link> html file
+
+7. set up firebase
