@@ -15,11 +15,14 @@
         "sourceType": "module"
     },
     "plugins": [
-        "react"
+        "react",
+        "only-warn"
     ],
+    
     "rules": {
         "linebreak-style": "off",
-        "no-console": "error",
-        "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }]
+        "no-console": "off",
+        "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+        "quotes": [2, "double", { "avoidEscape": true }]
     }
 }

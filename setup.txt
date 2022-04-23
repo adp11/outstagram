@@ -21,3 +21,9 @@ npx tailwindcss init
 <link> html file
 
 7. set up firebase
+8. <script src="https://kit.fontawesome.com/c397ae2491.js" crossorigin="anonymous"></script>
+9. <link rel="shortcut icon" type="image/x-icon" href="../img/title-icon.png" />
+10. "plugins": [
+        "react",
+        "only-warn"
+    ],

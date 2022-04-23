@@ -1,3 +1,728 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+* {
+  /* box-sizing: border-box; */
+}
+
+.App {
+  margin: 0;
+  /* border: 1px red solid; */
+  /* min-height: 100vh; */
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-size: 16px;
+  background-color: #fafafa;
+  box-sizing: border-box;
+}
+
+.Nav {
+  align-self: center;
+  border-bottom: 1px #dbdbdb solid;
+  display: flex;
+  align-items: center;
+  width: 100vw;
+  /* min-width: 550px; */
+  height: 60px;
+  justify-content: center;
+  gap: 135px;
+  position: fixed;
+  background-color: #fff;
+  /* make navbar overlap every other element */
+  z-index: 1;
+}
+
+.nav-buttons {
+  border: 1px black solid;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.header {
+  border: 1px blue solid;
+  width: 110px;
+  height: auto;
+}
+
+
+.search-box svg {
+  position: relative;
+  left: 30px;
+  top: 2px;
+}
+
+input[type="search"] {
+  padding: 10px;
+  padding-left: 45px;
+  background-color: #efefef;
+  outline: none;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  width: 280px;
+}
+
+.Account {
+  position: relative;
+}
+
+.Account .snippet {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  /* border: 1px black solid; */
+  background-image: url("../public/images/logo.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.Account > .dropdown {
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  border-radius: 10px;
+  position: absolute;
+  top: 45px;
+  right: 0px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  display: none;
+}
+
+.Account .dropdown > * {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  padding: 12px 0;
+  /* border: 1px black solid; */
+}
+
+.Account .dropdown *:hover, .search-result:hover {
+  background-color: #efefef;
+  cursor: pointer;
+}
+
+.account-icon {
+  width: 20px;
+  margin-left: 20px;
+  margin-right: 10px;
+}
+
+.dropdown svg {
+  margin-left: 20px;
+  margin-right: 10px;
+}
+
+.Notifications {
+  position: relative;
+}
+
+.Notifications .dropdown {
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  border-radius: 10px;
+  position: absolute;
+  top: 45px;
+  right: -55px;
+  width: 470px;
+  display: flex;
+  flex-direction: column;
+  display: none;
+  overflow: auto;
+}
+
+.Notifications .src-picture {
+  /* border: 1px black solid; */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 15px;
+}
+
+.Notifications .src-action-on {
+  width: 40px;
+  height: 40px;
+  border-radius: 10%;
+  margin-left: auto;
+  margin-right: 15px
+}
+
+.Notifications .dropdown > *:not(div:last-child) {
+  border-bottom: 1px #dbdbdb solid;
+}
+
+.Notifications .dropdown > div {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+}
+
+.Notifications .dropdown > * {
+  padding: 25px 0;
+  /* border: 1px black solid */
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box .dropdown {
+  position: absolute;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  border-radius: 10px;
+  width: 280px;
+  height: 320px;
+  top: 50px;
+  left: 15px;
+  display: none;
+  font-size: 14px;
+  overflow: auto;
+}
+
+.search-result {
+  display: flex;
+  padding: 10px 0;
+}
+
+.user-picture-in-search {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 15px;
+  border: 1px black solid;
+}
+
+/* ----ProfilePreview---- */
+
+.ProfilePreview {
+  /* border: 1px red solid; */
+  width: 280px;
+  height: 245px;
+  position: fixed;
+  margin-top: 90px;
+  margin-left: 810px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-card {
+  display: flex;
+  font-size: 14px;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-card img {
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+}
+
+
+.profile-card .fullname {
+  color: #8e8e8e;
+}
+
+.profile-card .logout-shortcut {
+  color: #0095f6;
+  font-size: 12px;
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.ProfilePreview .stats {
+  /* border: 1px black solid; */
+  display: flex;
+  font-size: 14px;
+  background-color: #fff;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
+  border-radius: 15px;
+}
+
+.ProfilePreview .stats > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* border: 1px black solid; */
+  padding: 5px 10px;
+  flex: 1;
+}
+
+.ProfilePreview .stats:hover  {
+  cursor: pointer;
+  background-color: black;
+  color: #fff;
+}
+
+.ProfilePreview .stats > * > div:first-child {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.ProfilePreview .stats > * > div:last-child {
+  color: #8e8e8e;
+}
+
+@media only screen and (max-width: 645px) {
+  .ProfilePreview {
+    display: none;
+  }
+
+  input[type="search"] {
+    display: none;
+  }
+}
+/* dasdsadsaaaaaaaaaaaaaaaaa */
+.FullPost {
+  border: 5px black solid;
+  display: flex; 
+  justify-content: center;
+  width: 80vw;
+  height: 90vh;
+}
+
+.FullPost .post-picture {
+  width: 50%;
+  height: 100%;
+}
+
+.FullPost .post-info {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  font-size: 14px;
+}
+
+.FullPost .post-caption {
+  margin-left: 45px;
+}
+
+.FullPost .user-preview, .FullPost .post-comment {
+  display: flex;
+  align-items: flex-start;
+}
+
+.FullPost .post-all-comments {
+  padding: 15px 0;
+  overflow: auto;
+  scrollbar-width: none; /* for Firefox */
+}
+
+::-webkit-scrollbar {
+  width: 0;  /* Remove scrollbar space */
+}
+
+.FullPost .user-picture, .FullPost .src-picture {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.FullPost .post-comment-box {
+  width: 100%;
+}
+
+.post-comment {
+  margin-bottom: 15px;
+}
+
+.post-comment small {
+  margin-top: 10px;
+  display: block;
+}
+
+.src-content:hover {
+  cursor: auto;
+}
+
+/* ------------Post on newsfeed------------------ */
+
+.Newsfeed {
+  /* border: 5px green solid; */
+  /* padding: 10px; */
+  width: 590px;
+  margin-top: 90px;
+  margin-left: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.NewsfeedPost{
+  border: 1px #dbdbdb solid;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.NewsfeedPost> div {
+  /* border: 1px black solid; */
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+
+.NewsfeedPost> .post-picture {
+  width: 100%;
+  height: 62%;
+}
+
+.NewsfeedPost .user-picture {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px #dbdbdb solid;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.NewsfeedPost .user-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.post-comment-box .post-btn {
+  color: #0095f6;
+  font-weight: 500;
+  border: none;
+  background-color: none;
+  margin-left: auto;
+}
+
+.post-comment-box > textarea {
+  width: 90%;
+  /* add height if texts go beyond certain point */
+  height: 50px;
+  background-color: #fafafa;
+  font-size: 14px;
+  outline: none;
+  overflow: auto;
+  resize: none;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.post-comment-box {
+  border-top: 1px #dbdbdb solid;
+  margin-top: 10px;
+  padding: 10px 20px;
+  display: flex;
+}
+
+/* ----------Profile summary------------- */
+.Profile {
+  /* border: 5px green solid; */
+  width: 920px;
+  margin-top: 90px;
+  margin-left: 170px;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-summary {
+  width: 680px;
+  display: flex;
+  gap: 30px;
+  /* border: 1px black solid; */
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin: 0 50px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.profile-stats span {
+  font-weight: 600;
+  font-size: 16px;
+  margin-right: 5px;
+}
+/* -----------Profile post nav--------- */
+.profile-post-nav {
+  margin-top: 50px;
+  letter-spacing: 1px;
+  font-size: 14px;
+  padding: 15px 0;
+  border-top: 1px #dbdbdb solid;
+  text-align: center;
+  font-weight: 600;
+}
+
+.profile-post-nav svg {
+  margin-right: 5px;
+}
+
+/* -----------Profile posts--------- */
+
+.profile-posts {
+  /* border: 1px red solid; */
+  gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 1fr));
+  background-color: #fff;
+}
+
+.profile-post {
+  /* border: 1px black solid; */
+  aspect-ratio: 1 / 1;
+  position: relative;
+}
+
+/* max-width: 100%: take original size of img. width: 100% force img into full container width */
+.post-picture {
+  /* border: 1px red solid; */
+  width: 100%;
+  height: 100%;
+}
+
+.profile-post-stats {
+  top: calc(50% - 20px);
+  left: calc(25%);
+  position: absolute;
+  /* border: 1px black solid; */
+  display: none;
+}
+
+.profile-post:hover > .post-picture {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.profile-post:hover > .profile-post-stats {
+  display: block;
+  cursor: pointer;
+}
+
+
+.profile-post-stats span {
+  font-weight: 600;
+  margin: 0 5px;
+}
+
+.profile-post-stats span:nth-of-type(2) {
+  margin-right: 30px;
+}
+
+.profile-post-stats span:nth-of-type(2n) {
+  position: relative;
+  bottom: 3px;
+}
+
+/* ----------Auth page------- */
+.Auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  /* border: 5px red solid; */
+  font-size: 14px;
+}
+
+.iphoneX {
+  height: 100vh;
+  width: auto;
+  border: 1px black solid;
+}
+
+.login-container, .signup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px #dbdbdb solid;
+  padding: 40px;
+  background-color: #fff;
+  margin-bottom: 20px;
+  gap: 10px;
+  width: 280px;
+}
+
+.signup-container > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-provider {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color:#8e8e8e;
+}
+
+.signup-box, .login-box {
+  border: 1px #dbdbdb solid;
+  padding: 20px;
+  text-align: center;
+}
+
+form {
+  width: 280px;
+}
+
+form > div {
+  margin-bottom: 10px;
+}
+
+form input {
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px #dbdbdb solid;
+  background-color: #fafafa;
+}
+
+form button[type="submit"] {
+  background-color: #0095f6;
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  padding: 5px;
+  width: 100%;
+  font-weight: 600;
+}
+
+form button:hover {
+  background-color: royalblue;
+  cursor: pointer;
+}
+
+footer a {
+  text-decoration: none;
+  color: #8e8e8e;
+}
+
+footer > div {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin: 20px;
+}
+
+
+/* ADD POST */
+.AddPost, .EditPost {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  /* border: 1px red solid; */
+}
+
+.AddPost .container, .EditPost .container {
+  width: 30%;
+  /* height: 90%; */
+  border: 1px black solid;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+
+.AddPost form {
+  border: 1px black solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+
+.AddPost .file-upload-container {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px #dbdbdb solid;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+.AddPost svg {
+  width: 50%;
+  aspect-ratio: 1 / 1;
+  /* border: 1px blue solid; */
+  margin-left: 25%;
+}
+
+.AddPost small {
+  color: #8e8e8e;
+  font-size: 12px;
+  margin-left: 33%;
+}
+
+.AddPost textarea, .EditPost textarea {
+  font-size: 14px;
+  overflow: auto;
+  resize: none;
+  padding: 10px;
+  border: 1px #dbdbdb solid;
+  border-radius: 10px;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.AddPost button, .EditPost button {
+  padding: 5px 30px;
+  border-radius: 20px;
+}
+
+/* -------EDIT PROFILE */
+.EditPost img {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+}
+
+
+.EditPost #file-upload {
+  margin-left: 35%;
+  width: 30%;
+  aspect-ratio: 1 / 1;
+  border: 1px black solid;
+  background-image: url("../public/images/logo.png");
+  background-size: cover;
+  border-radius: 50%;
+}
+
+.EditPost input[type="text"] {
+  border-radius: 10px;
+  background-color: #fff;
+  font-size: 14px;
+}
+
+.form-row label {
+  font-weight: 600;
+}
+
+.EditPost button {
+  margin-left: 35%;
+}
+
+/* utilities */
+.profile-card .logout-shortcut:hover, .profile-card .username:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover  {
+  cursor: pointer;
+}
+
+form input:focus, .AddPost textarea {
+  outline: none;
+}
+
+.username {
+  font-weight: 600;
+}
