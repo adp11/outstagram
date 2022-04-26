@@ -1,6 +1,6 @@
 import "./App.css";
 // useEffect, useContext, useState
-import React from "react";
+import React, { Fragment } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Nav from "./components/Nav";
 import Newsfeed from "./components/Newsfeed";

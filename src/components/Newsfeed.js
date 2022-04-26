@@ -4,8 +4,10 @@ import NewsfeedPost from "./NewsfeedPost";
 function Newsfeed() {
   return (
     <div className="Newsfeed">
-      <NewsfeedPost />
-      <NewsfeedPost />
+      <div className="newsfeed-container">
+        <NewsfeedPost />
+        <NewsfeedPost />
+      </div>
     </div>
   );
 }
