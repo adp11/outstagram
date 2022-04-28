@@ -104,7 +104,7 @@ input[type="search"] {
   width: 200px;
   display: flex;
   flex-direction: column;
-  display: none;
+  /* display: none; */
 }
 
 .Account .dropdown > * {

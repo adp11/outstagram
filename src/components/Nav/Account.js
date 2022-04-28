@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useEffect, useContext, useState } from "react";
+import UserContext from "../Contexts/UserContext";
 
 function Account() {
+  const { setIsLoggedIn, setUserData } = useContext(UserContext);
+
   return (
     <div className="Account">
       <div className="profile-avatar">
@@ -23,7 +26,7 @@ function Account() {
           <img src={`${window.location.origin}/images/light-mode.png`} alt="light-mode" />
           Toggle theme
         </div>
-        <div>
+        <div onClick={() => { setIsLoggedIn(false); }}>
           <img src={`${window.location.origin}/images/logout.png`} alt="logout" />
           Log out
         </div>
