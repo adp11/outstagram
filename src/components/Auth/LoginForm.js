@@ -6,12 +6,16 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { app, auth } from "../../firebase";
+import {
+  addDoc, arrayRemove, collection, doc, setDoc,
+} from "firebase/firestore";
+import { app, auth, db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
+import Snackbar from "../Snackbar";
 
 function LoginForm() {
-  const { setIsLoggedIn, setUserData } = useContext(UserContext);
+  const { setUserData, setIsLoggedIn } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [userAuthInfo, setUserAuthInfo] = useState({
@@ -27,13 +31,7 @@ function LoginForm() {
   async function loginEmailPassword(e) {
     e.preventDefault();
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
-      const userData = {
-        email: userCredential.email,
-        uid: userCredential.uid,
-      };
-      console.log("worked?")
-      setUserData(userData);
+      await signInWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
       setIsLoggedIn(true);
     } catch (error) {
       if (error.code === AuthErrorCodes.INVALID_PASSWORD) {
@@ -52,15 +50,18 @@ function LoginForm() {
 
   async function logInProvider() {
     const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(getAuth(), provider);
-    const userData = {
-      email: userCredential.email,
-      uid: userCredential.uid,
-    };
-    setUserData(userData);
+    await signInWithPopup(getAuth(), provider);
+
+    // case 1: first time log in, first time in Auth database --> postSnippets not exists --> arrayRemove(null) initializes empty array.
+    // case 2: already a user in Auth database --> postSnippets already exists --> arrayRemove(null) leaves current array intact.
+    const { uid } = getAuth().currentUser;
+    await setDoc(doc(db, `users/uid_${uid}`), {
+      username: `user_${uid}`,
+      bio: "",
+      postSnippets: arrayRemove(null),
+    }, { merge: true });
+
     setIsLoggedIn(true);
-    // console.log(userCredential);
-    // console.log(userCredential.user);
   }
 
   return (
