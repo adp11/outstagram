@@ -47,18 +47,22 @@ function LoginForm() {
       }
     }
   }
-
   async function logInProvider() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
 
     // case 1: first time log in, first time in Auth database --> postSnippets not exists --> arrayRemove(null) initializes empty array.
     // case 2: already a user in Auth database --> postSnippets already exists --> arrayRemove(null) leaves current array intact.
-    const { uid } = getAuth().currentUser;
+    const { uid, displayName, photoURL } = getAuth().currentUser;
     await setDoc(doc(db, `users/uid_${uid}`), {
       username: `user_${uid}`,
       bio: "",
+      displayName,
+      photoURL,
       postSnippets: arrayRemove(null),
+      totalPosts: 0,
+      followers: arrayRemove(null),
+      following: arrayRemove(null),
     }, { merge: true });
 
     setIsLoggedIn(true);

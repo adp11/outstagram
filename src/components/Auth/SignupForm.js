@@ -16,6 +16,7 @@ import { capitalizeFirebaseAuthError } from "../../utils";
 import Snackbar from "../Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function SignupForm() {
   const { setIsLoggedIn } = useContext(UserContext);
@@ -45,7 +46,16 @@ function SignupForm() {
       });
 
       const { uid } = getAuth().currentUser;
-      await setDoc(doc(db, `users/uid_${uid}`), { username: userAuthInfo.username, bio: "", postSnippets: [] });
+      await setDoc(doc(db, `users/uid_${uid}`), {
+        username: userAuthInfo.username,
+        bio: "",
+        displayName: userAuthInfo.fullname,
+        photoURL: DUMMY_AVATAR_URL,
+        postSnippets: [],
+        totalPosts: 0,
+        followers: [],
+        following: [],
+      });
 
       setIsLoggedIn(true);
     } catch (error) {
@@ -58,11 +68,16 @@ function SignupForm() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
 
-    const { uid } = getAuth().currentUser;
+    const { uid, displayName, photoURL } = getAuth().currentUser;
     await setDoc(doc(db, `users/uid_${uid}`), {
       username: `user_${uid}`,
       bio: "",
+      displayName,
+      photoURL,
       postSnippets: arrayRemove(null),
+      totalPosts: 0,
+      followers: arrayRemove(null),
+      following: arrayRemove(null),
     }, { merge: true });
 
     setIsLoggedIn(true);
