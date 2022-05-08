@@ -1,23 +1,22 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, {
+  useEffect, useContext, useState, useRef,
+} from "react";
+import { Link } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
 function Newsfeed() {
-  // authorId: `uid_${getAuth().currentUser.uid}`,
-  //         authorPhotoUrl: userData.photoURL,
-  //         authorUsername: userData.username,
-  //         postId: postRef.id,
-  //         postCaption: caption,
-  //         imageUrl: publicImageUrl,
-  //         storageUrl: fileSnapshot.metadata.fullPath,
-  //         likes: {
-  //           oneLastLike: [],
-  //           totalLikes: 0,
-  //         },
-  //         comments: {
-  //           twoLastComments: [],
-  //           totalComments: 0,
-  //         },
-  const { newsfeed } = useContext(UserContext);
+  const {
+    newsfeed, setIsFullPostActive, setBeforeFullPost, scrollY,
+  } = useContext(UserContext);
+
+  function handleClick() {
+    scrollY.current = window.scrollY;
+    setIsFullPostActive(true);
+    setBeforeFullPost({
+      newsfeed: true,
+      profile: false,
+    });
+  }
 
   return (
     <div className="Newsfeed">
@@ -59,7 +58,9 @@ function Newsfeed() {
               {" "}
               Another day in paradise… And it’s only Monday ☠️☠️.
             </div>
-            <div className="post-all-comments grey medium">View all 10 comments</div>
+            <Link to={`p/${post.postId}`} onClick={handleClick}>
+              <div className="post-all-comments grey medium">View all 10 comments</div>
+            </Link>
 
             <div className="comment-snippet">
               <div className="comment medium">

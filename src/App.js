@@ -1,11 +1,11 @@
 import "./App.css";
 import React, {
-  useEffect, useContext, useState, useMemo, useRef, useLayoutEffect,
+  useEffect, useState, useMemo, useRef,
 } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import {
-  collection, doc, getDoc, getDocs, limit, onSnapshot, orderBy, query, where,
+  collection, doc, getDoc, getDocs, limit, onSnapshot, query,
 } from "firebase/firestore";
 import Nav from "./components/Nav/Nav";
 import Newsfeed from "./components/Newsfeed";
@@ -14,13 +14,11 @@ import Profile from "./components/Profile";
 import Auth from "./components/Auth/Auth";
 import AddPost from "./components/AddPost";
 import FullPost from "./components/FullPost";
-// import EditProfile from "./components/EditProfile";
-// import NewsfeedPost from "./components/NewsfeedPost";
-// import app from "./firebase";
 import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
 import { quickSort, sortedAdd } from "./utils";
+import Page404 from "./Page404";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,12 +29,22 @@ function App() {
   const [visitedUserData, setVisitedUserData] = useState(null);
   const [allUserData, setAllUserData] = useState([]);
   const [newsfeed, setNewsfeed] = useState([]);
-  const tempNewsfeed = [];
+  const [beforeFullPost, setBeforeFullPost] = useState({
+    profile: false,
+    newsfeed: false,
+  });
 
-  const providerValue = useMemo(() => ({
-    setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, allUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive,
-  }), [setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setAllUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive]);
+  const tempNewsfeed = [];
+  const scrollY = useRef(0);
   const counter = useRef(0);
+
+  const providerValue = useMemo(
+    () => (
+      {
+        setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, allUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive, beforeFullPost, setBeforeFullPost, scrollY,
+      }),
+    [setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setAllUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive, beforeFullPost, setBeforeFullPost],
+  );
 
   useEffect(() => {
     async function fetchUserData() {
@@ -98,8 +106,6 @@ function App() {
     }
   }, [userData]);
 
-  const scrollY = useRef(0);
-
   /*
   useEffect here is fired twice upon first loading even though isFullPostActive still is (false). Duc tape (counter < 2) for this
   useRef works but using a variable to save counter doesn't.
@@ -123,21 +129,14 @@ function App() {
     <div>
       <BrowserRouter>
         <UserContext.Provider value={providerValue}>
-          {/* <div className="App" style={{ position: "fixed", top: "-20px" }}> */}
-          <div style={{ position: isFullPostActive && "fixed", top: isFullPostActive && `-${scrollY.current}px` }} className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`}>
-            {/* <button
-              type="button"
-              style={{ position: "fixed", top: "0px", zIndex: "4" }}
-              onClick={() => { scrollY.current = parseInt(window.scrollY, 10); setIsFullPostActive(true); }}
-            >
-              CLICK
-            </button> */}
+          <div className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`} style={{ position: isFullPostActive && "fixed", top: isFullPostActive && `-${scrollY.current}px` }}>
             {!isLoggedIn && <Auth />}
             {isLoggedIn && <Nav />}
             {isLoggedIn && (
-              <Routes>
+            <Routes>
+              {["/", "/p/:postId"].map((path) => (
                 <Route
-                  path="/"
+                  path={path}
                   element={(
                     <>
                       <Newsfeed />
@@ -145,34 +144,23 @@ function App() {
                     </>
 )}
                 />
-                <Route path="/:uid" element={<Profile />} />
-              </Routes>
+              ))}
+              <Route path="/:uid" element={<Profile />} />
+            </Routes>
             )}
           </div>
           {isAddPostActive && <AddPost />}
           {isEditProfileActive && <EditProfile />}
-          {isFullPostActive && <FullPost />}
+          {isFullPostActive && (
+          <Routes>
+            <Route path="/p/:postId" element={<FullPost />} />
+            <Route path="*" element={<Page404 />} />
+          </Routes>
+          )}
         </UserContext.Provider>
       </BrowserRouter>
     </div>
-
   );
 }
 
 export default App;
-
-{ /* <AddPost />
-<EditProfile />
-<FullPost />
-<Routes>
-  <Route
-    path="/a"
-    element={(
-      <>
-        <Newsfeed />
-        <ProfilePreview />
-      </>
-)}
-  />
-  <Route path="/a" element={<Profile />} />
-</Routes> */ }

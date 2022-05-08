@@ -1,8 +1,34 @@
+import { getAuth } from "firebase/auth";
 import React, { useEffect, useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import UserContext from "./Contexts/UserContext";
 
 function FullPost() {
+  const { setIsFullPostActive, beforeFullPost, setBeforeFullPost } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  function handleClick() {
+    if (beforeFullPost.profile) {
+      navigate(`/uid_${getAuth().currentUser.uid}`);
+    } else {
+      navigate("/");
+    }
+    setIsFullPostActive(false);
+    setBeforeFullPost({
+      profile: false,
+      newsfeed: false,
+    });
+  }
   return (
     <div className="FullPost">
+      {/* eslint-disable-next-line */}
+      <i
+        onClick={handleClick}
+        className="fa-solid fa-xmark"
+        style={{
+          position: "fixed", left: "97%", top: "2%", fontSize: "30px",
+        }}
+      />
       <div className="fullpost-container">
         <div>
           <img className="post-picture" src={`${window.location.origin}/images/iphoneX.png`} alt="" />
