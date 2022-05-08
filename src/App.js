@@ -85,7 +85,7 @@ function App() {
     function fetchNewsfeed() {
       const { following } = userData;
       following.forEach(async (followee) => {
-        const q = query(collection(db, `users/${followee.uid}/posts`), limit(7));
+        const q = query(collection(db, `users/${followee.uid}/posts`));
 
         // Listening to real-time change
         onSnapshot(q, (snapshot) => {
@@ -93,8 +93,11 @@ function App() {
             if (change.type === "removed") {
               const deletePosition = newsfeed.findIndex((post) => post.postId === change.doc.id);
               tempNewsfeed.splice(deletePosition, 1);
-            } else {
+            } else if (change.type === "added") {
               sortedAdd(tempNewsfeed, change.doc.data()); // oldest to newest
+            } else {
+              const modifiedPosition = newsfeed.findIndex((post) => post.postId === change.doc.id);
+              tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
             }
           });
           setNewsfeed(tempNewsfeed);
@@ -134,18 +137,14 @@ function App() {
             {isLoggedIn && <Nav />}
             {isLoggedIn && (
             <Routes>
-              {["/", "/p/:postId"].map((path) => (
-                <Route
-                  path={path}
-                  element={(
-                    <>
-                      <Newsfeed />
-                      <ProfilePreview />
-                    </>
-)}
-                />
-              ))}
+              {/* eslint-disable-next-line */}
+              <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
               <Route path="/:uid" element={<Profile />} />
+              {(beforeFullPost.newsfeed)
+              // eslint-disable-next-line
+                ? (<Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />)
+                : (<Route path="/p/:postId" element={<Profile />} />)}
+
             </Routes>
             )}
           </div>

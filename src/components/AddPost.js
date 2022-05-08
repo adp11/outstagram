@@ -86,33 +86,27 @@ function AddPost() {
           postCaption: caption,
           imageUrl: publicImageUrl,
           storageUrl: fileSnapshot.metadata.fullPath,
-          likes: {
-            oneLastLike: [],
-            totalLikes: 0,
-          },
-          comments: {
-            twoLastComments: [],
-            totalComments: 0,
-          },
+          likes: [],
+          comments: [],
         });
 
         setIsAddPostActive(false);
         // TODO: 2 these functions should be put into code when click triggered
         updatetPostSnippets(publicImageUrl, postRef.id);
-        console.log({
-          postId: postRef.id,
-          postCaption: caption,
-          imageUrl: publicImageUrl,
-          storageUrl: fileSnapshot.metadata.fullPath,
-          likes: {
-            oneLastLike: [],
-            totalLikes: 0,
-          },
-          comments: {
-            twoLastComments: [],
-            totalComments: 0,
-          },
-        }, "data of add post to database");
+        // console.log({
+        //   postId: postRef.id,
+        //   postCaption: caption,
+        //   imageUrl: publicImageUrl,
+        //   storageUrl: fileSnapshot.metadata.fullPath,
+        //   likes: {
+        //     likesList: [],
+        //     totalLikes: 0,
+        //   },
+        //   comments: {
+        //     twoLastComments: [],
+        //     totalComments: 0,
+        //   },
+        // }, "data of add post to database");
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);
 
