@@ -1,19 +1,8 @@
 import { getAuth, updateProfile } from "firebase/auth";
 import React, { useContext, useEffect, useState } from "react";
 import {
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  setDoc,
   updateDoc,
   doc,
-  serverTimestamp,
-  deleteDoc,
-  arrayUnion,
-  deleteField,
 } from "firebase/firestore";
 import {
   ref,

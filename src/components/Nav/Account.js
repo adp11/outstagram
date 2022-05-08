@@ -35,10 +35,12 @@ function Account() {
           <img src={`${window.location.origin}/images/light-mode.png`} alt="light-mode" />
           Toggle theme
         </div>
-        <div onClick={() => { logOut(); setIsLoggedIn(false); }}>
-          <img src={`${window.location.origin}/images/logout.png`} alt="logout" />
-          Log out
-        </div>
+        <Link to="/">
+          <div onClick={() => { logOut(); setIsLoggedIn(false); }}>
+            <img src={`${window.location.origin}/images/logout.png`} alt="logout" />
+            Log out
+          </div>
+        </Link>
       </div>
     </div>
   );
