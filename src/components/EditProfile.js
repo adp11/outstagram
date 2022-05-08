@@ -26,6 +26,7 @@ import { db, storage } from "../firebase";
 import Snackbar from "./Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function EditProfile() {
   const { userData, setUserData, setIsEditProfileActive } = useContext(UserContext);
@@ -36,19 +37,18 @@ function EditProfile() {
   const [bio, setBio] = useState(null);
   const [username, setUsername] = useState(null);
   const [file, setFile] = useState(null);
-  const { displayName, photoURL } = getAuth().currentUser;
 
-  async function updateUserData() {
+  async function updateUserData(publicImageUrl) {
     if (userData) {
       userData.username = username;
       userData.bio = bio;
+      userData.photoURL = publicImageUrl;
     }
     setUserData(userData);
 
     const { uid } = getAuth().currentUser;
     const docRef = doc(db, `users/uid_${uid}`);
-    await updateDoc(docRef, { bio: userData.bio, username: userData.username });
-    console.log(userData.bio);
+    await updateDoc(docRef, { bio: userData.bio, username: userData.username, photoURL: userData.photoURL });
   }
 
   async function handleEditProfileSubmission(e) {
@@ -56,20 +56,21 @@ function EditProfile() {
     let newImageRef;
     try {
       setIsLoading(true);
+      let publicImageUrl;
       if (file) {
         // 1 - Upload the image to Cloud Storage, using that postRef.
         const filePath = `uid_${getAuth().currentUser.uid}/userPhotos/${file.name}`;
         newImageRef = ref(storage, filePath);
         await uploadBytesResumable(newImageRef, file);
 
-        const publicImageUrl = await getDownloadURL(newImageRef); // 2 - Generate a public URL for the file.
+        publicImageUrl = await getDownloadURL(newImageRef); // 2 - Generate a public URL for the file.
         await updateProfile(getAuth().currentUser, { // 3 - Update photoURL field to uid Doc
           photoURL: publicImageUrl,
         });
       }
 
       setIsEditProfileActive(false);
-      updateUserData();
+      updateUserData(publicImageUrl);
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);
       await deleteObject(newImageRef); // undo code executed inside try block
@@ -99,17 +100,10 @@ function EditProfile() {
     };
   }, []);
 
-  let imageUrl;
-  if (previewImageUrl) {
-    imageUrl = previewImageUrl;
-  } else if (photoURL) {
-    imageUrl = photoURL;
-  } else {
-    imageUrl = `${window.location.origin}/images/dummy-avatar.png`;
-  }
+  const imageUrl = previewImageUrl || userData.photoURL || DUMMY_AVATAR_URL;
 
   return (
-    <div className="EditPost" style={{ padding: "10px" }}>
+    <div className="EditProfile" style={{ padding: "10px" }}>
       {/* eslint-disable-next-line */}
       <i
         onClick={() => { setIsEditProfileActive(false); }}

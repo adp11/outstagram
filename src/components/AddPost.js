@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   deleteDoc,
   arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -20,7 +21,7 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { getAuth } from "firebase/auth";
-import uniqid from "uniqid";
+// import uniqid from "uniqid";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
 import { db, storage } from "../firebase";
@@ -37,20 +38,19 @@ function AddPost() {
   const [file, setFile] = useState(null);
 
   async function updatetPostSnippets(publicImageUrl, postId) {
-    // console.log("update post snippet?")
     if (userData) {
-      console.log(userData, "here at addpost");
-      userData.postSnippets.unshift({
+      userData.postSnippets.push({
         postId,
         imageUrl: publicImageUrl,
         totalComments: 0,
         totalLikes: 0,
       });
+      userData.totalPosts += 1;
       setUserData(userData);
-
+      console.log(userData, "here at updatePOSTSNIPPETS after updating (2)");
       const { uid } = getAuth().currentUser;
       const docRef = doc(db, `users/uid_${uid}`);
-      await updateDoc(docRef, { postSnippets: userData.postSnippets });
+      await updateDoc(docRef, { postSnippets: userData.postSnippets, totalPosts: userData.totalPosts });
     }
   }
 
@@ -62,8 +62,8 @@ function AddPost() {
       try {
         setIsLoading(true);
         // 1 - Create a Doc of this post first to get postRef.
-        const docPath = `users/uid_${getAuth().currentUser.uid}/posts`;
-        postRef = await addDoc(collection(db, docPath), {
+        const collectionPath = `users/uid_${getAuth().currentUser.uid}/posts`;
+        postRef = await addDoc(collection(db, collectionPath), {
           creationTime: serverTimestamp(),
         });
 
@@ -74,16 +74,45 @@ function AddPost() {
 
         // 3 - Generate a public URL for the file.
         const publicImageUrl = await getDownloadURL(newImageRef);
+        console.log(publicImageUrl);
 
+        // TODO: create variable to assign those fields into a 'data' and pass around
         // 4 - Update the rest of the form's input to Doc
         await updateDoc(postRef, {
+          authorId: `uid_${getAuth().currentUser.uid}`,
+          authorPhotoUrl: userData.photoURL,
+          authorUsername: userData.username,
+          postId: postRef.id,
           postCaption: caption,
           imageUrl: publicImageUrl,
           storageUrl: fileSnapshot.metadata.fullPath,
+          likes: {
+            oneLastLike: [],
+            totalLikes: 0,
+          },
+          comments: {
+            twoLastComments: [],
+            totalComments: 0,
+          },
         });
 
         setIsAddPostActive(false);
+        // TODO: 2 these functions should be put into code when click triggered
         updatetPostSnippets(publicImageUrl, postRef.id);
+        console.log({
+          postId: postRef.id,
+          postCaption: caption,
+          imageUrl: publicImageUrl,
+          storageUrl: fileSnapshot.metadata.fullPath,
+          likes: {
+            oneLastLike: [],
+            totalLikes: 0,
+          },
+          comments: {
+            twoLastComments: [],
+            totalComments: 0,
+          },
+        }, "data of add post to database");
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);
 

@@ -1,41 +1,209 @@
 import { getAuth } from "firebase/auth";
+import {
+  addDoc,
+  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where,
+} from "firebase/firestore";
 import React, { useEffect, useContext, useState } from "react";
+import { flushSync } from "react-dom";
+import { useParams } from "react-router-dom";
+import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
+const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
+
+// no setNewsfeed because same function of onSnapshot
 function Profile() {
-  const { userData, setIsEditProfileActive } = useContext(UserContext);
-  const { displayName, photoURL } = getAuth().currentUser;
+  const {
+    userData, setUserData, visitedUserData, newsfeed, setNewsfeed, setVisitedUserData, setIsEditProfileActive,
+  } = useContext(UserContext);
+  const { uid } = getAuth().currentUser;
+  const params = useParams();
+  const [isFollowing, setIsFollowing] = useState(
+    userData.following.findIndex((user) => user.uid === params.uid) !== -1,
+  );
+
+  // async function getTime() {
+  //   const querySnapshot = await getDocs(collection(db, `users/uid_${getAuth().currentUser.uid}/posts`));
+  //   // notice: querySnapshot.map() not working
+  //   querySnapshot.forEach((document) => {
+  //     console.log(document.data(), "==> ", document.data().creationTime.seconds);
+  //   });
+  // }
+
+  // getTime();
+
+  let userAvatar;
+  let username;
+  let totalPosts;
+  let totalFollowers;
+  let totalFollowing;
+  let userBio;
+  let userDisplayName;
+  let whichUser;
+  let button;
+
+  // postId,
+  //   sourceUserPhotoURL: userData.photoURL,
+  //   sourceUsername: userData.username,
+  //   postImageURL: publicImageUrl,
+  //   postCaption: caption,
+  //   likes: {
+  //     oneLastLike: [],
+  //     totalLikes: 0,
+  //   },
+  //   comments: {
+  //     twoLastComments: [],
+  //     totalComments: 0,
+  //   },
+  //   creationTime: unixTime,
+  // });
+  // console.log(newsfeed);
+  // ID people in following for self newsfeed
+
+  async function updateFollowingData() {
+    const docRef = doc(db, `users/uid_${uid}`);
+    await updateDoc(docRef, { following: userData.following });
+  }
+
+  async function updateFollowersData() {
+    const docRef = doc(db, `users/${params.uid}`);
+    await updateDoc(docRef, { followers: visitedUserData.followers });
+  }
+
+  function handleFollowToggle() {
+    const positionInFollowing = userData.following.findIndex((user) => user.uid === params.uid);
+    const positionInFollowers = visitedUserData.followers.findIndex((user) => user.uid === uid);
+
+    // if following
+    if (positionInFollowing === -1) {
+      // update current user's following data
+      userData.following.push({
+        uid: params.uid,
+        photoURL: visitedUserData.photoURL || DUMMY_AVATAR_URL,
+        username: visitedUserData && visitedUserData.username,
+        userDisplayName: visitedUserData && visitedUserData.displayName,
+      });
+      setUserData(userData);
+      updateFollowingData();
+
+      // update visited user's followers data
+      visitedUserData.followers.push({
+        uid,
+        photoURL: userData.photoURL || DUMMY_AVATAR_URL,
+        username: userData && userData.username,
+        userDisplayName: userData && userData.displayName,
+      });
+      setVisitedUserData(visitedUserData);
+      updateFollowersData();
+
+      setIsFollowing(true);
+      // if unfollowing
+    } else {
+      // update current user's following data
+      userData.following.splice(positionInFollowing, 1);
+      setUserData(userData);
+      updateFollowingData();
+
+      // update visited user's followers data
+      visitedUserData.followers.splice(positionInFollowers, 1);
+      setVisitedUserData(visitedUserData);
+      updateFollowersData();
+
+      setIsFollowing(false);
+    }
+  }
+
+  if (params.uid === `uid_${uid}`) {
+    userAvatar = userData.photoURL || DUMMY_AVATAR_URL;
+    username = userData && userData.username;
+    userBio = (userData && userData.bio) || "none";
+    userDisplayName = userData.displayName;
+    totalPosts = userData && userData.totalPosts;
+    totalFollowers = userData && userData.followers.length;
+    totalFollowing = userData && userData.following.length;
+    whichUser = userData;
+    button = (
+      <button
+        type="button"
+        onClick={() => { setIsEditProfileActive(true); }}
+        style={{
+          padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500",
+        }}
+      >
+        Edit Profile
+      </button>
+    );
+  } else {
+    userAvatar = visitedUserData.photoURL || DUMMY_AVATAR_URL;
+    username = visitedUserData && visitedUserData.username;
+    userBio = (visitedUserData && visitedUserData.bio) || "none";
+    userDisplayName = visitedUserData && visitedUserData.displayName;
+    totalPosts = visitedUserData && visitedUserData.totalPosts;
+    totalFollowers = visitedUserData && visitedUserData.followers.length;
+    totalFollowing = visitedUserData && visitedUserData.following.length;
+    whichUser = visitedUserData;
+    console.log(visitedUserData);
+    if (isFollowing) {
+      button = (
+        <button
+          onClick={handleFollowToggle}
+          type="button"
+          style={{
+            padding: "5px 15px", backgroundColor: "transparent", border: "1px #dbdbdb solid", fontSize: "14px", borderRadius: "5px", width: "80px", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg aria-label="Following" className="_8-yf5 " color="#262626" fill="#262626" height="20" role="img" viewBox="0 0 95.28 70.03" width="20">
+            <path d="M64.23 69.98c-8.66 0-17.32-.09-26 0-3.58.06-5.07-1.23-5.12-4.94-.16-11.7 8.31-20.83 20-21.06 7.32-.15 14.65-.14 22 0 11.75.22 20.24 9.28 20.1 21 0 3.63-1.38 5.08-5 5-8.62-.1-17.28 0-25.98 0zm19-50.8A19 19 0 1164.32 0a19.05 19.05 0 0118.91 19.18zM14.76 50.01a5 5 0 01-3.37-1.31L.81 39.09a2.5 2.5 0 01-.16-3.52l3.39-3.7a2.49 2.49 0 013.52-.16l7.07 6.38 15.73-15.51a2.48 2.48 0 013.52 0l3.53 3.58a2.49 2.49 0 010 3.52L18.23 48.57a5 5 0 01-3.47 1.44z" />
+
+          </svg>
+        </button>
+      );
+    } else {
+      button = (
+      // eslint-disable-next-line
+        <button
+          onClick={handleFollowToggle}
+          type="button"
+          style={{
+            padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px",
+          }}
+        >
+          Follow
+        </button>
+      );
+    }
+  }
+  if (whichUser.postSnippets[0]) {
+    console.log(whichUser.postSnippets[0].imageUrl, "manual check");
+  }
 
   return (
     <div className="Profile">
       <div className="profile-container">
         <div className="profile-summary">
-          <img src={photoURL || `${window.location.origin}/images/dummy-avatar.png`} alt="" className="user-avatar" />
+          <img src={userAvatar} alt="" className="user-avatar" />
           <div className="user-info">
             <div>
-              <span style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{userData && userData.username}</span>
-              {/* eslint-disable-next-line */}
-            <button onClick={() => {setIsEditProfileActive(true)}} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "10px", fontWeight: "500" }}>Edit Profile</button>
+              <span style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
+              {button}
             </div>
             <div className="user-stats">
               <div className="posts">
-                <span>3</span>
+                <span>{totalPosts}</span>
                 posts
               </div>
               <div className="followers">
-                <span>421</span>
+                <span>{totalFollowers}</span>
                 followers
               </div>
               <div className="following">
-                <span>688</span>
+                <span>{totalFollowing}</span>
                 following
               </div>
             </div>
             <div className="user-bio">
-              <div className="bold">{displayName}</div>
-              <div>
-                {(userData && userData.bio) || "none"}
-              </div>
+              <div className="bold">{userDisplayName}</div>
+              <div>{userBio}</div>
             </div>
           </div>
         </div>
@@ -52,9 +220,8 @@ function Profile() {
         </div>
 
         <div className="profile-posts">
-          {userData && userData.postSnippets.map((post) => (
+          {whichUser && whichUser.postSnippets.slice(0).reverse().map((post) => (
             <div className="profile-post" key={post.postId}>
-              {/* `${window.location.origin}/images/p0.jpg` */}
               <img className="post-picture" src={post.imageUrl} alt="user's post" />
               <div className="profile-post-stats">
                 <span>
