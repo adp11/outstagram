@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   getAuth,
   updateProfile,
@@ -6,10 +6,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import {
-  addDoc, arrayRemove, collection, doc, setDoc, updateDoc,
-} from "firebase/firestore";
-import { app, auth, db } from "../../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 import AuthContext from "../Contexts/AuthContext";
 import UserContext from "../Contexts/UserContext";
 import { capitalizeFirebaseAuthError } from "../../utils";
@@ -23,63 +21,70 @@ function SignupForm() {
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [signUpError, setSignUpError] = useState(null);
+  const [updateProfileError, setUpdateProfileError] = useState(null);
   const [userAuthInfo, setUserAuthInfo] = useState({
     email: "",
     password: "",
-    username: "",
     fullname: "",
+    username: "",
   });
-
-  const [signupErrorMessage, setSignupErrorMessage] = useState(null);
-  const [updateProfileError, setUpdateProfileError] = useState(null);
 
   async function createAccount(e) {
     e.preventDefault();
     try {
       setIsLoading(true);
       await createUserWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
+
+      // Because there's no paramater for displayName in createUserWithEmailAndPassword()
       updateProfile(getAuth().currentUser, {
         displayName: `${userAuthInfo.fullname}`,
       }).then(() => {
+        console.log("Profile updated successfully when creating new account");
       }).catch((error) => {
         setUpdateProfileError(error);
       });
 
-      const { uid } = getAuth().currentUser;
-      await setDoc(doc(db, `users/uid_${uid}`), {
+      await setDoc(doc(db, `users/uid_${getAuth().currentUser.uid}`), {
+        uid: `uid_${getAuth().currentUser.uid}`,
         username: userAuthInfo.username,
-        bio: "",
         displayName: userAuthInfo.fullname,
         photoURL: DUMMY_AVATAR_URL,
-        postSnippets: [],
+        bio: "",
         totalPosts: 0,
+        postSnippets: [],
         followers: [],
         following: [],
       });
 
       setIsLoggedIn(true);
     } catch (error) {
-      console.log(error);
-      setSignupErrorMessage(capitalizeFirebaseAuthError(error.code));
+      setIsLoading(false);
+      setSignUpError(capitalizeFirebaseAuthError(error.code));
     }
   }
 
   async function logInProvider() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
-
     const { uid, displayName, photoURL } = getAuth().currentUser;
-    await setDoc(doc(db, `users/uid_${uid}`), {
-      username: `user_${uid}`,
-      bio: "",
-      displayName,
-      photoURL,
-      postSnippets: arrayRemove(null),
-      totalPosts: 0,
-      followers: arrayRemove(null),
-      following: arrayRemove(null),
-    }, { merge: true });
 
+    // If first time logged in, initialize Field Values in Firestore db
+    const docRef = doc(db, `users/uid_${uid}`);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      await setDoc(doc(db, `users/uid_${uid}`), {
+        uid: `uid_${uid}`,
+        username: `u_${uid}`,
+        displayName,
+        photoURL,
+        bio: "",
+        totalPosts: 0,
+        postSnippets: [],
+        followers: [],
+        following: [],
+      });
+    }
     setIsLoggedIn(true);
   }
 
@@ -92,6 +97,7 @@ function SignupForm() {
           <p style={{ textAlign: "center", fontSize: "18px", fontWeight: "600", color: "#8e8e8e" }} >
             Sign up to see photos and videos from your friends
           </p>
+          {/* eslint-disable-next-line */}
           <div onClick={logInProvider} className="login-provider grey bold">
             <img src={`${window.location.origin}/images/google.png`} alt="google icon" style={{ width: "20px", height: "20px" }} />
             Log in with Google
@@ -168,7 +174,7 @@ function SignupForm() {
               required
               autoComplete="true"
             />
-            {signupErrorMessage && <small style={{ color: "red" }}>{signupErrorMessage}</small>}
+            {signUpError && <small style={{ color: "red" }}>{signUpError}</small>}
           </div>
           <button type="submit">Sign up</button>
           {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />}
@@ -177,6 +183,7 @@ function SignupForm() {
       <div className="login-box">
         Have an account?
         {" "}
+        {/* eslint-disable-next-line */}
         <span onClick={() => { setIsLoginFormActive(true); }} style={{ color: "#0095f6", fontWeight: "600" }}>Log in</span>
       </div>
       {updateProfileError && <Snackbar snackBarMessage={updateProfileError} setSnackBarMessage={setUpdateProfileError} />}

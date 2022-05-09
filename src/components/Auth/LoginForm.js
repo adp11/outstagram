@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   AuthErrorCodes,
   getAuth,
@@ -6,16 +6,14 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import {
-  addDoc, arrayRemove, collection, doc, setDoc,
-} from "firebase/firestore";
-import { app, auth, db } from "../../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
 import Snackbar from "../Snackbar";
 
 function LoginForm() {
-  const { setUserData, setIsLoggedIn } = useContext(UserContext);
+  const { setIsLoggedIn } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [userAuthInfo, setUserAuthInfo] = useState({
@@ -23,7 +21,7 @@ function LoginForm() {
     password: "",
   });
 
-  const [loginErrorMessage, setLoginErrorMessage] = useState({
+  const [loginError, setLoginError] = useState({
     usernameError: false,
     passwordError: false,
   });
@@ -35,12 +33,12 @@ function LoginForm() {
       setIsLoggedIn(true);
     } catch (error) {
       if (error.code === AuthErrorCodes.INVALID_PASSWORD) {
-        setLoginErrorMessage({
+        setLoginError({
           usernameError: false,
           passwordError: true,
         });
       } else {
-        setLoginErrorMessage({
+        setLoginError({
           usernameError: true,
           passwordError: false,
         });
@@ -50,21 +48,24 @@ function LoginForm() {
   async function logInProvider() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
-
-    // case 1: first time log in, first time in Auth database --> postSnippets not exists --> arrayRemove(null) initializes empty array.
-    // case 2: already a user in Auth database --> postSnippets already exists --> arrayRemove(null) leaves current array intact.
     const { uid, displayName, photoURL } = getAuth().currentUser;
-    await setDoc(doc(db, `users/uid_${uid}`), {
-      username: `user_${uid}`,
-      bio: "",
-      displayName,
-      photoURL,
-      postSnippets: arrayRemove(null),
-      totalPosts: 0,
-      followers: arrayRemove(null),
-      following: arrayRemove(null),
-    }, { merge: true });
 
+    // If first time logged in, initialize Field Values in Firestore db
+    const docRef = doc(db, `users/uid_${uid}`);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      await setDoc(doc(db, `users/uid_${uid}`), {
+        uid: `uid_${uid}`,
+        username: `u_${uid}`,
+        displayName,
+        photoURL,
+        bio: "",
+        totalPosts: 0,
+        postSnippets: [],
+        followers: [],
+        following: [],
+      });
+    }
     setIsLoggedIn(true);
   }
 
@@ -77,17 +78,17 @@ function LoginForm() {
         <form onSubmit={loginEmailPassword}>
           <div className="form-row">
             <input onChange={(e) => { setUserAuthInfo({ email: e.target.value, password: userAuthInfo.password }); }} type="email" name="email" placeholder="Email" required autoComplete="true" />
-            {loginErrorMessage.usernameError && <small style={{ color: "red" }}>The username you entered doesn't belong to an account. Please check your username and try again.</small>}
+            {loginError.usernameError && <small style={{ color: "red" }}>The username you entered doesn't belong to an account. Please check your username and try again.</small>}
           </div>
           <div className="form-row">
             <input onChange={(e) => { setUserAuthInfo({ email: userAuthInfo.email, password: e.target.value }); }} type="password" name="password" placeholder="Password" required autoComplete="true" />
-            {loginErrorMessage.passwordError && <small style={{ color: "red" }}>Sorry, your password was incorrect. Please double-check your password.</small>}
+            {loginError.passwordError && <small style={{ color: "red" }}>Sorry, your password was incorrect. Please double-check your password.</small>}
           </div>
           <button type="submit">Log In</button>
         </form>
 
         <div className="grey bold">OR</div>
-
+        {/* eslint-disable-next-line */}
         <div onClick={logInProvider} className="login-provider grey bold">
           <img src={`${window.location.origin}/images/google.png`} alt="google icon" style={{ width: "20px", height: "20px" }} />
           Log in with Google
@@ -96,6 +97,7 @@ function LoginForm() {
       <div className="signup-box">
         Don't have an account?
         {" "}
+        {/* eslint-disable-next-line */}
         <span onClick={() => { setIsLoginFormActive(false); }} style={{ color: "#0095f6", fontWeight: "600" }}>Sign up</span>
       </div>
     </div>

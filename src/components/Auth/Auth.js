@@ -1,14 +1,11 @@
-import React, {
-  useEffect, useContext, useState, useMemo,
-} from "react";
+import React, { useState, useMemo } from "react";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import AuthContext from "../Contexts/AuthContext";
 
 function Auth() {
   const [isLoginFormActive, setIsLoginFormActive] = useState(true);
-
-  const providerValue = useMemo(() => ({ isLoginFormActive, setIsLoginFormActive }), [isLoginFormActive, setIsLoginFormActive]);
+  const providerValue = useMemo(() => ({ isLoginFormActive, setIsLoginFormActive }), [isLoginFormActive]);
 
   return (
     <div>
@@ -38,10 +35,8 @@ function Auth() {
             <a href="https://www.theodinproject.com/lessons/node-path-javascript-javascript-final-project">The Odin Project (TOP)</a>
           </span>
         </div>
-
       </footer>
     </div>
-
   );
 }
 
