@@ -1,11 +1,7 @@
-import {
-  collection, query, where, getDocs,
-} from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
 import { Link } from "react-router-dom";
-import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 function SearchBox() {
@@ -31,9 +27,7 @@ function SearchBox() {
 
   function handleQuery(value) {
     if (value) {
-      console.log("activated here", value);
       const filtered = allUserData.filter((data) => (data.username.toLowerCase().includes(value) || data.displayName.toLowerCase().includes(value)));
-      console.log(filtered, 'here at searchbox');
       setSearchResults(filtered);
     } else {
       setSearchResults([]);
@@ -54,7 +48,7 @@ function SearchBox() {
       {isSearchActive && (
       <div className="dropdown" ref={dropdownRef}>
         {searchResults.length ? searchResults.map((result) => (
-          <Link to={`/${result.uid}`} key={result.uid} onClick={() => { console.log("click triggered"); setVisitedUserData(result); setIsSearchActive(false); }}>
+          <Link to={`/${result.uid}`} key={result.uid} onClick={() => { setVisitedUserData(result); setIsSearchActive(false); }}>
             <div className="search-result">
               <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
               <div>

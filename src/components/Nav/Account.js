@@ -1,6 +1,6 @@
 import { getAuth, signOut } from "firebase/auth";
 import { Link } from "react-router-dom";
-import React, { useEffect, useContext, useState } from "react";
+import React, { useContext } from "react";
 import UserContext from "../Contexts/UserContext";
 
 function Account() {
@@ -29,13 +29,14 @@ function Account() {
             </svg>
             Profile
           </div>
-
         </Link>
+
         <div>
           <img src={`${window.location.origin}/images/light-mode.png`} alt="light-mode" />
           Toggle theme
         </div>
         <Link to="/">
+          {/* eslint-disable-next-line */}
           <div onClick={() => { logOut(); setIsLoggedIn(false); }}>
             <img src={`${window.location.origin}/images/logout.png`} alt="logout" />
             Log out

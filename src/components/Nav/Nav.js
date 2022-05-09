@@ -1,12 +1,11 @@
-import { Link } from "react-router-dom";
-import React, { useEffect, useContext, useState } from "react";
+import React, { useContext } from "react";
 import Notifications from "./Notifications";
 import Account from "./Account";
 import SearchBox from "./SearchBox";
 import UserContext from "../Contexts/UserContext";
 
 function Nav() {
-  const { setIsLoggedIn, setUserData, setIsAddPostActive } = useContext(UserContext);
+  const { setIsAddPostActive } = useContext(UserContext);
 
   return (
     <div className="Nav">
