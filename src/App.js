@@ -5,7 +5,7 @@ import React, {
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import {
-  collection, doc, getDoc, getDocs, limit, onSnapshot, query,
+  collection, doc, getDoc, getDocs, onSnapshot, query,
 } from "firebase/firestore";
 import Nav from "./components/Nav/Nav";
 import Newsfeed from "./components/Newsfeed";
@@ -25,6 +25,7 @@ function App() {
   const [isAddPostActive, setIsAddPostActive] = useState(false);
   const [isEditProfileActive, setIsEditProfileActive] = useState(false);
   const [isFullPostActive, setIsFullPostActive] = useState(false);
+
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
   const [allUserData, setAllUserData] = useState([]);
@@ -34,16 +35,16 @@ function App() {
     newsfeed: false,
   });
 
-  const tempNewsfeed = [];
+  const tempNewsfeed = []; // for state immutability
+  const tempAllUserData = []; // for state immutability
   const scrollY = useRef(0);
-  const counter = useRef(0);
+  const initialFetch = false;
 
   const providerValue = useMemo(
-    () => (
-      {
-        setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, allUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive, beforeFullPost, setBeforeFullPost, scrollY,
-      }),
-    [setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setAllUserData, userData, setUserData, visitedUserData, setVisitedUserData, newsfeed, setNewsfeed, setIsFullPostActive, beforeFullPost, setBeforeFullPost],
+    () => ({
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, scrollY, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost,
+    }),
+    [userData, visitedUserData, newsfeed, beforeFullPost],
   );
 
   useEffect(() => {
@@ -56,75 +57,79 @@ function App() {
     }
 
     /*
-    This function serves the purpose of displaying short 3-field snippets of all users in searchbox ONLY.
-    It is also NOT designed to listen to realtime updates in the remote Firebase database (e.g. when new users signed up to the database)
-    Notice: querySnapshot.map() won't work. Need to use forEach() as an alternative.
+    1. Fetch allUserData is to get all users to be filtered/sorted when a user is using search box only
+    2. Fetch allUserData is NOT designed to real-time listen to remote db (e.g. new users logged)
+    3. querySnapshot.map() won't work. Use forEach()
     */
     async function fetchAllUserData() {
       const querySnapshot = await getDocs(collection(db, "users"));
       querySnapshot.forEach((document) => {
         const toBePushed = { ...document.data(), uid: document.id };
-        allUserData.push(toBePushed);
+        tempAllUserData.push(toBePushed);
       });
-      setAllUserData(allUserData);
+      console.log(tempAllUserData);
+      // setAllUserData([...tempAllUserData]);
+      setAllUserData(tempAllUserData);
     }
 
     if (isLoggedIn) {
       fetchUserData();
       fetchAllUserData();
     } else {
-      setAllUserData([]);
-      setVisitedUserData(null);
       setUserData(null);
+      setVisitedUserData(null);
+      setAllUserData([]);
       setNewsfeed([]);
     }
-    window.scrollTo(0, 0); // prevent browser remember scroll position and auto scroll upon user refreshes the page.
+
+    // prevent browser remember scroll position and auto scroll upon user refreshes the page.
+    window.scrollTo(0, 0);
   }, [isLoggedIn]);
 
   useEffect(() => {
+    /*
+    1. fetch Newsfeed is designed to real-time listen to remote db
+    2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
+    */
     function fetchNewsfeed() {
       const { following } = userData;
       following.forEach(async (followee) => {
         const q = query(collection(db, `users/${followee.uid}/posts`));
 
-        // Listening to real-time change
         onSnapshot(q, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === "removed") {
-              const deletePosition = newsfeed.findIndex((post) => post.postId === change.doc.id);
+              console.log("before removed");
+              const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
               tempNewsfeed.splice(deletePosition, 1);
             } else if (change.type === "added") {
+              console.log("before add");
               sortedAdd(tempNewsfeed, change.doc.data()); // oldest to newest
             } else {
-              const modifiedPosition = newsfeed.findIndex((post) => post.postId === change.doc.id);
+              console.log("before modified");
+              const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
               tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
             }
           });
+          // BUG TODO: UI not rerender when newsfeed is updated
           setNewsfeed(tempNewsfeed);
         });
       });
     }
+    console.log("triggered because of follow/unfollow")
     if (isLoggedIn) {
+      console.log(userData, "userdata");
       fetchNewsfeed();
     }
   }, [userData]);
 
   /*
-  useEffect here is fired twice upon first loading even though isFullPostActive still is (false). Duc tape (counter < 2) for this
-  useRef works but using a variable to save counter doesn't.
-  smooth scroll here, but want abrupt scroll
-  nav and previewprofile is not fixed on top edge because of position: fixed with top down applied to App
+  1. Triggered upon both mouting and dependency changes
+  2. Prefer abrupt scroll (not smooth)
   */
   useEffect(() => {
-    function jump() {
-      if (counter.current < 1) {
-        counter.current += 1;
-      } else {
-        window.scrollTo(0, scrollY.current);
-      }
-    }
     if (!isFullPostActive) {
-      jump();
+      window.scrollTo(0, scrollY.current);
     }
   }, [isFullPostActive]);
 
@@ -132,7 +137,10 @@ function App() {
     <div>
       <BrowserRouter>
         <UserContext.Provider value={providerValue}>
-          <div className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`} style={{ position: isFullPostActive && "fixed", top: isFullPostActive && `-${scrollY.current}px` }}>
+          <div
+            className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`}
+            style={{ position: isFullPostActive && "fixed", top: isFullPostActive && `-${scrollY.current}px` }}
+          >
             {!isLoggedIn && <Auth />}
             {isLoggedIn && <Nav />}
             {isLoggedIn && (
@@ -144,10 +152,10 @@ function App() {
               // eslint-disable-next-line
                 ? (<Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />)
                 : (<Route path="/p/:postId" element={<Profile />} />)}
-
             </Routes>
             )}
           </div>
+
           {isAddPostActive && <AddPost />}
           {isEditProfileActive && <EditProfile />}
           {isFullPostActive && (

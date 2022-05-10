@@ -1,20 +1,22 @@
 import { getAuth } from "firebase/auth";
 import {
-  addDoc, arrayRemove, arrayUnion, collection, doc, serverTimestamp, updateDoc,
+  arrayUnion, doc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
-import React, {
-  useEffect, useContext, useState, useRef,
-} from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
+import Snackbar from "./Snackbar";
 
 function Newsfeed() {
   const {
     newsfeed, setIsFullPostActive, setBeforeFullPost, scrollY, userData,
   } = useContext(UserContext);
-  const [postComments, setPostComments] = useState(new Array(newsfeed.length));
+  const [submitCommentError, setSubmitCommentError] = useState(null);
+
+  // Prevent user from writing comments on multiple posts on their newsfeed
+  const [postComments, setPostComments] = useState({});
 
   function handleViewAllComments() {
     scrollY.current = window.scrollY;
@@ -25,49 +27,46 @@ function Newsfeed() {
     });
   }
 
-  function handleCommentPost(e, index) {
-    postComments[index] = e.target.value;
-    console.log(postComments[index]);
-    setPostComments(postComments);
-    // setPostComments(postComments.map((postComment, idx) => {
-    //   if (idx === index) {
-    //     return e.target.value;
-    //   }
-    //   return postComment;
-    // }));
-  }
+  useEffect(() => {
+    console.log(newsfeed, "check newsfeed in Newsfeed.js after update 'modified'");
+  }, [newsfeed]);
 
+  // Quick dirty workaround with [cmtId] since array elements are not supported with serverTimestamp()
   async function handleSubmitPostComment(e, index) {
     e.preventDefault();
     const postInfo = newsfeed[index];
-    const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const cmtId = uniqid();
-    await updateDoc(postRef, {
-      comments: arrayUnion({
-        sourceId: getAuth().currentUser.uid,
-        sourcePhotoUrl: userData.photoURL,
-        sourceUsername: userData.username,
-        sourceComment: postComments[index],
-        sourceCommentTime: cmtId,
-      }),
-      [cmtId]: serverTimestamp(),
-    });
-    console.log("success");
+    if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
+      const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
+      const cmtId = uniqid();
+      await updateDoc(postRef, {
+        comments: arrayUnion({
+          sourceId: getAuth().currentUser.uid,
+          sourcePhotoUrl: userData.photoURL,
+          sourceUsername: userData.username,
+          sourceComment: postComments[postInfo.postId],
+          sourceCommentTime: cmtId,
+        }),
+        [cmtId]: serverTimestamp(),
+      });
+      setPostComments({ ...postComments, [postInfo.postId]: "" });
+    } else {
+      setSubmitCommentError("Posting empty comments error");
+    }
   }
 
-  async function handleLikePost(index) {
+  async function handleLikePost(index) { // toggle
+    // console.log(`newsfeed: ${newsfeed[0].postId}`);
+    // console.log("just cliked like", `post index: ${index}`);
     const postInfo = newsfeed[index];
-    console.log(index);
+    // console.log(postInfo, "postInfo");
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
     const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === getAuth().currentUser.uid);
-    console.log(postInfo.likes, "sourceId");
+    // console.log(targetIndex, "targetIndex", getAuth().currentUser.uid, "uid");
     if (targetIndex !== -1) {
-      console.log("before remove like");
       await updateDoc(postRef, {
         likes: postInfo.likes.filter((like, idx) => idx !== targetIndex),
       });
     } else {
-      console.log("before add like");
       await updateDoc(postRef, {
         likes: arrayUnion({
           sourceId: getAuth().currentUser.uid,
@@ -82,7 +81,7 @@ function Newsfeed() {
   return (
     <div className="Newsfeed">
       <div className="newsfeed-container">
-        {newsfeed && newsfeed.map((post, index) => (
+        {(newsfeed.length > 0) ? newsfeed.map((post, index) => (
           <div className="NewsfeedPost" key={post.postId}>
             <div className="user-profile">
               <img className="user-avatar" src={post.authorPhotoUrl} alt="" />
@@ -153,12 +152,21 @@ function Newsfeed() {
             <div className="grey extrasmall" style={{ margin: "0 20px" }}>{post.creationTime.seconds}</div>
 
             <form onSubmit={(e) => { handleSubmitPostComment(e, index); }} className="post-comment-box">
-              <textarea onChange={(e) => { handleCommentPost(e, index); }} type="text" placeholder="Add a comment..." />
+              <textarea onChange={(e) => { setPostComments({ ...postComments, [post.postId]: e.target.value }); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
               <span onClick={(e) => { handleSubmitPostComment(e, index); }} className="submit-btn" type="submit">Post</span>
             </form>
           </div>
-        ))}
+        ))
+          : (
+            <div style={{ display: "grid", placeItems: "center", height: "calc(100vh - 90px)" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <img src={`${window.location.origin}/images/no-newsfeed.jpg`} alt="No Newsfeed" style={{ width: "70px", height: "auto" }} />
+                <p className="bold">Follow people to explore Instagram.</p>
+              </div>
+            </div>
+          )}
       </div>
+      {submitCommentError && <Snackbar snackBarMessage={submitCommentError} setSnackBarMessage={setSubmitCommentError} />}
     </div>
   );
 }
