@@ -19,6 +19,20 @@ function FullPost() {
       newsfeed: false,
     });
   }
+
+  useEffect(() => {
+    function escape(e) {
+      if (e.key === "Escape") {
+        setIsFullPostActive(false);
+      }
+    }
+
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("keydown", escape);
+    };
+  }, []);
+
   return (
     <div className="FullPost">
       {/* eslint-disable-next-line */}

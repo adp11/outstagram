@@ -1,31 +1,39 @@
+import { getAuth, signOut } from "firebase/auth";
 import React, { useEffect, useContext, useState } from "react";
+import UserContext from "./Contexts/UserContext";
 
 function ProfilePreview() {
+  const { userData, setIsLoggedIn } = useContext(UserContext);
+
+  function logOut() {
+    signOut(getAuth());
+  }
+
   return (
     <div className="ProfilePreview">
       <div className="user-profile">
         <div>
-          <img src={`${window.location.origin}/images/logo.png`} alt="profile" />
+          <img src={userData && userData.photoURL} alt="profile" />
         </div>
         <div>
-          <div className="medium bold">andrew.pham__</div>
-          <div className="medium grey">Loc Pham</div>
+          <div className="medium bold cut">{userData && userData.username}</div>
+          <div className="medium grey">{userData && userData.displayName}</div>
         </div>
-        <div className="logout-shortcut">
+        <div className="logout-shortcut" onClick={() => { logOut(); setIsLoggedIn(false); }}>
           Log out
         </div>
       </div>
       <div className="stats medium">
         <div className="posts">
-          <div className="bold medium">1</div>
+          <div className="bold medium">{userData && userData.totalPosts}</div>
           <div className="grey medium">Posts</div>
         </div>
         <div className="followers">
-          <div className="bold medium">1</div>
+          <div className="bold medium">{userData && userData.followers.length}</div>
           <div className="grey medium">Followers</div>
         </div>
         <div className="following">
-          <div className="bold medium">4</div>
+          <div className="bold medium">{userData && userData.following.length}</div>
           <div className="grey medium">Following</div>
         </div>
       </div>

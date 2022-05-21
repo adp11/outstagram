@@ -70,7 +70,6 @@ input[type="search"] {
   left: 15px;
   /* display: none; */
   font-size: 14px;
-  overflow: auto;
 }
 
 .SearchBox .no-result {
@@ -111,6 +110,7 @@ input[type="search"] {
   right: 0px;
   width: 200px;
   display: flex;
+  background-color: #fff;
   flex-direction: column;
   /* display: none; */
 }
@@ -244,7 +244,7 @@ input[type="search"] {
   width: 90%;
   /* add height if texts go beyond certain point */
   height: 50px;
-  background-color: #fafafa;
+  background-color: #fff;
   font-size: 14px;
   outline: none;
   overflow: auto;
@@ -721,7 +721,7 @@ footer > div {
 }
 
 /* utilities */
-.profile-card .logout-shortcut:hover, .profile-card .username:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover  {
+.profile-card .logout-shortcut:hover, .profile-card .username:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover {
   cursor: pointer;
 }
 
@@ -751,14 +751,15 @@ form input:focus, textarea:focus {
 
 .blur {
   filter: blur(1px);
-  /* opacity: 0.5;
-  background-color: #fff; */
+  opacity: 0.5;
+  background-color: #fff;
 }
 
-.no-scroll {
+.cut {
+  text-overflow: ellipsis;
+  white-space: nowrap;
   overflow: hidden;
-  height: 100vh;
-  /* position: fixed; */
+  width: 120px;
 }
 
 a {

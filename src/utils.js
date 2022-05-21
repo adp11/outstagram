@@ -43,25 +43,27 @@ function quickSort(items, left, right) {
   }
   return items;
 }
-// first call to quick sort
-// const items = [5, 3, 7, 6, 2, 9];
-// const sortedArray = quickSort(items, 0, items.length - 1);
-// console.log(sortedArray); // prints [2,3,5,6,7,9]
 
-function findIndex(array, item) {
-  let low = 0;
-  let high = array.length;
-
-  while (low > high) {
-    const mid = low + high >>> 1;
-    if (array[mid].creationTime.seconds < item.creationTime.seconds) low = mid + 1;
-    else high = mid;
+function locationOf(element, array, start, end) {
+  start = start || 0;
+  end = end || array.length;
+  const pivot = parseInt(start + (end - start) / 2, 10);
+  if (end - start <= 1 || array[pivot].creationTime.seconds === element.creationTime.seconds) return pivot;
+  // console.log(array[pivot].creationTime);
+  if (array[pivot].creationTime.seconds < element.creationTime.seconds) {
+    return locationOf(element, array, pivot, end);
   }
-  return low;
+  return locationOf(element, array, start, pivot);
 }
 
-function sortedAdd(array, item) {
-  array.splice(findIndex(array, item), 0, item);
+function insert(element, array) {
+  const targetIndex = locationOf(element, array);
+  if (targetIndex === 0) {
+    array.splice(targetIndex, 0, element);
+  } else {
+    array.splice(targetIndex + 1, 0, element);
+  }
+  return array;
 }
 
-export { capitalizeFirebaseAuthError, quickSort, sortedAdd };
+export { capitalizeFirebaseAuthError, quickSort, insert };

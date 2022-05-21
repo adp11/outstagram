@@ -33,21 +33,20 @@ function AddPost() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [addPostError, setAddPostError] = useState(null);
-  const [previewImageUrl, setPreviewImageUrl] = useState(null);
+  const [previewImageURL, setPreviewImageURL] = useState(null);
   const [caption, setCaption] = useState(null);
   const [file, setFile] = useState(null);
 
-  async function updatetPostSnippets(publicImageUrl, postId) {
+  async function updatetPostSnippets(publicImageURL, postId) {
     if (userData) {
       userData.postSnippets.push({
         postId,
-        imageUrl: publicImageUrl,
+        imageURL: publicImageURL,
         totalComments: 0,
         totalLikes: 0,
       });
       userData.totalPosts += 1;
       setUserData(userData);
-      console.log(userData, "here at updatePOSTSNIPPETS after updating (2)");
       const { uid } = getAuth().currentUser;
       const docRef = doc(db, `users/uid_${uid}`);
       await updateDoc(docRef, { postSnippets: userData.postSnippets, totalPosts: userData.totalPosts });
@@ -73,31 +72,30 @@ function AddPost() {
         const fileSnapshot = await uploadBytesResumable(newImageRef, file);
 
         // 3 - Generate a public URL for the file.
-        const publicImageUrl = await getDownloadURL(newImageRef);
-        console.log(publicImageUrl);
+        const publicImageURL = await getDownloadURL(newImageRef);
 
         // TODO: create variable to assign those fields into a 'data' and pass around
         // 4 - Update the rest of the form's input to Doc
         await updateDoc(postRef, {
           authorId: `uid_${getAuth().currentUser.uid}`,
-          authorPhotoUrl: userData.photoURL,
+          authorPhotoURL: userData.photoURL,
           authorUsername: userData.username,
           postId: postRef.id,
           postCaption: caption,
-          imageUrl: publicImageUrl,
-          storageUrl: fileSnapshot.metadata.fullPath,
+          imageURL: publicImageURL,
+          storageURL: fileSnapshot.metadata.fullPath,
           likes: [],
           comments: [],
         });
 
         setIsAddPostActive(false);
         // TODO: 2 these functions should be put into code when click triggered
-        updatetPostSnippets(publicImageUrl, postRef.id);
+        updatetPostSnippets(publicImageURL, postRef.id);
         // console.log({
         //   postId: postRef.id,
         //   postCaption: caption,
-        //   imageUrl: publicImageUrl,
-        //   storageUrl: fileSnapshot.metadata.fullPath,
+        //   imageURL: publicImageURL,
+        //   storageURL: fileSnapshot.metadata.fullPath,
         //   likes: {
         //     likesList: [],
         //     totalLikes: 0,
@@ -125,7 +123,7 @@ function AddPost() {
       setAddPostError("You can only share images");
       return;
     }
-    setPreviewImageUrl(URL.createObjectURL(fileSelected)); // TODO: prevent vertical image
+    setPreviewImageURL(URL.createObjectURL(fileSelected)); // TODO: prevent vertical image
     setFile(fileSelected);
   }
 
@@ -153,7 +151,7 @@ function AddPost() {
         <form onSubmit={handleAddPostSubmission}>
           <div className="file-upload-container">
             <label htmlFor="file-upload">
-              {!previewImageUrl && (
+              {!previewImageURL && (
               <input
                 onChange={handleMediaFileSelected}
                 id="file-upload"
@@ -163,14 +161,14 @@ function AddPost() {
                 style={{ visibility: "hidden" }}
               />
               )}
-              {!previewImageUrl ? (
+              {!previewImageURL ? (
                 <svg stroke="#8e8e8e" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                   <path fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="10" d="M320 367.79h76c55 0 100-29.21 100-83.6s-53-81.47-96-83.6c-8.89-85.06-71-136.8-144-136.8-69 0-113.44 45.79-128 91.2-60 5.7-112 43.88-112 106.4s54 106.4 120 106.4h56" />
                   <path fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="10" d="M320 255.79l-64-64-64 64m64 192.42V207.79" />
                 </svg>
               )
-                : <img src={previewImageUrl} className="preview-image" alt="preview" />}
-              {!previewImageUrl && <small>File size limit 5 mb.</small>}
+                : <img src={previewImageURL} className="preview-image" alt="preview" />}
+              {!previewImageURL && <small>File size limit 5 mb.</small>}
             </label>
           </div>
           {/* override with 100% line 639 textarea */}

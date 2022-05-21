@@ -1,6 +1,6 @@
 import { getAuth } from "firebase/auth";
 import {
-  arrayUnion, doc, serverTimestamp, updateDoc,
+  arrayUnion, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ import Snackbar from "./Snackbar";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, scrollY, userData,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setUserData, scrollY, userData,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
 
@@ -27,9 +27,30 @@ function Newsfeed() {
     });
   }
 
-  useEffect(() => {
-    console.log(newsfeed, "check newsfeed in Newsfeed.js after update 'modified'");
-  }, [newsfeed]);
+  async function updatePostSnippets(type, postInfo) {
+    const userRef = doc(db, `users/${postInfo.authorId}`);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+      const tempData = docSnap.data();
+      const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
+      if (type === "unlike") {
+        tempData.postSnippets[snippetPos].totalLikes -= 1;
+        await updateDoc(userRef, {
+          postSnippets: tempData.postSnippets,
+        });
+      } else if (type === "like") {
+        tempData.postSnippets[snippetPos].totalLikes += 1;
+        await updateDoc(userRef, {
+          postSnippets: tempData.postSnippets,
+        });
+      } else if (type === "comment") {
+        tempData.postSnippets[snippetPos].totalComments += 1;
+        await updateDoc(userRef, {
+          postSnippets: tempData.postSnippets,
+        });
+      }
+    }
+  }
 
   // Quick dirty workaround with [cmtId] since array elements are not supported with serverTimestamp()
   async function handleSubmitPostComment(e, index) {
@@ -41,7 +62,7 @@ function Newsfeed() {
       await updateDoc(postRef, {
         comments: arrayUnion({
           sourceId: getAuth().currentUser.uid,
-          sourcePhotoUrl: userData.photoURL,
+          sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
           sourceComment: postComments[postInfo.postId],
           sourceCommentTime: cmtId,
@@ -49,46 +70,45 @@ function Newsfeed() {
         [cmtId]: serverTimestamp(),
       });
       setPostComments({ ...postComments, [postInfo.postId]: "" });
+      updatePostSnippets("comment", postInfo);
     } else {
       setSubmitCommentError("Posting empty comments error");
     }
   }
 
   async function handleLikePost(index) { // toggle
-    // console.log(`newsfeed: ${newsfeed[0].postId}`);
-    // console.log("just cliked like", `post index: ${index}`);
     const postInfo = newsfeed[index];
-    // console.log(postInfo, "postInfo");
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
     const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === getAuth().currentUser.uid);
-    // console.log(targetIndex, "targetIndex", getAuth().currentUser.uid, "uid");
     if (targetIndex !== -1) {
       await updateDoc(postRef, {
         likes: postInfo.likes.filter((like, idx) => idx !== targetIndex),
       });
+      updatePostSnippets("unlike", postInfo);
     } else {
       await updateDoc(postRef, {
         likes: arrayUnion({
           sourceId: getAuth().currentUser.uid,
-          sourcePhotoUrl: userData.photoURL,
+          sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
           sourceDisplayname: userData.displayName,
         }),
       });
+      updatePostSnippets("like", postInfo);
     }
   }
 
   return (
     <div className="Newsfeed">
       <div className="newsfeed-container">
-        {(newsfeed.length > 0) ? newsfeed.map((post, index) => (
+        {(newsfeed.length > 0) ? newsfeed.reverse().map((post, index) => (
           <div className="NewsfeedPost" key={post.postId}>
             <div className="user-profile">
               <img className="user-avatar" src={post.authorPhotoUrl} alt="" />
               <span className="username bold medium">{post.authorUsername}</span>
             </div>
             <div className="post-picture">
-              <img src={post.imageUrl} alt="" style={{ width: "100%", height: "auto" }} />
+              <img src={post.imageURL} alt="" style={{ width: "100%", height: "auto" }} />
             </div>
             <div className="post-btns">
               <svg onClick={() => { handleLikePost(index); }} className="like" color="#262626" fill="#262626" height="24" width="24">

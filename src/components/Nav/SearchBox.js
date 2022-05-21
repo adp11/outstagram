@@ -52,7 +52,7 @@ function SearchBox() {
             <div className="search-result">
               <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
               <div>
-                <div className="bold medium">{result.username}</div>
+                <div className="bold medium cut">{result.username}</div>
                 <div className="grey medium">{result.displayName}</div>
               </div>
             </div>

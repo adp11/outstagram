@@ -17,7 +17,7 @@ import FullPost from "./components/FullPost";
 import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
-import { quickSort, sortedAdd } from "./utils";
+import { quickSort, insert } from "./utils";
 import Page404 from "./Page404";
 
 function App() {
@@ -38,11 +38,63 @@ function App() {
   const tempNewsfeed = []; // for state immutability
   const tempAllUserData = []; // for state immutability
   const scrollY = useRef(0);
-  const initialFetch = false;
+  let unsubscribeFromSelf = null;
+  let unsubscribeFromFollowing = null;
+
+  /*
+    1. fetch Newsfeed is designed to real-time listen to remote db
+    2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
+    */
+
+  function getRealTimeUpdates(q) {
+    return onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        console.log(change.doc.data(), "change is: ");
+        if (change.type === "removed") {
+          console.log("before removed");
+          const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+          tempNewsfeed.splice(deletePosition, 1);
+        } else if (change.type === "added") {
+          console.log("before add");
+          // console.log(change.doc.data());
+          insert(change.doc.data(), tempNewsfeed); // old to recent - need to be reversed later when populating
+        } else {
+          console.log("before modified");
+          const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+          tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
+        }
+      });
+      setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
+    });
+  }
+
+  // BUG TODO
+  function fetchNewsfeed() {
+    // // posts from self
+    // const q1 = query(collection(db, `users/${userData.uid}/posts`));
+    // unsubscribeFromSelf = getRealTimeUpdates(q1);
+
+    // posts from people user follows
+    const { following } = userData;
+    if (following.length) {
+      following.forEach((followee) => {
+        const q2 = query(collection(db, `users/${followee.uid}/posts`));
+        unsubscribeFromFollowing = getRealTimeUpdates(q2);
+      });
+    } else {
+      setNewsfeed([]);
+    }
+
+    // console.log("self is next");
+    // // posts from self
+    // console.log(userData.uid);
+    // const q1 = query(collection(db, `users/${userData.uid}/posts`));
+    // unsubscribeFromSelf = getRealTimeUpdates(q1);
+  }
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, scrollY, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost,
     }),
     [userData, visitedUserData, newsfeed, beforeFullPost],
   );
@@ -67,7 +119,6 @@ function App() {
         const toBePushed = { ...document.data(), uid: document.id };
         tempAllUserData.push(toBePushed);
       });
-      console.log(tempAllUserData);
       // setAllUserData([...tempAllUserData]);
       setAllUserData(tempAllUserData);
     }
@@ -80,6 +131,14 @@ function App() {
       setVisitedUserData(null);
       setAllUserData([]);
       setNewsfeed([]);
+      if (unsubscribeFromSelf) {
+        unsubscribeFromSelf();
+        unsubscribeFromSelf = null;
+      }
+      if (unsubscribeFromFollowing) {
+        unsubscribeFromFollowing();
+        unsubscribeFromFollowing = null;
+      }
     }
 
     // prevent browser remember scroll position and auto scroll upon user refreshes the page.
@@ -87,38 +146,7 @@ function App() {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    /*
-    1. fetch Newsfeed is designed to real-time listen to remote db
-    2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
-    */
-    function fetchNewsfeed() {
-      const { following } = userData;
-      following.forEach(async (followee) => {
-        const q = query(collection(db, `users/${followee.uid}/posts`));
-
-        onSnapshot(q, (snapshot) => {
-          snapshot.docChanges().forEach((change) => {
-            if (change.type === "removed") {
-              console.log("before removed");
-              const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-              tempNewsfeed.splice(deletePosition, 1);
-            } else if (change.type === "added") {
-              console.log("before add");
-              sortedAdd(tempNewsfeed, change.doc.data()); // oldest to newest
-            } else {
-              console.log("before modified");
-              const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-              tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
-            }
-          });
-          // BUG TODO: UI not rerender when newsfeed is updated
-          setNewsfeed(tempNewsfeed);
-        });
-      });
-    }
-    console.log("triggered because of follow/unfollow")
     if (isLoggedIn) {
-      console.log(userData, "userdata");
       fetchNewsfeed();
     }
   }, [userData]);

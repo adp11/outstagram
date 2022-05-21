@@ -1,10 +1,6 @@
 import { getAuth } from "firebase/auth";
-import {
-  addDoc,
-  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where,
-} from "firebase/firestore";
-import React, { useEffect, useContext, useState } from "react";
-import { flushSync } from "react-dom";
+import { doc, updateDoc } from "firebase/firestore";
+import React, { useContext, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
@@ -14,7 +10,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, newsfeed, setNewsfeed, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY,
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY,
   } = useContext(UserContext);
   const { uid } = getAuth().currentUser;
   const params = useParams();
@@ -41,54 +37,56 @@ function Profile() {
     });
   }
 
-  async function updateFollowingData() {
+  async function updateFollowingData(tempUserData) {
     const docRef = doc(db, `users/uid_${uid}`);
-    await updateDoc(docRef, { following: userData.following });
+    await updateDoc(docRef, { following: tempUserData.following });
   }
 
-  async function updateFollowersData() {
+  async function updateFollowersData(tempVisitedUserData) {
     const docRef = doc(db, `users/${params.uid}`);
-    await updateDoc(docRef, { followers: visitedUserData.followers });
+    await updateDoc(docRef, { followers: tempVisitedUserData.followers });
   }
 
   function handleFollowToggle() {
     const positionInFollowing = userData.following.findIndex((user) => user.uid === params.uid);
     const positionInFollowers = visitedUserData.followers.findIndex((user) => user.uid === uid);
+    const tempUserData = { ...userData };
+    const tempVisitedUserData = { ...visitedUserData };
 
     // if following
     if (positionInFollowing === -1) {
       // update current user's following data
-      userData.following.push({
+      tempUserData.following.push({
         uid: params.uid,
         photoURL: visitedUserData.photoURL || DUMMY_AVATAR_URL,
         username: visitedUserData && visitedUserData.username,
         userDisplayName: visitedUserData && visitedUserData.displayName,
       });
-      setUserData(userData);
-      updateFollowingData();
+      setUserData(tempUserData);
+      updateFollowingData(tempUserData);
 
       // update visited user's followers data
-      visitedUserData.followers.push({
+      tempVisitedUserData.followers.push({
         uid,
         photoURL: userData.photoURL || DUMMY_AVATAR_URL,
         username: userData && userData.username,
         userDisplayName: userData && userData.displayName,
       });
-      setVisitedUserData(visitedUserData);
-      updateFollowersData();
+      setVisitedUserData(tempVisitedUserData);
+      updateFollowersData(tempVisitedUserData);
 
       setIsFollowing(true);
       // if unfollowing
     } else {
       // update current user's following data
-      userData.following.splice(positionInFollowing, 1);
-      setUserData(userData);
-      updateFollowingData();
+      tempUserData.following.splice(positionInFollowing, 1);
+      setUserData(tempUserData);
+      updateFollowingData(tempUserData);
 
       // update visited user's followers data
-      visitedUserData.followers.splice(positionInFollowers, 1);
-      setVisitedUserData(visitedUserData);
-      updateFollowersData();
+      tempVisitedUserData.followers.splice(positionInFollowers, 1);
+      setVisitedUserData(tempVisitedUserData);
+      updateFollowersData(tempVisitedUserData);
 
       setIsFollowing(false);
     }
@@ -123,7 +121,6 @@ function Profile() {
     totalFollowers = visitedUserData && visitedUserData.followers.length;
     totalFollowing = visitedUserData && visitedUserData.following.length;
     whichUser = visitedUserData;
-    console.log(visitedUserData);
     if (isFollowing) {
       button = (
         <button
@@ -153,9 +150,6 @@ function Profile() {
         </button>
       );
     }
-  }
-  if (whichUser.postSnippets[0]) {
-    console.log(whichUser.postSnippets[0].imageUrl, "manual check");
   }
 
   return (
@@ -189,6 +183,7 @@ function Profile() {
           </div>
         </div>
 
+        {(whichUser && whichUser.postSnippets.length > 0) && (
         <div className="profile-nav">
           <svg color="#262626" fill="#262626" height="12" role="img" viewBox="0 0 24 24" width="12">
             <rect fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" width="18" x="3" y="3" />
@@ -199,9 +194,10 @@ function Profile() {
           </svg>
           POSTS
         </div>
+        )}
 
         <div className="profile-posts">
-          {whichUser && whichUser.postSnippets.slice(0).reverse().map((post) => (
+          {whichUser && whichUser.postSnippets.length > 0 ? whichUser.postSnippets.slice(0).reverse().map((post) => (
             <Link to={`/p/${post.postId}`} onClick={handleClick} key={post.postId}>
               <div className="profile-post" key={post.postId}>
                 <img className="post-picture" src={post.imageUrl} alt="user's post" />
@@ -223,7 +219,22 @@ function Profile() {
                 </div>
               </div>
             </Link>
-          ))}
+          )) : (
+            <div style={{ display: "flex", width: "100vw", margin: "50px 0" }}>
+              <div style={{
+                flex: "1",
+                maxWidth: "900px",
+                minWidth: "500px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+              >
+                <img src={`${window.location.origin}/images/no-post.png`} alt="No Newsfeed" style={{ width: "100px", height: "auto" }} />
+                <p className="bold" style={{ fontSize: "20px" }}>No Posts Yet</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

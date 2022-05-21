@@ -4,7 +4,7 @@ import React, { useContext } from "react";
 import UserContext from "../Contexts/UserContext";
 
 function Account() {
-  const { setIsLoggedIn } = useContext(UserContext);
+  const { setIsLoggedIn, userData } = useContext(UserContext);
 
   function logOut() {
     signOut(getAuth());
@@ -14,7 +14,7 @@ function Account() {
     <div className="Account">
       <div className="profile-avatar">
         <img
-          src={`${window.location.origin}/images/logo.png`}
+          src={userData && userData.photoURL}
           alt="user profile"
           style={{ width: "26px", height: "26px", borderRadius: "50%" }}
         />
