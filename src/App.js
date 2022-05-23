@@ -35,6 +35,7 @@ function App() {
     newsfeed: false,
   });
   const [fullPostIndex, setFullPostIndex] = useState(null);
+  const [fullPostInfo, setFullPostInfo] = useState(null);
 
   const tempNewsfeed = []; // for state immutability
   const tempAllUserData = []; // for state immutability
@@ -94,9 +95,9 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo,
     }),
-    [userData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex],
+    [userData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo],
   );
 
   useEffect(() => {

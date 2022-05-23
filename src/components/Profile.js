@@ -10,7 +10,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostIndex,
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo,
   } = useContext(UserContext);
   const { uid } = getAuth().currentUser;
   const params = useParams();
@@ -39,7 +39,8 @@ function Profile() {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      setFullPostIndex(docSnap.data());
+      console.log(docSnap.data(), "docSnap.data()");
+      setFullPostInfo(docSnap.data());
     }
   }
 
@@ -64,7 +65,7 @@ function Profile() {
       // update current user's following data
       tempUserData.following.push({
         uid: params.uid,
-        photoURL: visitedUserData.photoURL || DUMMY_AVATAR_URL,
+        photoURL: visitedUserData.photoURL,
         username: visitedUserData && visitedUserData.username,
         userDisplayName: visitedUserData && visitedUserData.displayName,
       });
@@ -74,7 +75,7 @@ function Profile() {
       // update visited user's followers data
       tempVisitedUserData.followers.push({
         uid,
-        photoURL: userData.photoURL || DUMMY_AVATAR_URL,
+        photoURL: userData.photoURL,
         username: userData && userData.username,
         userDisplayName: userData && userData.displayName,
       });
@@ -97,9 +98,10 @@ function Profile() {
       setIsFollowing(false);
     }
   }
-
+  // LIKE POST IN FULLPOST FROM PROFILE --> OUT --> POST SNIPPETS NOT UPDATED (1+ like) --> THE CODE BELOW BUG
+  // MAKE CONDITIONAL RENDERING CHANGE UPON CHANGE IN USERDATA --> make variables become state
   if (params.uid === `uid_${uid}` || params.postId) {
-    userAvatar = userData.photoURL || DUMMY_AVATAR_URL;
+    userAvatar = userData.photoURL;
     username = userData && userData.username;
     userBio = (userData && userData.bio) || "none";
     userDisplayName = userData.displayName;
@@ -119,7 +121,7 @@ function Profile() {
       </button>
     );
   } else {
-    userAvatar = visitedUserData.photoURL || DUMMY_AVATAR_URL;
+    userAvatar = visitedUserData.photoURL;
     username = visitedUserData && visitedUserData.username;
     userBio = (visitedUserData && visitedUserData.bio) || "none";
     userDisplayName = visitedUserData && visitedUserData.displayName;

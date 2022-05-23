@@ -24,6 +24,7 @@
         "linebreak-style": "off",
         "no-console": "off",
         "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
-        "quotes": [2, "double", { "avoidEscape": true }]
+        "quotes": [2, "double", { "avoidEscape": true }],
+        "no-nested-ternary": "off"
     }
 }
