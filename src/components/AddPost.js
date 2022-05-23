@@ -123,7 +123,7 @@ function AddPost() {
       setAddPostError("You can only share images");
       return;
     }
-    setPreviewImageURL(URL.createObjectURL(fileSelected)); // TODO: prevent vertical image
+    setPreviewImageURL(URL.createObjectURL(fileSelected)); 
     setFile(fileSelected);
   }
 

@@ -57,7 +57,6 @@ function App() {
           tempNewsfeed.splice(deletePosition, 1);
         } else if (change.type === "added") {
           console.log("before add");
-          // console.log(change.doc.data());
           insert(change.doc.data(), tempNewsfeed); // old to recent - need to be reversed later when populating
         } else {
           console.log("before modified");
@@ -120,8 +119,9 @@ function App() {
         const toBePushed = { ...document.data(), uid: document.id };
         tempAllUserData.push(toBePushed);
       });
-      // setAllUserData([...tempAllUserData]);
-      setAllUserData(tempAllUserData);
+      setAllUserData([...tempAllUserData]);
+      // setAllUserData(tempAllUserData);
+      console.log(tempAllUserData, "tempAllUserData");
     }
 
     if (isLoggedIn) {
@@ -144,7 +144,7 @@ function App() {
     }
 
     // prevent browser remember scroll position and auto scroll upon user refreshes the page.
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
   }, [isLoggedIn]);
 
   useEffect(() => {
@@ -153,15 +153,19 @@ function App() {
     }
   }, [userData]);
 
+  useEffect(() => {
+    console.log(allUserData, "allUserData in app.js");
+  }, [allUserData]);
+
   /*
   1. Triggered upon both mouting and dependency changes
   2. Prefer abrupt scroll (not smooth)
   */
-  useEffect(() => {
-    if (!isFullPostActive) {
-      window.scrollTo(0, scrollY.current);
-    }
-  }, [isFullPostActive]);
+  // useEffect(() => {
+  //   if (!isFullPostActive) {
+  //     window.scrollTo(0, scrollY.current);
+  //   }
+  // }, [isFullPostActive]);
 
   return (
     <div>
@@ -169,7 +173,7 @@ function App() {
         <UserContext.Provider value={providerValue}>
           <div
             className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`}
-            style={{ position: isFullPostActive && "fixed", top: isFullPostActive && `-${scrollY.current}px` }}
+            style={{ position: (isAddPostActive || isEditProfileActive || isFullPostActive) && "fixed", top: (isAddPostActive || isEditProfileActive || isFullPostActive) && `-${scrollY.current}px` }}
           >
             {!isLoggedIn && <Auth />}
             {isLoggedIn && <Nav />}

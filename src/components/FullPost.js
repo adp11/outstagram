@@ -21,7 +21,7 @@ function FullPost() {
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
 
-  function handleClick() {
+  function handleCloseFullPost() {
     if (beforeFullPost.profile) {
       navigate(`/uid_${getAuth().currentUser.uid}`);
     } else {
@@ -123,7 +123,7 @@ function FullPost() {
     <div className="FullPost">
       {/* eslint-disable-next-line */}
       <i
-        onClick={handleClick}
+        onClick={handleCloseFullPost}
         className="fa-solid fa-xmark"
         style={{
           position: "fixed", left: "97%", top: "2%", fontSize: "30px",
@@ -131,7 +131,7 @@ function FullPost() {
       />
       <div className="fullpost-container">
         <div>
-          <img className="post-picture" src={newsfeed[fullPostIndex].imageURL} alt="" />
+          <img className="post-picture" src={newsfeed[fullPostIndex].imageURL} alt="" style={{ objectFit: "contain" }} />
         </div>
 
         <div className="post-info">

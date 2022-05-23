@@ -1,10 +1,11 @@
 import { getAuth, signOut } from "firebase/auth";
 import { Link } from "react-router-dom";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import UserContext from "../Contexts/UserContext";
 
 function Account() {
   const { setIsLoggedIn, userData } = useContext(UserContext);
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   function logOut() {
     signOut(getAuth());
@@ -12,15 +13,16 @@ function Account() {
 
   return (
     <div className="Account">
-      <div className="profile-avatar">
+      <div className="profile-avatar" onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
         <img
           src={userData && userData.photoURL}
           alt="user profile"
           style={{ width: "26px", height: "26px", borderRadius: "50%" }}
         />
       </div>
+      {isDropdownActive && (
       <div className="dropdown">
-        <Link to={`/uid_${getAuth().currentUser.uid}`}>
+        <Link to={`/uid_${getAuth().currentUser.uid}`} onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
           <div>
             <svg color="#262626" fill="#262626" height="20" role="img" viewBox="0 0 24 24" width="20">
               <circle cx="12.004" cy="12.004" fill="none" r="10.5" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="2" />
@@ -35,7 +37,7 @@ function Account() {
           <img src={`${window.location.origin}/images/light-mode.png`} alt="light-mode" />
           Toggle theme
         </div>
-        <Link to="/">
+        <Link to="/" onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
           {/* eslint-disable-next-line */}
           <div onClick={() => { logOut(); setIsLoggedIn(false); }}>
             <img src={`${window.location.origin}/images/logout.png`} alt="logout" />
@@ -43,6 +45,7 @@ function Account() {
           </div>
         </Link>
       </div>
+      )}
     </div>
   );
 }

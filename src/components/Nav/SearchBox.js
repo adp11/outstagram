@@ -27,12 +27,18 @@ function SearchBox() {
 
   function handleQuery(value) {
     if (value) {
+      console.log(value, "value");
       const filtered = allUserData.filter((data) => (data.username.toLowerCase().includes(value) || data.displayName.toLowerCase().includes(value)));
+      console.log(allUserData, "filtered");
       setSearchResults(filtered);
     } else {
       setSearchResults([]);
     }
   }
+
+  useEffect(() => {
+    console.log(allUserData, "allUserData in searchbox");
+  }, [allUserData]);
 
   useOutsideAlerter(dropdownRef, searchBoxRef);
 
