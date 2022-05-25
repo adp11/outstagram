@@ -49,7 +49,6 @@ function locationOf(element, array, start, end) {
   end = end || array.length;
   const pivot = parseInt(start + (end - start) / 2, 10);
   if (end - start <= 1 || array[pivot].creationTime.seconds === element.creationTime.seconds) return pivot;
-  // console.log(array[pivot].creationTime);
   if (array[pivot].creationTime.seconds < element.creationTime.seconds) {
     return locationOf(element, array, pivot, end);
   }

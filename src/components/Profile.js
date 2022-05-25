@@ -1,6 +1,6 @@
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
@@ -10,36 +10,36 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo,
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost
   } = useContext(UserContext);
   const { uid } = getAuth().currentUser;
   const params = useParams();
   const [isFollowing, setIsFollowing] = useState(
-    userData.following.findIndex((user) => user.uid === params.uid) !== -1,
+    userData.following.findIndex((user) => user.uid === params.uid) !== -1
   );
 
-  let userAvatar;
-  let username;
-  let totalPosts;
-  let totalFollowers;
-  let totalFollowing;
-  let userBio;
-  let userDisplayName;
-  let whichUser;
-  let button;
-
   async function handleViewFullPost(postId) {
+    let docRef;
     scrollY.current = window.scrollY;
     setIsFullPostActive(true);
-    setBeforeFullPost({
-      newsfeed: false,
-      profile: true,
-    });
-    const docRef = doc(db, `users/${userData.uid}/posts/${postId}`);
-    const docSnap = await getDoc(docRef);
+    if (params.uid === `uid_${uid}` || params.postId) {
+      setBeforeFullPost({
+        newsfeed: false,
+        selfProfile: true,
+        visitedProfile: false,
+      });
+      docRef = doc(db, `users/${userData.uid}/posts/${postId}`);
+    } else {
+      setBeforeFullPost({
+        newsfeed: false,
+        selfProfile: false,
+        visitedProfile: true,
+      });
+      docRef = doc(db, `users/${visitedUserData.uid}/posts/${postId}`);
+    }
 
+    const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      console.log(docSnap.data(), "docSnap.data()");
       setFullPostInfo(docSnap.data());
     }
   }
@@ -98,67 +98,53 @@ function Profile() {
       setIsFollowing(false);
     }
   }
-  // LIKE POST IN FULLPOST FROM PROFILE --> OUT --> POST SNIPPETS NOT UPDATED (1+ like) --> THE CODE BELOW BUG
-  // MAKE CONDITIONAL RENDERING CHANGE UPON CHANGE IN USERDATA --> make variables become state
-  if (params.uid === `uid_${uid}` || params.postId) {
-    userAvatar = userData.photoURL;
-    username = userData && userData.username;
-    userBio = (userData && userData.bio) || "none";
-    userDisplayName = userData.displayName;
-    totalPosts = userData && userData.totalPosts;
-    totalFollowers = userData && userData.followers.length;
-    totalFollowing = userData && userData.following.length;
-    whichUser = userData;
-    button = (
-      <button
-        type="button"
-        onClick={() => { setIsEditProfileActive(true); }}
-        style={{
-          padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500",
-        }}
-      >
-        Edit Profile
-      </button>
-    );
-  } else {
-    userAvatar = visitedUserData.photoURL;
-    username = visitedUserData && visitedUserData.username;
-    userBio = (visitedUserData && visitedUserData.bio) || "none";
-    userDisplayName = visitedUserData && visitedUserData.displayName;
-    totalPosts = visitedUserData && visitedUserData.totalPosts;
-    totalFollowers = visitedUserData && visitedUserData.followers.length;
-    totalFollowing = visitedUserData && visitedUserData.following.length;
-    whichUser = visitedUserData;
-    if (isFollowing) {
-      button = (
-        <button
-          onClick={handleFollowToggle}
-          type="button"
-          style={{
-            padding: "5px 15px", backgroundColor: "transparent", border: "1px #dbdbdb solid", fontSize: "14px", borderRadius: "5px", width: "80px", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <svg aria-label="Following" className="_8-yf5 " color="#262626" fill="#262626" height="20" role="img" viewBox="0 0 95.28 70.03" width="20">
-            <path d="M64.23 69.98c-8.66 0-17.32-.09-26 0-3.58.06-5.07-1.23-5.12-4.94-.16-11.7 8.31-20.83 20-21.06 7.32-.15 14.65-.14 22 0 11.75.22 20.24 9.28 20.1 21 0 3.63-1.38 5.08-5 5-8.62-.1-17.28 0-25.98 0zm19-50.8A19 19 0 1164.32 0a19.05 19.05 0 0118.91 19.18zM14.76 50.01a5 5 0 01-3.37-1.31L.81 39.09a2.5 2.5 0 01-.16-3.52l3.39-3.7a2.49 2.49 0 013.52-.16l7.07 6.38 15.73-15.51a2.48 2.48 0 013.52 0l3.53 3.58a2.49 2.49 0 010 3.52L18.23 48.57a5 5 0 01-3.47 1.44z" />
+  
+  // Conditional rendering
+  const [componentVars, setComponentVars] = useState({
+    userAvatar: "",
+    username: "",
+    totalPosts: [],
+    totalFollowers: [],
+    totalFollowing: [],
+    userBio: "",
+    userDisplayName: "",
+    whichUser: null,
+  });
 
-          </svg>
-        </button>
-      );
+  useEffect(() => {
+    console.log(isFollowing, "isFollowing currently: ")
+    if (params.uid === `uid_${uid}` || beforeFullPost.selfProfile) {
+      setComponentVars({
+        userAvatar: userData.photoURL,
+        username: userData.username,
+        totalPosts: userData.totalPosts,
+        totalFollowers: userData.followers.length,
+        totalFollowing: userData.following.length,
+        userBio: userData.bio,
+        userDisplayName: userData.displayName,
+        whichUser: userData,
+      });
+    console.log(userData.username, "whichUser");
+
     } else {
-      button = (
-      // eslint-disable-next-line
-        <button
-          onClick={handleFollowToggle}
-          type="button"
-          style={{
-            padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px",
-          }}
-        >
-          Follow
-        </button>
-      );
+      setComponentVars({
+        userAvatar: visitedUserData.photoURL,
+        username: visitedUserData.username,
+        totalPosts: visitedUserData.totalPosts,
+        totalFollowers: visitedUserData.followers.length,
+        totalFollowing: visitedUserData.following.length,
+        userBio: visitedUserData.bio,
+        userDisplayName: visitedUserData.displayName,
+        whichUser: visitedUserData,
+      });
+      console.log(visitedUserData.username, "whichUser");
+
     }
-  }
+  }, [userData, visitedUserData, params.uid]);
+
+  const {
+    userAvatar, username, totalPosts, totalFollowers, totalFollowing, userBio, userDisplayName, whichUser,
+  } = componentVars;
 
   return (
     <div className="Profile">
@@ -166,9 +152,31 @@ function Profile() {
         <div className="profile-summary">
           <img src={userAvatar} alt="" className="user-avatar" />
           <div className="user-info">
-            <div>
-              <span style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
-              {button}
+            <div style={{border: "1px black solid", display: "flex", }}>
+              <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
+
+              {(params.uid === `uid_${uid}` || beforeFullPost.selfProfile)
+                // eslint-disable-next-line
+                ? <button type="button" onClick={() => { setIsEditProfileActive(true); }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
+
+                : isFollowing
+                // eslint-disable-next-line
+                ? (
+                  <button
+                    type="button"
+                    onClick={handleFollowToggle}
+                    style={{
+                      padding: "5px 15px", backgroundColor: "transparent", border: "1px #dbdbdb solid", fontSize: "14px", borderRadius: "5px", width: "80px", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    <svg aria-label="Following" className="_8-yf5 " color="#262626" fill="#262626" height="20" role="img" viewBox="0 0 95.28 70.03" width="20">
+                      <path d="M64.23 69.98c-8.66 0-17.32-.09-26 0-3.58.06-5.07-1.23-5.12-4.94-.16-11.7 8.31-20.83 20-21.06 7.32-.15 14.65-.14 22 0 11.75.22 20.24 9.28 20.1 21 0 3.63-1.38 5.08-5 5-8.62-.1-17.28 0-25.98 0zm19-50.8A19 19 0 1164.32 0a19.05 19.05 0 0118.91 19.18zM14.76 50.01a5 5 0 01-3.37-1.31L.81 39.09a2.5 2.5 0 01-.16-3.52l3.39-3.7a2.49 2.49 0 013.52-.16l7.07 6.38 15.73-15.51a2.48 2.48 0 013.52 0l3.53 3.58a2.49 2.49 0 010 3.52L18.23 48.57a5 5 0 01-3.47 1.44z" />
+                    </svg>
+                  </button>
+                  )
+
+                // eslint-disable-next-line
+                : <button onClick={handleFollowToggle} type="button" style={{ padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px" }}>Follow</button>}
             </div>
             <div className="user-stats">
               <div className="posts">
@@ -216,14 +224,14 @@ function Profile() {
 
                     </svg>
                   </span>
-                  <span>{post.totalLikes}</span>
+                  <span>{post.totalComments}</span>
                   <span>
                     <svg stroke="black" fill="black" strokeWidth="0" viewBox="0 0 512 512" height="20px" width="20px" xmlns="http://www.w3.org/2000/svg">
                       <path fill="black" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="32" d="M87.49 380c1.19-4.38-1.44-10.47-3.95-14.86a44.86 44.86 0 00-2.54-3.8 199.81 199.81 0 01-33-110C47.65 139.09 140.73 48 255.83 48 356.21 48 440 117.54 459.58 209.85a199 199 0 014.42 41.64c0 112.41-89.49 204.93-204.59 204.93-18.3 0-43-4.6-56.47-8.37s-26.92-8.77-30.39-10.11a31.09 31.09 0 00-11.12-2.07 30.71 30.71 0 00-12.09 2.43l-67.83 24.48a16 16 0 01-4.67 1.22 9.6 9.6 0 01-9.57-9.74 15.85 15.85 0 01.6-3.29z" />
 
                     </svg>
                   </span>
-                  <span>{post.totalComments}</span>
+                  <span>{post.totalLikes}</span>
                 </div>
               </div>
             </Link>

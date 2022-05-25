@@ -1,6 +1,6 @@
 import { getAuth, signOut } from "firebase/auth";
 import { Link } from "react-router-dom";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import UserContext from "../Contexts/UserContext";
 
 function Account() {
@@ -10,6 +10,10 @@ function Account() {
   function logOut() {
     signOut(getAuth());
   }
+
+  useEffect(() => {
+    console.log(userData, "userdata change triggered")
+  }, [userData])
 
   return (
     <div className="Account">

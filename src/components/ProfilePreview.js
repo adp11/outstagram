@@ -21,7 +21,7 @@ function ProfilePreview() {
         </Link>
         <Link to={`/uid_${getAuth().currentUser.uid}`}>
           <div>
-            <div className="medium bold cut">{userData && userData.username}</div>
+            <div className="medium bold cut1">{userData && userData.username}</div>
             <div className="medium grey">{userData && userData.displayName}</div>
           </div>
         </Link>

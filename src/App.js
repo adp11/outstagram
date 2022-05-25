@@ -31,7 +31,8 @@ function App() {
   const [allUserData, setAllUserData] = useState([]);
   const [newsfeed, setNewsfeed] = useState([]);
   const [beforeFullPost, setBeforeFullPost] = useState({
-    profile: false,
+    selfProfile: false,
+    visitedProfile: false,
     newsfeed: false,
   });
   const [fullPostIndex, setFullPostIndex] = useState(null);
@@ -40,47 +41,46 @@ function App() {
   const tempNewsfeed = []; // for state immutability
   const tempAllUserData = []; // for state immutability
   const scrollY = useRef(0);
-  let unsubscribeFromSelf = null;
-  let unsubscribeFromFollowing = null;
+  let stopRealTimeListen1 = null;
+  let stopRealTimeListen2 = null;
 
   /*
     1. fetch Newsfeed is designed to real-time listen to remote db
     2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
     */
 
-  function getRealTimeUpdates(q) {
-    return onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        console.log(change.doc.data(), "change is: ");
-        if (change.type === "removed") {
-          console.log("before removed");
-          const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-          tempNewsfeed.splice(deletePosition, 1);
-        } else if (change.type === "added") {
-          console.log("before add");
-          insert(change.doc.data(), tempNewsfeed); // old to recent - need to be reversed later when populating
-        } else {
-          console.log("before modified");
-          const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-          tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
-        }
+    function getRealTimeUpdates(q) {
+      return onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "removed") {
+            console.log("before removed");
+            const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+            tempNewsfeed.splice(deletePosition, 1);
+          } else if (change.type === "added") {
+            console.log("before add");
+            insert(change.doc.data(), tempNewsfeed); // old to recent - need to be reversed later when populating
+          } else {
+            console.log("before modified");
+            const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+            tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
+          }
+        });
+        setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
       });
-      setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
-    });
-  }
+    }
 
   // BUG TODO
   function fetchNewsfeed() {
     // // posts from self
     // const q1 = query(collection(db, `users/${userData.uid}/posts`));
-    // unsubscribeFromSelf = getRealTimeUpdates(q1);
+    // stopRealTimeListen1 = getRealTimeUpdates(q1);
 
     // posts from people user follows
     const { following } = userData;
     if (following.length) {
       following.forEach((followee) => {
         const q2 = query(collection(db, `users/${followee.uid}/posts`));
-        unsubscribeFromFollowing = getRealTimeUpdates(q2);
+        stopRealTimeListen2 = getRealTimeUpdates(q2);
       });
     } else {
       setNewsfeed([]);
@@ -90,21 +90,23 @@ function App() {
     // // posts from self
     // console.log(userData.uid);
     // const q1 = query(collection(db, `users/${userData.uid}/posts`));
-    // unsubscribeFromSelf = getRealTimeUpdates(q1);
+    // stopRealTimeListen1 = getRealTimeUpdates(q1);
   }
 
   const providerValue = useMemo(
     () => ({
       userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo,
     }),
-    [userData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo],
+    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo],
   );
+
 
   useEffect(() => {
     async function fetchUserData() {
       const docRef = doc(db, `users/uid_${getAuth().currentUser.uid}`);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
+        console.log("is fetching userdata", docSnap.data())
         setUserData(docSnap.data());
       }
     }
@@ -122,7 +124,6 @@ function App() {
       });
       setAllUserData([...tempAllUserData]);
       // setAllUserData(tempAllUserData);
-      console.log(tempAllUserData, "tempAllUserData");
     }
 
     if (isLoggedIn) {
@@ -134,13 +135,13 @@ function App() {
       setAllUserData([]);
       setNewsfeed([]);
       setFullPostIndex(null);
-      if (unsubscribeFromSelf) {
-        unsubscribeFromSelf();
-        unsubscribeFromSelf = null;
+      if (stopRealTimeListen1) {
+        stopRealTimeListen1();
+        stopRealTimeListen1 = null;
       }
-      if (unsubscribeFromFollowing) {
-        unsubscribeFromFollowing();
-        unsubscribeFromFollowing = null;
+      if (stopRealTimeListen2) {
+        stopRealTimeListen2();
+        stopRealTimeListen2 = null;
       }
     }
 
@@ -153,10 +154,6 @@ function App() {
       fetchNewsfeed();
     }
   }, [userData]);
-
-  useEffect(() => {
-    console.log(allUserData, "allUserData in app.js");
-  }, [allUserData]);
 
   /*
   1. Triggered upon both mouting and dependency changes

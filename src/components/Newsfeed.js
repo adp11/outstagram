@@ -11,7 +11,7 @@ import Snackbar from "./Snackbar";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -24,7 +24,8 @@ function Newsfeed() {
     setIsFullPostActive(true);
     setBeforeFullPost({
       newsfeed: true,
-      profile: false,
+      selfProfile: false,
+      visitedProfile: false,
     });
     setFullPostIndex(index);
   }

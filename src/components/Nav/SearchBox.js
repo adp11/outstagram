@@ -27,18 +27,12 @@ function SearchBox() {
 
   function handleQuery(value) {
     if (value) {
-      console.log(value, "value");
       const filtered = allUserData.filter((data) => (data.username.toLowerCase().includes(value) || data.displayName.toLowerCase().includes(value)));
-      console.log(allUserData, "filtered");
       setSearchResults(filtered);
     } else {
       setSearchResults([]);
     }
   }
-
-  useEffect(() => {
-    console.log(allUserData, "allUserData in searchbox");
-  }, [allUserData]);
 
   useOutsideAlerter(dropdownRef, searchBoxRef);
 
@@ -58,7 +52,7 @@ function SearchBox() {
             <div className="search-result">
               <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
               <div>
-                <div className="bold medium cut">{result.username}</div>
+                <div className="bold medium cut1">{result.username}</div>
                 <div className="grey medium">{result.displayName}</div>
               </div>
             </div>
