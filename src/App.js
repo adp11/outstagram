@@ -95,18 +95,16 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData,
     }),
     [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo],
   );
-
 
   useEffect(() => {
     async function fetchUserData() {
       const docRef = doc(db, `users/uid_${getAuth().currentUser.uid}`);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        console.log("is fetching userdata", docSnap.data())
         setUserData(docSnap.data());
       }
     }
@@ -135,6 +133,8 @@ function App() {
       setAllUserData([]);
       setNewsfeed([]);
       setFullPostIndex(null);
+      setFullPostInfo(null);
+      scrollY.current = 0;
       if (stopRealTimeListen1) {
         stopRealTimeListen1();
         stopRealTimeListen1 = null;
@@ -159,11 +159,12 @@ function App() {
   1. Triggered upon both mouting and dependency changes
   2. Prefer abrupt scroll (not smooth)
   */
-  // useEffect(() => {
-  //   if (!isFullPostActive) {
-  //     window.scrollTo(0, scrollY.current);
-  //   }
-  // }, [isFullPostActive]);
+  useEffect(() => {
+    if (!(isAddPostActive && isEditProfileActive && isFullPostActive)) {
+      window.scrollTo(0, scrollY.current);
+      // scrollY.current = 0;
+    }
+  }, [isFullPostActive, isEditProfileActive, isAddPostActive]);
 
   return (
     <div>

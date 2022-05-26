@@ -11,7 +11,7 @@ import Snackbar from "./Snackbar";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -33,8 +33,10 @@ function Newsfeed() {
   async function updatePostSnippets(type, postInfo) {
     const userRef = doc(db, `users/${postInfo.authorId}`);
     const docSnap = await getDoc(userRef);
+    const tempAllUserData = [...allUserData];
+    let tempData;
     if (docSnap.exists()) {
-      const tempData = docSnap.data();
+      tempData = docSnap.data();
       const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
       if (type === "unlike") {
         tempData.postSnippets[snippetPos].totalLikes -= 1;
@@ -53,6 +55,15 @@ function Newsfeed() {
         });
       }
     }
+
+    // UI rerender for postSnippets in userData/allUserData
+    if (postInfo.authorId === userData.uid) {
+      setUserData(tempData);
+    } else {
+      const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
+      tempAllUserData.splice(userPos, 1, tempData);
+      setAllUserData(tempAllUserData);
+    }
   }
 
   // Quick dirty workaround with [cmtId] since array elements are not supported with serverTimestamp()
@@ -63,6 +74,7 @@ function Newsfeed() {
       const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
       const cmtId = uniqid();
       await updateDoc(postRef, {
+        [cmtId]: serverTimestamp(),
         comments: arrayUnion({
           sourceId: getAuth().currentUser.uid,
           sourcePhotoURL: userData.photoURL,
@@ -70,7 +82,6 @@ function Newsfeed() {
           sourceComment: postComments[postInfo.postId],
           sourceCommentTime: cmtId,
         }),
-        [cmtId]: serverTimestamp(),
       });
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);

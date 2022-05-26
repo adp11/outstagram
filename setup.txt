@@ -27,3 +27,18 @@ npx tailwindcss init
         "react",
         "only-warn"
     ],
+    
+
+    follow/unfollow display UI bug
+    view visitedProfile -> view full post --> selfProfile background bug - FIXED
+    operations on fullpost from visitedProfile bug - FIXED
+
+    comment seconds bug - FIXED
+    scroll bug - FIXED
+    postSnippet bug - FIXED 
+    
+    computeHowLongAgo
+    order posts when popups on and not bug
+    potential bugs with postSnippets, when include own posts
+    editProfile - sync data
+    deletePost

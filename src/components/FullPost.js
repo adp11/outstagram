@@ -15,7 +15,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 
 function FullPost() {
   const {
-    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo,
+    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -31,9 +31,9 @@ function FullPost() {
     postCaption: "",
     postCreationTime: "",
     postCmts: [],
-    postLikes: [], 
+    postLikes: [],
     postId: "",
-    // fromWhich: null,
+    fromWhich: null,
   });
   const textareaRef = useRef();
 
@@ -60,8 +60,9 @@ function FullPost() {
   async function updatePostSnippets(type, postInfo) {
     const userRef = doc(db, `users/${postInfo.authorId}`);
     const docSnap = await getDoc(userRef);
+    let tempData;
     if (docSnap.exists()) {
-      const tempData = docSnap.data();
+      tempData = docSnap.data();
       const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
       if (type === "unlike") {
         tempData.postSnippets[snippetPos].totalLikes -= 1;
@@ -79,6 +80,22 @@ function FullPost() {
           postSnippets: tempData.postSnippets,
         });
       }
+    }
+
+    // UI rerender for postSnippets in userData/allUserData
+    if (beforeFullPost.selfProfile || (beforeFullPost.newsfeed && postInfo.authorId === userData.uid)) {
+      setUserData(tempData);
+      console.log(tempData, "tempData in self");
+    } else if (beforeFullPost.visitedProfile) {
+      setVisitedUserData(tempData);
+      console.log(tempData, "tempData in visited");
+    } else if (beforeFullPost.newsfeed && postInfo.authorId !== userData.uid) {
+      const tempAllUserData = [...allUserData];
+      const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
+      console.log(userPos, "userPos");
+      tempAllUserData.splice(userPos, 1, tempData);
+      console.log(tempAllUserData, "tempAllUserData");
+      setAllUserData(tempAllUserData);
     }
   }
 
@@ -105,14 +122,18 @@ function FullPost() {
         sourceCommentTime: cmtId,
       });
       await updateDoc(postRef, {
-        comments: newComments,
         [cmtId]: serverTimestamp(),
+        comments: newComments,
       });
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);
 
       if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) {
-        setFullPostInfo({ ...fullPostInfo, comments: newComments });
+        const docSnap = await getDoc(postRef);
+        if (docSnap.exists()) {
+          setFullPostInfo(docSnap.data());
+        }
+        // setFullPostInfo({ ...fullPostInfo, comments: newComments }) won't work bc of serverTimestamp()
       }
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -158,23 +179,12 @@ function FullPost() {
     }
   }
 
-  // setFromWhich as a result of realtime update in newsfeed
-  useEffect(() => {
-    setComponentVars({...componentVars, fromWhich: newsfeed[fullPostIndex]});
-  }, [newsfeed]);
-
-  // setFromWhich as a result of change in FullPostInfo
-  useEffect(() => {
-    setComponentVars({...componentVars, fromWhich: fullPostInfo});
-  }, [fullPostInfo]);
-
   useEffect(() => {
     function escape(e) {
       if (e.key === "Escape") {
         setIsFullPostActive(false);
       }
     }
-
     document.addEventListener("keydown", escape);
     return () => {
       document.removeEventListener("keydown", escape);
@@ -182,9 +192,8 @@ function FullPost() {
   }, []);
 
   useEffect(() => {
+    console.log("componentVars triggered");
     if (beforeFullPost.newsfeed && fullPostIndex !== null) {
-      console.log("useeffect triggered because of change in fullpost[newsfeed[index]].comments")
-      console.log(newsfeed[fullPostIndex]);
       setComponentVars({
         authorUsername: newsfeed[fullPostIndex].authorUsername,
         authorPhotoURL: newsfeed[fullPostIndex].authorPhotoURL,
@@ -194,12 +203,9 @@ function FullPost() {
         postCmts: newsfeed[fullPostIndex].comments,
         postLikes: newsfeed[fullPostIndex].likes,
         postId: newsfeed[fullPostIndex].postId,
-        // fromWhich: newsfeed[fullPostIndex],
-      })
-      
+        fromWhich: newsfeed[fullPostIndex],
+      });
     } else if ((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && fullPostInfo !== null) {
-      console.log("useeffect triggered because of change in fullpostinfo.comments")
-      console.log(fullPostInfo);
       setComponentVars({
         authorUsername: fullPostInfo.authorUsername,
         authorPhotoURL: fullPostInfo.authorPhotoURL,
@@ -209,13 +215,14 @@ function FullPost() {
         postCmts: fullPostInfo.comments,
         postLikes: fullPostInfo.likes,
         postId: fullPostInfo.postId,
-        // fromWhich: fullPostInfo,
-      })
+        fromWhich: fullPostInfo,
+      });
     }
   }, [fullPostInfo, newsfeed[fullPostIndex]]);
 
-  // const {authorUsername, authorPhotoURL, postPictureURL, postCaption, postCreationTime, fromWhich } = componentVars;
-  const { authorUsername, authorPhotoURL, postPictureURL, postCaption, postCreationTime, postCmts, postLikes, postId } = componentVars;
+  const {
+    authorUsername, authorPhotoURL, postPictureURL, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
+  } = componentVars;
 
   return (
     <div className="FullPost">
@@ -261,7 +268,7 @@ function FullPost() {
                   {" "}
                   <span className="user-comment medium">{comment.sourceComment}</span>
                   {" "}
-                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{postCreationTime}</small>
+                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{(fromWhich && fromWhich[comment.sourceCommentTime]) && fromWhich[comment.sourceCommentTime].seconds}</small>
                 </div>
               </div>
             ))}
@@ -315,7 +322,7 @@ function FullPost() {
           </form>
         </div>
       </div>
-      
+
       {submitCommentError && <Snackbar snackBarMessage={submitCommentError} setSnackBarMessage={setSubmitCommentError} />}
     </div>
   );

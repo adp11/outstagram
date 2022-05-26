@@ -11,9 +11,9 @@ function Account() {
     signOut(getAuth());
   }
 
-  useEffect(() => {
-    console.log(userData, "userdata change triggered")
-  }, [userData])
+  // useEffect(() => {
+  //   console.log(userData, "userdata change triggered")
+  // }, [userData])
 
   return (
     <div className="Account">

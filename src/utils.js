@@ -1,3 +1,8 @@
+import {
+  differenceInMinutes, differenceInHours, differenceInDays, differenceInWeeks, differenceInMonths, differenceInYears,
+} from "date-fns";
+// import differenceInHours from "date-fns/differenceInHours";
+
 function capitalizeFirebaseAuthError(message) {
   const words = message.split("-");
   words[0] = words[0].substring(words[0].indexOf("/") + 1);
@@ -63,6 +68,31 @@ function insert(element, array) {
     array.splice(targetIndex + 1, 0, element);
   }
   return array;
+}
+
+function computeHowLongAgo(unixTime, abbreviation) {
+  let result = differenceInYears(new Date(), new Date(unixTime * 1000) > 0);
+  if (result === 0) {
+    result = differenceInMonths(new Date(), new Date(unixTime * 1000) > 0);
+    if (result === 0) {
+      result = differenceInWeeks(new Date(), new Date(unixTime * 1000) > 0);
+      if (result === 0) {
+        result = differenceInDays(new Date(), new Date(unixTime * 1000) > 0);
+        if (result === 0) {
+          result = differenceInDays(new Date(), new Date(unixTime * 1000) > 0);
+          if (result === 0) {
+            result = differenceInHours(new Date(), new Date(unixTime * 1000) > 0);
+            if (result === 0) {
+              result = differenceInMinutes(new Date(), new Date(unixTime * 1000) > 0);
+              if (result === 0) {
+                result = "JUST NOW";
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 export { capitalizeFirebaseAuthError, quickSort, insert };

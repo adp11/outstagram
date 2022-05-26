@@ -6,7 +6,7 @@ import SearchBox from "./SearchBox";
 import UserContext from "../Contexts/UserContext";
 
 function Nav() {
-  const { setIsAddPostActive, fetchNewsfeed } = useContext(UserContext);
+  const { setIsAddPostActive, fetchNewsfeed, scrollY } = useContext(UserContext);
   const navigate = useNavigate();
 
   function refresh() {
@@ -31,7 +31,7 @@ function Nav() {
             <path d="M17.79 10.132a.659.659 0 00-.962-.873l-2.556 2.05a.63.63 0 01-.758.002L11.06 9.47a1.576 1.576 0 00-2.277.42l-2.567 3.98a.659.659 0 00.961.875l2.556-2.049a.63.63 0 01.759-.002l2.452 1.84a1.576 1.576 0 002.278-.42z" fillRule="evenodd" />
           </svg>
 
-          <svg onClick={() => { setIsAddPostActive(true); }} className="Add" color="#262626" fill="#262626" height="24" width="24">
+          <svg onClick={() => { setIsAddPostActive(true); scrollY.current = window.scrollY;}} className="Add" color="#262626" fill="#262626" height="24" width="24">
             <path d="M2 12v3.45c0 2.849.698 4.005 1.606 4.944.94.909 2.098 1.608 4.946 1.608h6.896c2.848 0 4.006-.7 4.946-1.608C21.302 19.455 22 18.3 22 15.45V8.552c0-2.849-.698-4.006-1.606-4.945C19.454 2.7 18.296 2 15.448 2H8.552c-2.848 0-4.006.699-4.946 1.607C2.698 4.547 2 5.703 2 8.552z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
             <line fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="6.545" x2="17.455" y1="12.001" y2="12.001" />
             <line fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="12.003" x2="12.003" y1="6.545" y2="17.455" />

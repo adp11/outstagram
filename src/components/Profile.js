@@ -10,12 +10,12 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost,
   } = useContext(UserContext);
   const { uid } = getAuth().currentUser;
   const params = useParams();
   const [isFollowing, setIsFollowing] = useState(
-    userData.following.findIndex((user) => user.uid === params.uid) !== -1
+    userData.following.findIndex((user) => user.uid === params.uid) !== -1,
   );
 
   async function handleViewFullPost(postId) {
@@ -98,7 +98,7 @@ function Profile() {
       setIsFollowing(false);
     }
   }
-  
+
   // Conditional rendering
   const [componentVars, setComponentVars] = useState({
     userAvatar: "",
@@ -112,7 +112,7 @@ function Profile() {
   });
 
   useEffect(() => {
-    console.log(isFollowing, "isFollowing currently: ")
+    // console.log(isFollowing, "isFollowing currently: ");
     if (params.uid === `uid_${uid}` || beforeFullPost.selfProfile) {
       setComponentVars({
         userAvatar: userData.photoURL,
@@ -124,8 +124,7 @@ function Profile() {
         userDisplayName: userData.displayName,
         whichUser: userData,
       });
-    console.log(userData.username, "whichUser");
-
+      // console.log(userData, "whichUser");
     } else {
       setComponentVars({
         userAvatar: visitedUserData.photoURL,
@@ -137,8 +136,7 @@ function Profile() {
         userDisplayName: visitedUserData.displayName,
         whichUser: visitedUserData,
       });
-      console.log(visitedUserData.username, "whichUser");
-
+      // console.log(visitedUserData, "whichUser");
     }
   }, [userData, visitedUserData, params.uid]);
 
@@ -152,12 +150,12 @@ function Profile() {
         <div className="profile-summary">
           <img src={userAvatar} alt="" className="user-avatar" />
           <div className="user-info">
-            <div style={{border: "1px black solid", display: "flex", }}>
+            <div style={{ display: "flex" }}>
               <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
 
               {(params.uid === `uid_${uid}` || beforeFullPost.selfProfile)
                 // eslint-disable-next-line
-                ? <button type="button" onClick={() => { setIsEditProfileActive(true); }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
+                ? <button type="button" onClick={() => { setIsEditProfileActive(true); scrollY.current = window.scrollY; }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
 
                 : isFollowing
                 // eslint-disable-next-line
@@ -224,14 +222,14 @@ function Profile() {
 
                     </svg>
                   </span>
-                  <span>{post.totalComments}</span>
+                  <span>{post.totalLikes}</span>
                   <span>
                     <svg stroke="black" fill="black" strokeWidth="0" viewBox="0 0 512 512" height="20px" width="20px" xmlns="http://www.w3.org/2000/svg">
                       <path fill="black" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="32" d="M87.49 380c1.19-4.38-1.44-10.47-3.95-14.86a44.86 44.86 0 00-2.54-3.8 199.81 199.81 0 01-33-110C47.65 139.09 140.73 48 255.83 48 356.21 48 440 117.54 459.58 209.85a199 199 0 014.42 41.64c0 112.41-89.49 204.93-204.59 204.93-18.3 0-43-4.6-56.47-8.37s-26.92-8.77-30.39-10.11a31.09 31.09 0 00-11.12-2.07 30.71 30.71 0 00-12.09 2.43l-67.83 24.48a16 16 0 01-4.67 1.22 9.6 9.6 0 01-9.57-9.74 15.85 15.85 0 01.6-3.29z" />
 
                     </svg>
                   </span>
-                  <span>{post.totalLikes}</span>
+                  <span>{post.totalComments}</span>
                 </div>
               </div>
             </Link>
