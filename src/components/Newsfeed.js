@@ -12,7 +12,7 @@ import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData, setVisitedUserData,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ function Newsfeed() {
       await updateDoc(postRef, {
         [cmtId]: serverTimestamp(),
         comments: arrayUnion({
-          sourceId: getAuth().currentUser.uid,
+          sourceId: `uid_${getAuth().currentUser.uid}`,
           sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
           sourceComment: postComments[postInfo.postId],
@@ -95,7 +95,7 @@ function Newsfeed() {
   async function handleLikePost(index) { // toggle
     const postInfo = newsfeed[index];
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === getAuth().currentUser.uid);
+    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === `uid_${getAuth().currentUser.uid}`);
     if (targetIndex !== -1) {
       await updateDoc(postRef, {
         likes: postInfo.likes.filter((like, idx) => idx !== targetIndex),
@@ -104,7 +104,7 @@ function Newsfeed() {
     } else {
       await updateDoc(postRef, {
         likes: arrayUnion({
-          sourceId: getAuth().currentUser.uid,
+          sourceId: `uid_${getAuth().currentUser.uid}`,
           sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
           sourceDisplayname: userData.displayName,
@@ -114,14 +114,24 @@ function Newsfeed() {
     }
   }
 
+  async function handleVisitProfile(uid) {
+    console.log("visiting profile", uid);
+    const docRef = doc(db, `users/${uid}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      navigate(`/${uid}`);
+      setVisitedUserData(docSnap.data());
+    }
+  }
+
   return (
     <div className="Newsfeed">
       <div className="newsfeed-container">
         {(newsfeed.length > 0) ? newsfeed.map((post, index) => (
           <div className="NewsfeedPost" key={post.postId}>
             <div className="user-profile">
-              <img className="user-avatar" src={post.authorPhotoURL} alt="" />
-              <span className="username bold medium">{post.authorUsername}</span>
+              <img className="user-avatar" src={post.authorPhotoURL} alt="" onClick={() => { handleVisitProfile(post.authorId); }} />
+              <span className="username bold medium" onClick={() => { handleVisitProfile(post.authorId); }}>{post.authorUsername}</span>
             </div>
 
             <Link to={`p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
@@ -131,9 +141,11 @@ function Newsfeed() {
             </Link>
 
             <div className="post-btns">
-              <svg onClick={() => { handleLikePost(index); }} className="like" color="#262626" fill="#262626" height="24" width="24">
-                <path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 013.679-1.938m0-2a6.04 6.04 0 00-4.797 2.127 6.052 6.052 0 00-4.787-2.127A6.985 6.985 0 00.5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 003.518 3.018 2 2 0 002.174 0 45.263 45.263 0 003.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 00-6.708-7.218z" />
-              </svg>
+              {(post.likes.findIndex((like) => like.sourceId === userData.uid) === -1) ? (
+                <svg onClick={() => { handleLikePost(index); }} color="#262626" fill="#262626" height="24" width="24">
+                  <path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 013.679-1.938m0-2a6.04 6.04 0 00-4.797 2.127 6.052 6.052 0 00-4.787-2.127A6.985 6.985 0 00.5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 003.518 3.018 2 2 0 002.174 0 45.263 45.263 0 003.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 00-6.708-7.218z" />
+                </svg>
+              ) : <svg onClick={() => { handleLikePost(index); }} color="#ed4956" fill="#ed4956" height="24" role="img" viewBox="0 0 48 48" width="24"><path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" /></svg>}
 
               <svg onClick={() => { navigate(`/p/${post.postId}`); handleViewFullPost(index); }} className="comment" color="black" fill="#8e8e8e" height="24" viewBox="0 0 24 24" width="24">
                 <path d="M20.656 17.008a9.993 9.993 0 10-3.59 3.615L22 22z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
@@ -145,7 +157,7 @@ function Newsfeed() {
               </svg>
             </div>
 
-            {post.likes.length > 0 ? (
+            {post.likes.length > 10 ? (
               <div className="post-likes medium">
                 Liked by
                 {" "}
@@ -169,7 +181,7 @@ function Newsfeed() {
               )}
             {post.postCaption && (
             <div className="post-caption medium">
-              <span className="username bold medium">{post.authorUsername}</span>
+              <span className="username bold medium" onClick={() => { handleVisitProfile(post.authorId); }}>{post.authorUsername}</span>
               {" "}
               {post.postCaption}
             </div>
@@ -185,12 +197,12 @@ function Newsfeed() {
             </Link>
             <div className="comment-snippet">
               <div className="comment medium">
-                <span className="username bold medium">{post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].sourceUsername}</span>
+                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 2].sourceId); }}>{post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].sourceUsername}</span>
                 {" "}
                 {post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].sourceComment}
               </div>
               <div className="comment medium">
-                <span className="username bold medium">{post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].sourceUsername}</span>
+                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 1].sourceId); }}>{post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].sourceUsername}</span>
                 {" "}
                 {post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].sourceComment}
               </div>

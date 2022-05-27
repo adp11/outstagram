@@ -42,12 +42,23 @@ npx tailwindcss init
     add post real time bug - FIXED
     include own posts bug - FIXED
 
-    fullpost on --> previewprofile + nav lost bug 
-    editProfile - sync data
+    small UI fix (loading, editprofile form) - commit separate
+    red heart liked - FIXED
+    editProfile (3 fields) - FIXED
+    follow button beside username in fullpost - REMOVED
+    link profile from newsfeed - FIXED
+
+    view following/follower list
+    view like list
     notif
-    red heart liked
-    TODO places
-    follow button beside username in fullpost
-    following/follower list
-    link profile from newsfeed
     deletePost
+
+    shortcut icon bug
+    newsfeed post buttons (copy link, delete post)
+    routing/direct link access
+
+    TRIVIAL
+    TODO places
+    fullpost on --> previewprofile + nav lost bug 
+    replace getAuth()
+
