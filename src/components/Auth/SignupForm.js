@@ -177,7 +177,7 @@ function SignupForm() {
             {signUpError && <small style={{ color: "red" }}>{signUpError}</small>}
           </div>
           <button type="submit">Sign up</button>
-          {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />}
+          {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px", marginTop: "15px" }} />}
         </form>
       </div>
       <div className="login-box">

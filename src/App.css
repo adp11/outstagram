@@ -512,7 +512,6 @@ input[type="search"] {
 .iphoneX {
   height: 100vh;
   width: auto;
-  border: 1px black solid;
 }
 
 .login-container, .signup-container {
@@ -676,14 +675,15 @@ footer > div {
 
 /* Edit profile form ----------------------------------  */
 .EditProfile .file-upload-container {
-  border: 1px black solid;
+  border: 1px #dbdbdb solid;
+  border-radius: 10px;
 }
 
 .EditProfile #file-upload {
   margin-left: 35%;
   width: 30%;
   aspect-ratio: 1 / 1;
-  border: 3px green solid;
+  border: 1px black solid;
   background-size: cover;
   border-radius: 50%;
   position: relative;
@@ -760,7 +760,7 @@ footer > div {
 }
 
 /* utilities */
-.profile-card, .logout-shortcut:hover, .profile-card .username:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover {
+.profile-card, .logout-shortcut:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover, .user-avatar:hover, .username:hover {
   cursor: pointer;
 }
 

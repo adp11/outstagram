@@ -21,23 +21,40 @@ function EditProfile() {
   const { userData, setUserData, setIsEditProfileActive } = useContext(UserContext);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [editProfileError, setEditProfileError] = useState(null);
+  const [editProfileError, setEditProfileError] = useState(false);
   const [previewImageURL, setPreviewImageURL] = useState(null);
-  const [bio, setBio] = useState(null);
-  const [username, setUsername] = useState(null);
+  const [bio, setBio] = useState(userData.bio);
+  const [username, setUsername] = useState(userData.username);
+  const [displayName, setDisplayName] = useState(userData.displayName);
   const [file, setFile] = useState(null);
 
   async function updateUserData(publicImageURL) {
-    if (userData) {
-      userData.username = username;
-      userData.bio = bio;
-      userData.photoURL = publicImageURL;
-    }
-    setUserData(userData);
+    const tempUserData = { ...userData };
 
     const { uid } = getAuth().currentUser;
     const docRef = doc(db, `users/uid_${uid}`);
-    await updateDoc(docRef, { bio: userData.bio, username: userData.username, photoURL: userData.photoURL });
+    if (publicImageURL) {
+      await updateDoc(docRef, {
+        bio,
+        displayName,
+        username,
+        photoURL: publicImageURL,
+      });
+    } else {
+      await updateDoc(docRef, {
+        bio,
+        displayName,
+        username,
+      });
+    }
+
+    tempUserData.username = username;
+    tempUserData.bio = bio;
+    tempUserData.displayName = displayName;
+    if (publicImageURL) {
+      tempUserData.photoURL = publicImageURL;
+    }
+    setUserData(tempUserData);
   }
 
   async function handleEditProfileSubmission(e) {
@@ -72,7 +89,7 @@ function EditProfile() {
       setEditProfileError("You can only share images");
       return;
     }
-    setPreviewImageURL(URL.createObjectURL(fileSelected)); // TODO: prevent vertical image
+    setPreviewImageURL(URL.createObjectURL(fileSelected));
     setFile(fileSelected);
   }
 
@@ -131,15 +148,21 @@ function EditProfile() {
             </label>
           </div>
           <div className="form-row">
-            <label className="bold">Username</label>
-            <input onChange={(e) => { console.log(e.target.value); setUsername(e.target.value); }} type="text" defaultValue={userData && userData.username} />
+            <label className="bold" htmlFor="username">Username</label>
+            <input id="username" onChange={(e) => { console.log(e.target.value); setUsername(e.target.value); }} type="text" defaultValue={userData && userData.username} />
           </div>
           <div className="form-row">
-            <label className="bold">Bio</label>
-            <textarea onChange={(e) => { setBio(e.target.value); }} defaultValue={(userData && userData.bio) || "none"} />
+            <label className="bold" htmlFor="fullname">Full Name</label>
+            <input id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} type="text" defaultValue={userData && userData.displayName} />
+            {/* <textarea id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} defaultValue={(userData && userData.displayName)} /> */}
           </div>
-          {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />}
+          <div className="form-row">
+            <label className="bold" htmlFor="bio">Bio</label>
+            <textarea id="bio" onChange={(e) => { setBio(e.target.value); }} defaultValue={(userData && userData.bio)} />
+          </div>
           <button onSubmit={handleEditProfileSubmission} type="button submit" className="btn btn-outline-primary">SAVE</button>
+          {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px", display: "block", marginTop: "15px", marginLeft: "50%" }} />}
+
         </form>
         <div />
       </div>
