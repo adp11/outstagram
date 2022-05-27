@@ -8,6 +8,7 @@ import React, {
 import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
+import { computeHowLongAgo } from "../utils";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
 
@@ -199,7 +200,7 @@ function FullPost() {
         authorPhotoURL: newsfeed[fullPostIndex].authorPhotoURL,
         postPictureURL: newsfeed[fullPostIndex].imageURL,
         postCaption: newsfeed[fullPostIndex].postCaption,
-        postCreationTime: newsfeed[fullPostIndex].creationTime.seconds,
+        postCreationTime: computeHowLongAgo(newsfeed[fullPostIndex].creationTime.seconds),
         postCmts: newsfeed[fullPostIndex].comments,
         postLikes: newsfeed[fullPostIndex].likes,
         postId: newsfeed[fullPostIndex].postId,
@@ -211,7 +212,7 @@ function FullPost() {
         authorPhotoURL: fullPostInfo.authorPhotoURL,
         postPictureURL: fullPostInfo.imageURL,
         postCaption: fullPostInfo.postCaption,
-        postCreationTime: fullPostInfo.creationTime.seconds,
+        postCreationTime: computeHowLongAgo(fullPostInfo.creationTime.seconds),
         postCmts: fullPostInfo.comments,
         postLikes: fullPostInfo.likes,
         postId: fullPostInfo.postId,
@@ -268,7 +269,7 @@ function FullPost() {
                   {" "}
                   <span className="user-comment medium">{comment.sourceComment}</span>
                   {" "}
-                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{(fromWhich && fromWhich[comment.sourceCommentTime]) && fromWhich[comment.sourceCommentTime].seconds}</small>
+                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{(fromWhich && fromWhich[comment.sourceCommentTime]) && computeHowLongAgo(fromWhich[comment.sourceCommentTime].seconds)}</small>
                 </div>
               </div>
             ))}

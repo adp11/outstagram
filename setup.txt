@@ -37,8 +37,17 @@ npx tailwindcss init
     scroll bug - FIXED
     postSnippet bug - FIXED 
     
-    computeHowLongAgo
-    order posts when popups on and not bug
-    potential bugs with postSnippets, when include own posts
+    computeHowLongAgo - FIXED
+    order posts when popups on and not on bug - FIXED
+    add post real time bug - FIXED
+    include own posts bug - FIXED
+
+    fullpost on --> previewprofile + nav lost bug 
     editProfile - sync data
+    notif
+    red heart liked
+    TODO places
+    follow button beside username in fullpost
+    following/follower list
+    link profile from newsfeed
     deletePost

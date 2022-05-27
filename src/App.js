@@ -17,7 +17,7 @@ import FullPost from "./components/FullPost";
 import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
-import { quickSort, insert } from "./utils";
+import { insert } from "./utils";
 import Page404 from "./Page404";
 
 function App() {
@@ -47,50 +47,58 @@ function App() {
   /*
     1. fetch Newsfeed is designed to real-time listen to remote db
     2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
+    3. There are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
+    4. 10 outermost keys at least in a PROPER "change.doc.data()" object
     */
 
-    function getRealTimeUpdates(q) {
-      return onSnapshot(q, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "removed") {
-            console.log("before removed");
-            const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-            tempNewsfeed.splice(deletePosition, 1);
-          } else if (change.type === "added") {
-            console.log("before add");
-            insert(change.doc.data(), tempNewsfeed); // old to recent - need to be reversed later when populating
-          } else {
-            console.log("before modified");
-            const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-            tempNewsfeed.splice(modifiedPosition, 1, change.doc.data());
+  function getRealTimeUpdates(q) {
+    return onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "removed") {
+          console.log("before removed");
+          const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+          tempNewsfeed.splice(deletePosition, 1);
+        } else if (change.type === "added") {
+          // console.log(tempNewsfeed, "before add", change.doc.data(), "length", Object.keys(change.doc.data()).length);
+          const data = change.doc.data();
+          if (Object.keys(data).length >= 10) {
+            insert(tempNewsfeed, change.doc.data()); // recent to old - big to small UnixTime
           }
-        });
-        setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
+        } else {
+          console.log("before modified");
+          const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
+          const data = change.doc.data();
+          if (modifiedPosition !== -1) {
+            tempNewsfeed.splice(modifiedPosition, 1, data);
+          } else if (modifiedPosition === -1 && Object.keys(data).length >= 10) {
+            insert(tempNewsfeed, change.doc.data());
+          }
+          // console.log(tempNewsfeed, "tempNewsfeed after addPost", modifiedPosition);
+        }
       });
-    }
+      console.log("tempNewsfeed before setNewsfeed()", tempNewsfeed);
+      setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
+    });
+  }
 
-  // BUG TODO
+  // BUG: double rerender from 2 setNewsfeed() from 2 real-time listening blocks of code
   function fetchNewsfeed() {
-    // // posts from self
-    // const q1 = query(collection(db, `users/${userData.uid}/posts`));
-    // stopRealTimeListen1 = getRealTimeUpdates(q1);
-
-    // posts from people user follows
     const { following } = userData;
     if (following.length) {
+      // posts from self
+      const q1 = query(collection(db, `users/${userData.uid}/posts`));
+      stopRealTimeListen1 = getRealTimeUpdates(q1);
+
+      // posts from people user follows
       following.forEach((followee) => {
         const q2 = query(collection(db, `users/${followee.uid}/posts`));
         stopRealTimeListen2 = getRealTimeUpdates(q2);
       });
     } else {
-      setNewsfeed([]);
+      // posts from self
+      const q1 = query(collection(db, `users/${userData.uid}/posts`));
+      stopRealTimeListen1 = getRealTimeUpdates(q1);
     }
-
-    // console.log("self is next");
-    // // posts from self
-    // console.log(userData.uid);
-    // const q1 = query(collection(db, `users/${userData.uid}/posts`));
-    // stopRealTimeListen1 = getRealTimeUpdates(q1);
   }
 
   const providerValue = useMemo(
@@ -154,6 +162,10 @@ function App() {
       fetchNewsfeed();
     }
   }, [userData]);
+
+  // useEffect(() => {
+  //   console.log("newsfeed change because of add post somewhere else");
+  // }, [newsfeed]);
 
   /*
   1. Triggered upon both mouting and dependency changes

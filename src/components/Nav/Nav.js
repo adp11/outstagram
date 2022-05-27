@@ -10,7 +10,7 @@ function Nav() {
   const navigate = useNavigate();
 
   function refresh() {
-    // fetchNewsfeed();
+    fetchNewsfeed();
     window.scrollTo(0, 0);
     navigate("/");
   }

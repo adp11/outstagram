@@ -8,6 +8,7 @@ import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
+import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
   const {
@@ -70,6 +71,7 @@ function Newsfeed() {
   async function handleSubmitPostComment(e, index) {
     e.preventDefault();
     const postInfo = newsfeed[index];
+    console.log(postInfo.postId, "postInfo.postId");
     if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
       const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
       const cmtId = uniqid();
@@ -115,7 +117,7 @@ function Newsfeed() {
   return (
     <div className="Newsfeed">
       <div className="newsfeed-container">
-        {(newsfeed.length > 0) ? newsfeed.reverse().map((post, index) => (
+        {(newsfeed.length > 0) ? newsfeed.map((post, index) => (
           <div className="NewsfeedPost" key={post.postId}>
             <div className="user-profile">
               <img className="user-avatar" src={post.authorPhotoURL} alt="" />
@@ -142,6 +144,7 @@ function Newsfeed() {
                 <polygon fill="none" points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
               </svg>
             </div>
+
             {post.likes.length > 0 ? (
               <div className="post-likes medium">
                 Liked by
@@ -164,11 +167,13 @@ function Newsfeed() {
                   likes
                 </div>
               )}
+            {post.postCaption && (
             <div className="post-caption medium">
               <span className="username bold medium">{post.authorUsername}</span>
               {" "}
               {post.postCaption}
             </div>
+            )}
             <Link to={`p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
               <div className="post-all-comments grey medium">
                 View all
@@ -191,10 +196,10 @@ function Newsfeed() {
               </div>
             </div>
 
-            <div className="grey extrasmall" style={{ margin: "0 20px" }}>{post.creationTime.seconds}</div>
+            <div className="grey extrasmall" style={{ margin: "0 20px" }}>{computeHowLongAgo(post.creationTime.seconds, false)}</div>
 
             <form onSubmit={(e) => { handleSubmitPostComment(e, index); }} className="post-comment-box">
-              <textarea onChange={(e) => { setPostComments({ ...postComments, [post.postId]: e.target.value }); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
+              <textarea onChange={(e) => { console.log({ ...postComments, [post.postId]: e.target.value }); setPostComments({ ...postComments, [post.postId]: e.target.value }); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
               <span onClick={(e) => { handleSubmitPostComment(e, index); }} className="submit-btn" type="submit">Post</span>
             </form>
           </div>
