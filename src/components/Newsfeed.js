@@ -12,7 +12,7 @@ import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData, setVisitedUserData,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData, setVisitedUserData, setIsLikeListActive, setLikeListInfo,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -29,6 +29,15 @@ function Newsfeed() {
       visitedProfile: false,
     });
     setFullPostIndex(index);
+  }
+
+  function handleViewLikeList(postLikes) {
+    scrollY.current = window.scrollY;
+    setIsLikeListActive(true);
+    setLikeListInfo({
+      postLikes,
+      fromNewsfeed: true,
+    });
   }
 
   async function updatePostSnippets(type, postInfo) {
@@ -158,7 +167,7 @@ function Newsfeed() {
             </div>
 
             {post.likes.length > 10 ? (
-              <div className="post-likes medium">
+              <div className="post-likes medium" onClick={() => { handleViewLikeList(post.likes); }}>
                 Liked by
                 {" "}
                 <span className="username medium bold">{post.likes[post.likes.length - 1].sourceUsername}</span>
@@ -173,7 +182,7 @@ function Newsfeed() {
               </div>
             )
               : (
-                <div className="post-likes medium bold">
+                <div className="post-likes medium bold" onClick={() => { handleViewLikeList(post.likes); }}>
                   {post.likes.length}
                   {" "}
                   likes

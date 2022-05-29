@@ -19,12 +19,19 @@ import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
 import { insert } from "./utils";
 import Page404 from "./Page404";
+import LikeList from "./components/LikeList";
+import FollowList from "./components/FollowList";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
   const [isEditProfileActive, setIsEditProfileActive] = useState(false);
   const [isFullPostActive, setIsFullPostActive] = useState(false);
+  const [isLikeListActive, setIsLikeListActive] = useState(false);
+  const [isFollowListActive, setIsFollowListActive] = useState({
+    followers: false,
+    following: false,
+  });
 
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
@@ -37,6 +44,11 @@ function App() {
   });
   const [fullPostIndex, setFullPostIndex] = useState(null);
   const [fullPostInfo, setFullPostInfo] = useState(null);
+  const [likeListInfo, setLikeListInfo] = useState({});
+  const [followListInfo, setFollowListInfo] = useState({
+    followers: [],
+    following: [],
+  });
 
   const tempNewsfeed = []; // for state immutability
   const tempAllUserData = []; // for state immutability
@@ -103,9 +115,9 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData, likeListInfo, setLikeListInfo, isLikeListActive, setIsLikeListActive, followListInfo, setFollowListInfo, isFollowListActive, setIsFollowListActive,
     }),
-    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo],
+    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive],
   );
 
   useEffect(() => {
@@ -172,19 +184,19 @@ function App() {
   2. Prefer abrupt scroll (not smooth)
   */
   useEffect(() => {
-    if (!(isAddPostActive && isEditProfileActive && isFullPostActive)) {
+    if (!(isAddPostActive && isEditProfileActive && isFullPostActive && isLikeListActive && (isFollowListActive.followers || isFollowListActive.following))) {
       window.scrollTo(0, scrollY.current);
       // scrollY.current = 0;
     }
-  }, [isFullPostActive, isEditProfileActive, isAddPostActive]);
+  }, [isFullPostActive, isEditProfileActive, isAddPostActive, isLikeListActive, isFollowListActive]);
 
   return (
     <div>
       <BrowserRouter>
         <UserContext.Provider value={providerValue}>
           <div
-            className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive) ? "blur" : ""}`}
-            style={{ position: (isAddPostActive || isEditProfileActive || isFullPostActive) && "fixed", top: (isAddPostActive || isEditProfileActive || isFullPostActive) && `-${scrollY.current}px` }}
+            className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) ? "blur opac" : ""}`}
+            style={{ position: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && "fixed", top: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && `-${scrollY.current}px` }}
           >
             {!isLoggedIn && <Auth />}
             {isLoggedIn && <Nav />}
@@ -209,6 +221,8 @@ function App() {
             <Route path="*" element={<Page404 />} />
           </Routes>
           )}
+          {isLikeListActive && <LikeList />}
+          {(isFollowListActive.followers || isFollowListActive.following) && <FollowList />}
         </UserContext.Provider>
       </BrowserRouter>
     </div>

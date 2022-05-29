@@ -150,7 +150,7 @@ input[type="search"] {
   padding: 25px 15px;
 }
 
-.Notifications .src-avatar {
+.Notifications .src-avatar, .LikeList .src-avatar, .FollowList .src-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -589,7 +589,7 @@ footer > div {
 
 
 /* Add post form ----------------------------------  */
-.AddPost, .EditProfile {
+.AddPost, .EditProfile, .LikeList, .FollowList {
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -597,27 +597,28 @@ footer > div {
   justify-content: center;
   position: fixed;
   bottom: 0;
-  z-index: 2;
+  z-index: 3;
 }
 
-.AddPost .container, .EditProfile .container {
+.AddPost .container, .EditProfile .container, .LikeList .container, .FollowList .container {
   background-color: #fff;
   width: 380px;
   /* height: 480px; */
-  border: 1px black solid;
+  border: 1px #dbdbdb solid;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   padding: 10px;
-  z-index: 3;
+  z-index: 4;
 }
 
-.AddPost form {
+.AddPost form, .LikeList .list, .FollowList .list {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* justify-content: center; */
   gap: 20px;
 }
 
@@ -760,7 +761,7 @@ footer > div {
 }
 
 /* utilities */
-.profile-card, .logout-shortcut:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover, .user-avatar:hover, .username:hover {
+.profile-card, .logout-shortcut:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover, .user-avatar:hover, .username:hover, .post-likes:hover, .src-avatar:hover, .user-stats > *:hover {
   cursor: pointer;
 }
 
@@ -790,8 +791,11 @@ form input:focus, textarea:focus {
 
 .blur {
   filter: blur(1px);
-  opacity: 0.5;
   /* background-color: #fff; */
+}
+
+.opac {
+  opacity: 0.5;
 }
 
 .cut1 {

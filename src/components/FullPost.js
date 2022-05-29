@@ -3,7 +3,7 @@ import {
   arrayUnion, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
 import React, {
-  useEffect, useContext, useState, useRef,
+  useEffect, useContext, useState, useRef, useMemo,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
@@ -16,7 +16,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 
 function FullPost() {
   const {
-    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData,
+    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -38,6 +38,15 @@ function FullPost() {
     fromWhich: null,
   });
   const textareaRef = useRef();
+
+  function handleViewLikeList(postLikes) {
+    scrollY.current = window.scrollY;
+    setIsLikeListActive(true);
+    setLikeListInfo({
+      postLikes,
+      fromFullPost: true,
+    });
+  }
 
   function handleCloseFullPost(redirect = true) {
     setIsFullPostActive(false);
@@ -234,6 +243,8 @@ function FullPost() {
     authorId, authorUsername, authorPhotoURL, postPictureURL, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
   } = componentVars;
 
+  // const providerValue = useMemo(() => handleCloseFullPost());
+
   async function handleVisitProfile(uid) {
     handleCloseFullPost(false); // prevent nagivate() 2 times
     console.log("visiting profile", uid);
@@ -246,7 +257,7 @@ function FullPost() {
   }
 
   return (
-    <div className="FullPost">
+    <div className={`FullPost ${(isLikeListActive) ? "blur" : ""}`}>
       {/* eslint-disable-next-line */}
       <i
         onClick={handleCloseFullPost}
@@ -268,15 +279,15 @@ function FullPost() {
           </div>
           <div className="comment-section">
             {postCaption && (
-            <div className="post-caption">
-              <img className="user-avatar" src={authorPhotoURL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
-              <div>
-                <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
-                {" "}
-                <span className="medium">{postCaption}</span>
-                <small style={{ display: "block", marginTop: "10px" }} className="grey small">{postCreationTime}</small>
+              <div className="post-caption">
+                <img className="user-avatar" src={authorPhotoURL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
+                <div>
+                  <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
+                  {" "}
+                  <span className="medium">{postCaption}</span>
+                  <small style={{ display: "block", marginTop: "10px" }} className="grey small">{postCreationTime}</small>
+                </div>
               </div>
-            </div>
             )}
             {/* .NewsfeedPost .user-avatar:hover, .NewsfeedPost .username:hover, .FullPost .username:hover, .FullPost .user-avatar:hover */}
             {postCmts.map((comment) => (
@@ -317,7 +328,7 @@ function FullPost() {
           </div>
 
           {postLikes.length > 10 ? (
-            <div className="post-likes medium">
+            <div className="post-likes medium" onClick={() => { handleViewLikeList(postLikes); }}>
               Liked by
               {" "}
               <span className="username medium bold">{postLikes[postLikes.length - 1].sourceUsername}</span>
@@ -332,7 +343,7 @@ function FullPost() {
             </div>
           )
             : (
-              <div className="post-likes medium bold">
+              <div className="post-likes medium bold" onClick={() => { handleViewLikeList(postLikes); }}>
                 {postLikes.length}
                 {" "}
                 likes

@@ -1,6 +1,8 @@
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useContext, useEffect, useRef, useState,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
@@ -10,13 +12,17 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost,
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost, setIsFollowListActive, setFollowListInfo,
   } = useContext(UserContext);
   const { uid } = getAuth().currentUser;
   const params = useParams();
-  const [isFollowing, setIsFollowing] = useState(
-    userData.following.findIndex((user) => user.uid === params.uid) !== -1,
-  );
+  const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
+  const [isFollowing, setIsFollowing] = useState(isCurrentUserFollowing);
+  const profilePostsRef = useRef(null);
+
+  useEffect(() => {
+    console.log(isFollowing, "isFollowing currently is: ");
+  }, [isFollowing]);
 
   async function handleViewFullPost(postId) {
     let docRef;
@@ -74,7 +80,7 @@ function Profile() {
 
       // update visited user's followers data
       tempVisitedUserData.followers.push({
-        uid,
+        uid: `uid_${uid}`,
         photoURL: userData.photoURL,
         username: userData && userData.username,
         userDisplayName: userData && userData.displayName,
@@ -96,6 +102,29 @@ function Profile() {
       updateFollowersData(tempVisitedUserData);
 
       setIsFollowing(false);
+    }
+  }
+
+  function handleViewFollowList(followListInfo, type) {
+    scrollY.current = window.scrollY;
+    if (type === "followers") {
+      setIsFollowListActive({
+        followers: true,
+        following: false,
+      });
+      setFollowListInfo({
+        followers: followListInfo,
+        following: [],
+      });
+    } else {
+      setIsFollowListActive({
+        followers: false,
+        following: true,
+      });
+      setFollowListInfo({
+        followers: [],
+        following: followListInfo,
+      });
     }
   }
 
@@ -177,15 +206,15 @@ function Profile() {
                 : <button onClick={handleFollowToggle} type="button" style={{ padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px" }}>Follow</button>}
             </div>
             <div className="user-stats">
-              <div className="posts">
+              <div className="posts" onClick={() => { profilePostsRef.current.scrollIntoView(); }}>
                 <span>{totalPosts}</span>
                 posts
               </div>
-              <div className="followers">
+              <div className="followers" onClick={() => { handleViewFollowList(whichUser.followers); }}>
                 <span>{totalFollowers}</span>
                 followers
               </div>
-              <div className="following">
+              <div className="following" onClick={() => { handleViewFollowList(whichUser.following); }}>
                 <span>{totalFollowing}</span>
                 following
               </div>
@@ -210,7 +239,7 @@ function Profile() {
         </div>
         )}
 
-        <div className="profile-posts">
+        <div className="profile-posts" ref={profilePostsRef}>
           {whichUser && whichUser.postSnippets.length > 0 ? whichUser.postSnippets.slice(0).reverse().map((post) => (
             <Link to={`/p/${post.postId}`} onClick={() => { handleViewFullPost(post.postId); }} key={post.postId}>
               <div className="profile-post" key={post.postId}>

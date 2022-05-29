@@ -29,7 +29,6 @@ npx tailwindcss init
     ],
     
 
-    follow/unfollow display UI bug
     view visitedProfile -> view full post --> selfProfile background bug - FIXED
     operations on fullpost from visitedProfile bug - FIXED
 
@@ -42,16 +41,18 @@ npx tailwindcss init
     add post real time bug - FIXED
     include own posts bug - FIXED
 
-    small UI fix (loading, editprofile form) - commit separate
+    small UI fix (loading, editprofile form) - commit separate - FIXED
     red heart liked - FIXED
-    editProfile (3 fields) - FIXED
+    editProfile (3 fields) - FIXED 
     follow button beside username in fullpost - REMOVED
     link profile from newsfeed - FIXED
 
-    view following/follower list
-    view like list
-    notif
+    ======>>>>>>> UPDATED POSTS (editProfile) - FIXED
+    follow/unfollow display UI bug -- FIXED (need follow-up)
+    view like list - ADDED
+    view following/follower list - ADDED
     deletePost
+    notif
 
     shortcut icon bug
     newsfeed post buttons (copy link, delete post)
@@ -61,4 +62,8 @@ npx tailwindcss init
     TODO places
     fullpost on --> previewprofile + nav lost bug 
     replace getAuth()
+
+    LATER:
+    remove console.log
+    organize codebase and manual-test along
 

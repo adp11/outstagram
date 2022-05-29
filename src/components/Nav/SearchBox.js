@@ -1,7 +1,9 @@
+import { doc, getDoc } from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 function SearchBox() {
@@ -10,6 +12,17 @@ function SearchBox() {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const dropdownRef = useRef(null);
   const searchBoxRef = useRef(null);
+  const navigate = useNavigate();
+
+  async function handleVisitProfile(uid) {
+    const docRef = doc(db, `users/${uid}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      setVisitedUserData(docSnap.data());
+    }
+    setIsSearchActive(false);
+    navigate(`/${uid}`);
+  }
 
   function useOutsideAlerter(ref1, ref2) {
     useEffect(() => {
@@ -48,15 +61,13 @@ function SearchBox() {
       {isSearchActive && (
       <div className="dropdown" ref={dropdownRef}>
         {searchResults.length ? searchResults.map((result) => (
-          <Link to={`/${result.uid}`} key={result.uid} onClick={() => { setVisitedUserData(result); setIsSearchActive(false); }}>
-            <div className="search-result">
-              <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
-              <div>
-                <div className="bold medium cut1">{result.username}</div>
-                <div className="grey medium">{result.displayName}</div>
-              </div>
+          <div className="search-result" key={result.uid} onClick={() => { handleVisitProfile(result.uid); }}>
+            <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
+            <div>
+              <div className="bold medium cut1">{result.username}</div>
+              <div className="grey medium">{result.displayName}</div>
             </div>
-          </Link>
+          </div>
         ))
           : <div className="no-result bold grey">No results found.</div>}
       </div>

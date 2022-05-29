@@ -3,6 +3,9 @@ import React, { useContext, useEffect, useState } from "react";
 import {
   updateDoc,
   doc,
+  collection,
+  getDocs,
+  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -18,7 +21,9 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function EditProfile() {
-  const { userData, setUserData, setIsEditProfileActive } = useContext(UserContext);
+  const {
+    userData, allUserData, setUserData, setIsEditProfileActive, fetchAllUserData,
+  } = useContext(UserContext);
 
   const [isLoading, setIsLoading] = useState(false);
   const [editProfileError, setEditProfileError] = useState(false);
@@ -57,6 +62,28 @@ function EditProfile() {
     setUserData(tempUserData);
   }
 
+  async function updateAcrossPosts(publicImageURL) {
+    // each user
+    allUserData.forEach(async (data) => {
+      const querySnapshot = await getDocs(collection(db, `users/${data.uid}/posts`));
+      // each post
+      querySnapshot.forEach(async (document) => {
+        const postRef = doc(db, `users/${data.uid}/posts/${document.id}`);
+        if (publicImageURL) {
+          await updateDoc(postRef, {
+            authorUsername: username,
+            authorPhotoURL: publicImageURL,
+          });
+        } else {
+          await updateDoc(postRef, {
+            authorUsername: username,
+          });
+        }
+      });
+    });
+    // fetchAllUserData(); // optional
+  }
+
   async function handleEditProfileSubmission(e) {
     e.preventDefault();
     let newImageRef;
@@ -77,6 +104,7 @@ function EditProfile() {
 
       setIsEditProfileActive(false);
       updateUserData(publicImageURL);
+      updateAcrossPosts(publicImageURL);
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);
       await deleteObject(newImageRef); // undo code executed inside try block
@@ -161,7 +189,15 @@ function EditProfile() {
             <textarea id="bio" onChange={(e) => { setBio(e.target.value); }} defaultValue={(userData && userData.bio)} />
           </div>
           <button onSubmit={handleEditProfileSubmission} type="button submit" className="btn btn-outline-primary">SAVE</button>
-          {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px", display: "block", marginTop: "15px", marginLeft: "50%" }} />}
+          {isLoading && (
+          <img
+            src={LOADING_IMAGE_URL}
+            alt="loading"
+            style={{
+              width: "24px", height: "24px", display: "block", marginTop: "15px", marginLeft: "50%",
+            }}
+          />
+          )}
 
         </form>
         <div />
