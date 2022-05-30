@@ -97,7 +97,7 @@ input[type="search"] {
   position: relative;
 }
 
-.Account .dropdown {
+.Account .dropdown, .FullPost .dropdown {
   box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
   border-radius: 10px;
   position: absolute;
@@ -109,7 +109,7 @@ input[type="search"] {
   flex-direction: column;
 }
 
-.Account .dropdown > * {
+.Account .dropdown > *, .FullPost .dropdown > * {
   display: flex;
   align-items: center;
   font-size: 14px;
@@ -117,13 +117,19 @@ input[type="search"] {
   /* border: 1px black solid; */
 }
 
-.Account .dropdown > *:hover, .search-result:hover {
+.Account .dropdown > *:hover, .search-result:hover, .FullPost .dropdown > *:hover {
   background-color: #efefef;
   cursor: pointer;
 }
 
 .Account .dropdown svg, .Account .dropdown img {
   width: 20px;
+  margin-left: 20px;
+  margin-right: 10px;
+}
+
+.FullPost .dropdown i {
+  width: 10px;
   margin-left: 20px;
   margin-right: 10px;
 }
@@ -141,6 +147,8 @@ input[type="search"] {
   flex-direction: column;
   overflow: auto;
   background-color: #fff;
+  max-width: 470px;
+  max-height: 470px;
 }
 
 .Notifications .notification {
@@ -150,18 +158,20 @@ input[type="search"] {
   padding: 25px 15px;
 }
 
-.Notifications .src-avatar, .LikeList .src-avatar, .FollowList .src-avatar {
+.Notifications .src-avatar, .LikeList .src-avatar, .FollowList .src-avatar, .src-pic {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   margin-right: 15px;
+  align-self: flex-start;
 }
+
 
 .Notifications .src-action-on {
   width: 40px;
   height: 40px;
-  border-radius: 5%;
   margin-left: auto;
+  object-fit: contain;
 }
 
 .Notifications .dropdown > *:not(div:last-child) {

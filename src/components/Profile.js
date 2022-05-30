@@ -1,11 +1,13 @@
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
+import uniqid from "uniqid";
 import { Link, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
+import Snackbar from "./Snackbar";
 
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
@@ -14,7 +16,6 @@ function Profile() {
   const {
     userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost, setIsFollowListActive, setFollowListInfo,
   } = useContext(UserContext);
-  const { uid } = getAuth().currentUser;
   const params = useParams();
   const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
   const [isFollowing, setIsFollowing] = useState(isCurrentUserFollowing);
@@ -28,7 +29,7 @@ function Profile() {
     let docRef;
     scrollY.current = window.scrollY;
     setIsFullPostActive(true);
-    if (params.uid === `uid_${uid}` || params.postId) {
+    if (params.uid === userData.uid || params.postId) {
       setBeforeFullPost({
         newsfeed: false,
         selfProfile: true,
@@ -51,7 +52,7 @@ function Profile() {
   }
 
   async function updateFollowingData(tempUserData) {
-    const docRef = doc(db, `users/uid_${uid}`);
+    const docRef = doc(db, `users/${userData.uid}`);
     await updateDoc(docRef, { following: tempUserData.following });
   }
 
@@ -60,9 +61,41 @@ function Profile() {
     await updateDoc(docRef, { followers: tempVisitedUserData.followers });
   }
 
+  async function updateNotifications({ uid }, notificationType) {
+    const collectionPath = `users/${uid}/notifications`;
+    if (notificationType === "follow") {
+      // update to Notifications subcollection
+      const notifRef = await addDoc(collection(db, collectionPath), {
+        creationTime: serverTimestamp(),
+      });
+
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "follow",
+      });
+
+      // update to totalNotifs snippet
+      const docRef = doc(db, `users/${uid}`);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          totalNotifs: docSnap.data().totalNotifs + 1,
+        });
+      }
+
+      // Set the "capital" field of the city 'DC'
+    } else if (notificationType === "like") {
+      //
+    }
+  }
+
   function handleFollowToggle() {
     const positionInFollowing = userData.following.findIndex((user) => user.uid === params.uid);
-    const positionInFollowers = visitedUserData.followers.findIndex((user) => user.uid === uid);
+    const positionInFollowers = visitedUserData.followers.findIndex((user) => user.uid === userData.uid);
     const tempUserData = { ...userData };
     const tempVisitedUserData = { ...visitedUserData };
 
@@ -80,7 +113,7 @@ function Profile() {
 
       // update visited user's followers data
       tempVisitedUserData.followers.push({
-        uid: `uid_${uid}`,
+        uid: userData.uid,
         photoURL: userData.photoURL,
         username: userData && userData.username,
         userDisplayName: userData && userData.displayName,
@@ -89,6 +122,7 @@ function Profile() {
       updateFollowersData(tempVisitedUserData);
 
       setIsFollowing(true);
+      updateNotifications(tempVisitedUserData, "follow");
       // if unfollowing
     } else {
       // update current user's following data
@@ -142,7 +176,7 @@ function Profile() {
 
   useEffect(() => {
     // console.log(isFollowing, "isFollowing currently: ");
-    if (params.uid === `uid_${uid}` || beforeFullPost.selfProfile) {
+    if (params.uid === userData.uid || beforeFullPost.selfProfile) {
       setComponentVars({
         userAvatar: userData.photoURL,
         username: userData.username,
@@ -182,7 +216,7 @@ function Profile() {
             <div style={{ display: "flex" }}>
               <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
 
-              {(params.uid === `uid_${uid}` || beforeFullPost.selfProfile)
+              {(params.uid === userData.uid || beforeFullPost.selfProfile)
                 // eslint-disable-next-line
                 ? <button type="button" onClick={() => { setIsEditProfileActive(true); scrollY.current = window.scrollY; }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
 
@@ -210,11 +244,11 @@ function Profile() {
                 <span>{totalPosts}</span>
                 posts
               </div>
-              <div className="followers" onClick={() => { handleViewFollowList(whichUser.followers); }}>
+              <div className="followers" onClick={() => { handleViewFollowList(whichUser.followers, "followers"); }}>
                 <span>{totalFollowers}</span>
                 followers
               </div>
-              <div className="following" onClick={() => { handleViewFollowList(whichUser.following); }}>
+              <div className="following" onClick={() => { handleViewFollowList(whichUser.following, "following"); }}>
                 <span>{totalFollowing}</span>
                 following
               </div>

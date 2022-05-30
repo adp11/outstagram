@@ -1,8 +1,11 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
+} from "firebase/firestore";
 import React, {
   useContext, useEffect, useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
@@ -21,12 +24,44 @@ function FollowList() {
     await updateDoc(docRef, { following: tempCurrentUserData.following });
   }
 
-  async function handleFollowToggle(followerInfo, type) {
+  async function updateNotifications({ uid }, notificationType) {
+    const collectionPath = `users/${uid}/notifications`;
+    if (notificationType === "follow") {
+      // update to Notifications subcollection
+      const notifRef = await addDoc(collection(db, collectionPath), {
+        creationTime: serverTimestamp(),
+      });
+
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "follow",
+      });
+
+      // update to totalNotifs snippet
+      const docRef = doc(db, `users/${uid}`);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          totalNotifs: docSnap.data().totalNotifs + 1,
+        });
+      }
+
+      // Set the "capital" field of the city 'DC'
+    } else if (notificationType === "like") {
+      //
+    }
+  }
+
+  async function handleFollowToggle(followInfo, type) {
     let tempCurrentUserData;
     let tempTargetUserData;
 
     if (type === "unfollow") {
-      const positionInFollowing = userData.following.findIndex((user) => user.uid === followerInfo.uid);
+      const positionInFollowing = userData.following.findIndex((user) => user.uid === followInfo.uid);
       tempCurrentUserData = { ...userData };
 
       // update current user's following data
@@ -35,7 +70,7 @@ function FollowList() {
       updateFollowingData(tempCurrentUserData);
 
       // update target user's followers data
-      const docRef = doc(db, `users/${followerInfo.uid}`);
+      const docRef = doc(db, `users/${followInfo.uid}`);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -47,7 +82,7 @@ function FollowList() {
     } else {
       const {
         uid, photoURL, userDisplayName, username,
-      } = followerInfo;
+      } = followInfo;
 
       // update current user's following data
       tempCurrentUserData = { ...userData };
@@ -74,6 +109,7 @@ function FollowList() {
         });
         await updateDoc(docRef, { followers: tempTargetUserData.followers });
       }
+      updateNotifications(tempTargetUserData, "follow");
     }
   }
 
@@ -158,10 +194,9 @@ function FollowList() {
               <img src={follow.photoURL} alt="user's pic" className="src-avatar" onClick={() => { handleVisitProfile(follow.uid); }} />
               <div>
                 {/* eslint-disable-next-line */}
-                <div className="bold medium cut1 username" onClick={() => { handleVisitProfile(follow.uid); }}>{follow.username}</div>
+                <div className="bold medium cut1 username">{follow.username}</div>
                 <div className="grey medium">{follow.userDisplayName}</div>
               </div>
-
               {(userData.following.findIndex((followee) => followee.uid === follow.uid) !== -1) ? (
                 // eslint-disable-next-line
                 <button type="button" style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500", fontSize: "14px", marginLeft: "auto" }}onClick={() => {handleFollowToggle(follow, "unfollow")}}>Following</button>

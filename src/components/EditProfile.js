@@ -36,8 +36,7 @@ function EditProfile() {
   async function updateUserData(publicImageURL) {
     const tempUserData = { ...userData };
 
-    const { uid } = getAuth().currentUser;
-    const docRef = doc(db, `users/uid_${uid}`);
+    const docRef = doc(db, `users/${userData.uid}`);
     if (publicImageURL) {
       await updateDoc(docRef, {
         bio,
@@ -92,7 +91,7 @@ function EditProfile() {
       let publicImageURL;
       if (file) {
         // 1 - Upload the image to Cloud Storage, using that postRef.
-        const filePath = `uid_${getAuth().currentUser.uid}/userPhotos/${file.name}`;
+        const filePath = `${userData.uid}/userPhotos/${file.name}`;
         newImageRef = ref(storage, filePath);
         await uploadBytesResumable(newImageRef, file);
 

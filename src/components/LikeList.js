@@ -1,8 +1,9 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
@@ -17,6 +18,38 @@ function LikeList() {
   async function updateFollowingData(tempCurrentUserData) {
     const docRef = doc(db, `users/${tempCurrentUserData.uid}`);
     await updateDoc(docRef, { following: tempCurrentUserData.following });
+  }
+
+  async function updateNotifications({ uid }, notificationType) {
+    const collectionPath = `users/${uid}/notifications`;
+    if (notificationType === "follow") {
+      // update to Notifications subcollection
+      const notifRef = await addDoc(collection(db, collectionPath), {
+        creationTime: serverTimestamp(),
+      });
+
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "follow",
+      });
+
+      // update to totalNotifs snippet
+      const docRef = doc(db, `users/${uid}`);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await updateDoc(docRef, {
+          totalNotifs: docSnap.data().totalNotifs + 1,
+        });
+      }
+
+      // Set the "capital" field of the city 'DC'
+    } else if (notificationType === "like") {
+      //
+    }
   }
 
   async function handleFollowToggle(likeInfo, type) {
@@ -75,6 +108,7 @@ function LikeList() {
         });
         await updateDoc(docRef, { followers: tempTargetUserData.followers });
       }
+      updateNotifications(tempTargetUserData, "follow");
       console.log("end follow");
     }
   }

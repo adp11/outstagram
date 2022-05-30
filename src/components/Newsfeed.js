@@ -1,6 +1,7 @@
 import { getAuth } from "firebase/auth";
 import {
-  arrayUnion, doc, getDoc, serverTimestamp, updateDoc,
+  addDoc,
+  arrayUnion, collection, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +20,51 @@ function Newsfeed() {
 
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
+
+  async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
+    const collectionPath = `users/${authorId}/notifications`;
+    // update to Notifications subcollection
+    const notifRef = await addDoc(collection(db, collectionPath), {
+      creationTime: serverTimestamp(),
+    });
+
+    if (notificationType === "like") {
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "like",
+        sourceAuthorId: authorId,
+        sourcePostId: postId,
+        sourcePostPictureURL: imageURL,
+      });
+    } else {
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "comment",
+        content: commentContent,
+        sourceAuthorId: authorId,
+        sourcePostId: postId,
+        sourcePostPictureURL: imageURL,
+      });
+    }
+
+    // update to totalNotifs snippet
+    const docRef = doc(db, `users/${authorId}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const tempTotalNotifs = docSnap.data().totalNotifs + 1;
+      await updateDoc(docRef, {
+        totalNotifs: tempTotalNotifs,
+      });
+    }
+  }
 
   function handleViewFullPost(index) {
     scrollY.current = window.scrollY;
@@ -84,18 +130,22 @@ function Newsfeed() {
     if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
       const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
       const cmtId = uniqid();
+      const commentContent = postComments[postInfo.postId];
       await updateDoc(postRef, {
         [cmtId]: serverTimestamp(),
         comments: arrayUnion({
-          sourceId: `uid_${getAuth().currentUser.uid}`,
+          sourceId: userData.uid,
           sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
-          sourceComment: postComments[postInfo.postId],
+          sourceComment: commentContent,
           sourceCommentTime: cmtId,
         }),
       });
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);
+      if (postInfo.authorId !== userData.uid) {
+        updateNotifications(postInfo, "comment", commentContent);
+      }
     } else {
       setSubmitCommentError("Posting empty comments error");
     }
@@ -104,7 +154,7 @@ function Newsfeed() {
   async function handleLikePost(index) { // toggle
     const postInfo = newsfeed[index];
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === `uid_${getAuth().currentUser.uid}`);
+    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === userData.uid);
     if (targetIndex !== -1) {
       await updateDoc(postRef, {
         likes: postInfo.likes.filter((like, idx) => idx !== targetIndex),
@@ -113,13 +163,16 @@ function Newsfeed() {
     } else {
       await updateDoc(postRef, {
         likes: arrayUnion({
-          sourceId: `uid_${getAuth().currentUser.uid}`,
+          sourceId: userData.uid,
           sourcePhotoURL: userData.photoURL,
           sourceUsername: userData.username,
           sourceDisplayname: userData.displayName,
         }),
       });
       updatePostSnippets("like", postInfo);
+      if (postInfo.authorId !== userData.uid) {
+        updateNotifications(postInfo, "like");
+      }
     }
   }
 
@@ -143,7 +196,7 @@ function Newsfeed() {
               <span className="username bold medium" onClick={() => { handleVisitProfile(post.authorId); }}>{post.authorUsername}</span>
             </div>
 
-            <Link to={`p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
+            <Link to={`/p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
               <div className="post-picture">
                 <img src={post.imageURL} alt="" style={{ width: "100%", height: "auto" }} />
               </div>

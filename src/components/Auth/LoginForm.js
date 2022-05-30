@@ -61,6 +61,7 @@ function LoginForm() {
         photoURL,
         bio: "",
         totalPosts: 0,
+        totalNotifs: 0,
         postSnippets: [],
         followers: [],
         following: [],

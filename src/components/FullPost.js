@@ -1,13 +1,15 @@
 import { getAuth } from "firebase/auth";
 import {
-  arrayUnion, doc, getDoc, serverTimestamp, updateDoc,
+  addDoc,
+  arrayUnion, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc,
 } from "firebase/firestore";
+import { deleteObject, ref } from "firebase/storage";
 import React, {
   useEffect, useContext, useState, useRef, useMemo,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
-import { db } from "../firebase";
+import { db, storage } from "../firebase";
 import { computeHowLongAgo } from "../utils";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
@@ -19,6 +21,7 @@ function FullPost() {
     userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive,
   } = useContext(UserContext);
   const navigate = useNavigate();
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
@@ -30,6 +33,7 @@ function FullPost() {
     authorUsername: "",
     authorPhotoURL: "",
     postPictureURL: "",
+    filePath: "",
     postCaption: "",
     postCreationTime: "",
     postCmts: [],
@@ -38,6 +42,51 @@ function FullPost() {
     fromWhich: null,
   });
   const textareaRef = useRef();
+
+  async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
+    const collectionPath = `users/${authorId}/notifications`;
+    // update to Notifications subcollection
+    const notifRef = await addDoc(collection(db, collectionPath), {
+      creationTime: serverTimestamp(),
+    });
+
+    if (notificationType === "like") {
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "like",
+        sourceAuthorId: authorId,
+        sourcePostId: postId,
+        sourcePostPictureURL: imageURL,
+      });
+    } else {
+      await updateDoc(notifRef, {
+        notifId: uniqid(),
+        sourceDisplayname: userData.displayName,
+        sourceId: userData.uid,
+        sourceUsername: userData.username,
+        sourcePhotoURL: userData.photoURL,
+        type: "comment",
+        content: commentContent,
+        sourceAuthorId: authorId,
+        sourcePostId: postId,
+        sourcePostPictureURL: imageURL,
+      });
+    }
+
+    // update to totalNotifs snippet
+    const docRef = doc(db, `users/${authorId}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const tempTotalNotifs = docSnap.data().totalNotifs + 1;
+      await updateDoc(docRef, {
+        totalNotifs: tempTotalNotifs,
+      });
+    }
+  }
 
   function handleViewLikeList(postLikes) {
     scrollY.current = window.scrollY;
@@ -72,6 +121,31 @@ function FullPost() {
       visitedProfile: false,
       newsfeed: false,
     });
+  }
+
+  async function handleDeletePost(authorId, postId, filePath) {
+    // delete in Firestore db
+    setIsDropdownActive(false);
+    handleCloseFullPost();
+    await deleteDoc(doc(db, `users/${authorId}/posts/${postId}`));
+    console.log("deleting ...");
+
+    // delete in Storage
+    const imageRef = ref(storage, filePath);
+    deleteObject(imageRef).then(() => {
+      // File deleted successfully (could've set a snackbar for visual feedback)
+    }).catch((error) => {
+      // Uh-oh, an error occurred!
+    });
+
+    // update post snippets
+    const tempUserData = { ...userData };
+    tempUserData.totalPosts -= 1;
+    tempUserData.postSnippets = tempUserData.postSnippets.filter((postSnippet) => postSnippet.postId !== postId);
+    setUserData(tempUserData);
+    console.log(tempUserData, "tempUserData");
+    const docRef = doc(db, `users/${authorId}`);
+    await setDoc(docRef, tempUserData);
   }
 
   async function updatePostSnippets(type, postInfo) {
@@ -131,11 +205,12 @@ function FullPost() {
     if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
       const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
       const cmtId = uniqid();
+      const commentContent = postComments[postInfo.postId];
       newComments = postInfo.comments.concat({
-        sourceId: `uid_${getAuth().currentUser.uid}`,
+        sourceId: userData.uid,
         sourcePhotoURL: userData.photoURL,
         sourceUsername: userData.username,
-        sourceComment: postComments[postInfo.postId],
+        sourceComment: commentContent,
         sourceCommentTime: cmtId,
       });
       await updateDoc(postRef, {
@@ -151,6 +226,9 @@ function FullPost() {
           setFullPostInfo(docSnap.data());
         }
         // setFullPostInfo({ ...fullPostInfo, comments: newComments }) won't work bc of serverTimestamp()
+      }
+      if (postInfo.authorId !== userData.uid) {
+        updateNotifications(postInfo, "comment", commentContent);
       }
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -168,7 +246,7 @@ function FullPost() {
       postInfo = fullPostInfo;
     }
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === `uid_${getAuth().currentUser.uid}`);
+    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === userData.uid);
     if (targetIndex !== -1) {
       newLikes = postInfo.likes.filter((like, idx) => idx !== targetIndex);
       await updateDoc(postRef, {
@@ -181,7 +259,7 @@ function FullPost() {
       }
     } else {
       newLikes = postInfo.likes.concat({
-        sourceId: `uid_${getAuth().currentUser.uid}`,
+        sourceId: userData.uid,
         sourcePhotoURL: userData.photoURL,
         sourceUsername: userData.username,
         sourceDisplayname: userData.displayName,
@@ -192,6 +270,9 @@ function FullPost() {
       updatePostSnippets("like", postInfo);
       if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) {
         setFullPostInfo({ ...fullPostInfo, likes: newLikes });
+      }
+      if (postInfo.authorId !== userData.uid) {
+        updateNotifications(postInfo, "like");
       }
     }
   }
@@ -216,6 +297,7 @@ function FullPost() {
         authorUsername: newsfeed[fullPostIndex].authorUsername,
         authorPhotoURL: newsfeed[fullPostIndex].authorPhotoURL,
         postPictureURL: newsfeed[fullPostIndex].imageURL,
+        filePath: newsfeed[fullPostIndex].filePath,
         postCaption: newsfeed[fullPostIndex].postCaption,
         postCreationTime: computeHowLongAgo(newsfeed[fullPostIndex].creationTime.seconds),
         postCmts: newsfeed[fullPostIndex].comments,
@@ -229,6 +311,7 @@ function FullPost() {
         authorUsername: fullPostInfo.authorUsername,
         authorPhotoURL: fullPostInfo.authorPhotoURL,
         postPictureURL: fullPostInfo.imageURL,
+        filePath: fullPostInfo.filePath,
         postCaption: fullPostInfo.postCaption,
         postCreationTime: computeHowLongAgo(fullPostInfo.creationTime.seconds),
         postCmts: fullPostInfo.comments,
@@ -240,7 +323,7 @@ function FullPost() {
   }, [fullPostInfo, newsfeed[fullPostIndex]]);
 
   const {
-    authorId, authorUsername, authorPhotoURL, postPictureURL, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
+    authorId, authorUsername, authorPhotoURL, postPictureURL, filePath, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
   } = componentVars;
 
   // const providerValue = useMemo(() => handleCloseFullPost());
@@ -289,7 +372,7 @@ function FullPost() {
                 </div>
               </div>
             )}
-            {/* .NewsfeedPost .user-avatar:hover, .NewsfeedPost .username:hover, .FullPost .username:hover, .FullPost .user-avatar:hover */}
+
             {postCmts.map((comment) => (
               <div className="post-comment" key={comment.sourceCommentTime}>
                 <img src={comment.sourcePhotoURL} alt="" className="user-avatar" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(comment.sourceId); }} />
@@ -322,9 +405,33 @@ function FullPost() {
               <polygon fill="none" points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
             </svg>
 
-            <svg height="24" width="24" style={{ marginLeft: "auto" }} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-            </svg>
+            <div style={{ marginLeft: "auto", position: "relative" }}>
+              <svg height="24" width="24" viewBox="0 0 24 24" aria-hidden="true" onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
+                <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+              {(isDropdownActive && authorId === userData.uid) ? (
+                <div className="dropdown" style={{ width: "150px", top: "-100px", right: "-50px" }}>
+                  <div onClick={() => { console.log("is about to delete"); handleDeletePost(authorId, postId, filePath); }}>
+                    <i className="fa-solid fa-trash-can" />
+                    {" "}
+                    Delete
+                  </div>
+                  <div>
+                    <i className="fa-solid fa-link" />
+                    {" "}
+                    Copy link
+                  </div>
+                </div>
+              ) : (isDropdownActive && authorId !== userData.uid) ? (
+                <div className="dropdown" style={{ width: "150px", top: "-50px", right: "-50px" }}>
+                  <div>
+                    <i className="fa-solid fa-link" />
+                    {" "}
+                    Copy link
+                  </div>
+                </div>
+              ) : <div />}
+            </div>
           </div>
 
           {postLikes.length > 10 ? (

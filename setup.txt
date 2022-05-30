@@ -51,19 +51,23 @@ npx tailwindcss init
     follow/unfollow display UI bug -- FIXED (need follow-up)
     view like list - ADDED
     view following/follower list - ADDED
-    deletePost
-    notif
+    deletePost - ADDED
+    notif - ADDED
+    replace getAuth() - FIXED
 
-    shortcut icon bug
-    newsfeed post buttons (copy link, delete post)
     routing/direct link access
+    toggle theme
+
+    =============> ACTUALLY USE the whole app FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed.
 
     TRIVIAL
+    shortcut icon bug
     TODO places
     fullpost on --> previewprofile + nav lost bug 
-    replace getAuth()
+    
 
     LATER:
-    remove console.log
-    organize codebase and manual-test along
+    clean up code
+    integration manual test, stimulate real app flow 
+
 

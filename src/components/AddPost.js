@@ -47,8 +47,7 @@ function AddPost() {
       });
       userData.totalPosts += 1;
       setUserData(userData);
-      const { uid } = getAuth().currentUser;
-      const docRef = doc(db, `users/uid_${uid}`);
+      const docRef = doc(db, `users/${userData.uid}`);
       await updateDoc(docRef, { postSnippets: userData.postSnippets, totalPosts: userData.totalPosts });
     }
   }
@@ -61,13 +60,13 @@ function AddPost() {
       try {
         setIsLoading(true);
         // 1 - Create a Doc of this post first to get postRef.
-        const collectionPath = `users/uid_${getAuth().currentUser.uid}/posts`;
+        const collectionPath = `users/${userData.uid}/posts`;
         postRef = await addDoc(collection(db, collectionPath), {
           creationTime: serverTimestamp(),
         });
 
         // 2 - Upload the image to Cloud Storage, using that postRef.
-        const filePath = `uid_${getAuth().currentUser.uid}/${postRef.id}/${file.name}`;
+        const filePath = `${userData.uid}/${postRef.id}/${file.name}`;
         newImageRef = ref(storage, filePath);
         const fileSnapshot = await uploadBytesResumable(newImageRef, file);
 
@@ -77,13 +76,14 @@ function AddPost() {
         // TODO: create variable to assign those fields into a 'data' and pass around
         // 4 - Update the rest of the form's input to Doc
         await updateDoc(postRef, {
-          authorId: `uid_${getAuth().currentUser.uid}`,
+          authorId: userData.uid,
           authorPhotoURL: userData.photoURL,
           authorUsername: userData.username,
           postId: postRef.id,
           postCaption: caption,
           imageURL: publicImageURL,
           storageURL: fileSnapshot.metadata.fullPath,
+          filePath,
           likes: [],
           comments: [],
         });
