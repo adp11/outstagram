@@ -18,7 +18,7 @@ import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
 import { insert } from "./utils";
-import Page404 from "./Page404";
+import PageNotFound from "./PageNotFound";
 import LikeList from "./components/LikeList";
 import FollowList from "./components/FollowList";
 
@@ -32,6 +32,9 @@ function App() {
     followers: false,
     following: false,
   });
+  const [isProfilePageNotFoundActive, setIsProfilePageNotFoundActive] = useState(false);
+  const [isPostPageNotFoundActive, setIsPostPageNotFoundActive] = useState(false);
+  const [abruptPostView, setAbruptPostView] = useState(false);
 
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
@@ -115,9 +118,9 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData, likeListInfo, setLikeListInfo, isLikeListActive, setIsLikeListActive, followListInfo, setFollowListInfo, isFollowListActive, setIsFollowListActive,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData, likeListInfo, setLikeListInfo, isLikeListActive, setIsLikeListActive, followListInfo, setFollowListInfo, isFollowListActive, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, abruptPostView, setAbruptPostView, isFullPostActive,
     }),
-    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive],
+    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, abruptPostView, isFullPostActive],
   );
 
   useEffect(() => {
@@ -154,6 +157,8 @@ function App() {
       setNewsfeed([]);
       setFullPostIndex(null);
       setFullPostInfo(null);
+      setIsProfilePageNotFoundActive(false);
+      setIsPostPageNotFoundActive(false);
       scrollY.current = 0;
       if (stopRealTimeListen1) {
         stopRealTimeListen1();
@@ -196,7 +201,10 @@ function App() {
         <UserContext.Provider value={providerValue}>
           <div
             className={`App ${(isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) ? "blur opac" : ""}`}
-            style={{ position: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && "fixed", top: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && `-${scrollY.current}px` }}
+            style={{
+              position: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && "fixed",
+              top: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && `-${scrollY.current}px`,
+            }}
           >
             {!isLoggedIn && <Auth />}
             {isLoggedIn && <Nav />}
@@ -204,11 +212,12 @@ function App() {
             <Routes>
               {/* eslint-disable-next-line */}
               <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
-              <Route path="/:uid" element={<Profile />} />
-              {(beforeFullPost.newsfeed)
-              // eslint-disable-next-line
-                ? (<Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />)
-                : (<Route path="/p/:postId" element={<Profile />} />)}
+              {!isProfilePageNotFoundActive && <Route path="/:uid" element={<Profile />} />}
+              {isProfilePageNotFoundActive && <Route path="/:uid" element={<PageNotFound />} />}
+              {/* eslint-disable-next-line */}
+              {(beforeFullPost.newsfeed) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
+              {(beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && <Route path="/p/:postId" element={<Profile />} />}
+              {isPostPageNotFoundActive && <Route path="/p/:postId" element={<PageNotFound />} />}
             </Routes>
             )}
           </div>
@@ -216,10 +225,9 @@ function App() {
           {isAddPostActive && <AddPost />}
           {isEditProfileActive && <EditProfile />}
           {isFullPostActive && (
-          <Routes>
-            <Route path="/p/:postId" element={<FullPost />} />
-            <Route path="*" element={<Page404 />} />
-          </Routes>
+            <Routes>
+              <Route path="/p/:postId" element={<FullPost />} />
+            </Routes>
           )}
           {isLikeListActive && <LikeList />}
           {(isFollowListActive.followers || isFollowListActive.following) && <FollowList />}

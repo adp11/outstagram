@@ -55,8 +55,8 @@ npx tailwindcss init
     notif - ADDED
     replace getAuth() - FIXED
 
-    routing/direct link access
-    toggle theme
+    added orderBy to notifs - FIXED
+    routing/direct link access - FIXED
 
     =============> ACTUALLY USE the whole app FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed.
 
@@ -69,5 +69,11 @@ npx tailwindcss init
     LATER:
     clean up code
     integration manual test, stimulate real app flow 
+    function reuse, setState reuse, useMemo props CODE CLEAN
+
+
+    FEATURES:
+    toggle theme
+    chat
 
 

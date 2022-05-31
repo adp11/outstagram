@@ -1,10 +1,12 @@
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
+} from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
 import uniqid from "uniqid";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
@@ -14,16 +16,24 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost, setIsFollowListActive, setFollowListInfo,
+    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
   const params = useParams();
-  const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
-  const [isFollowing, setIsFollowing] = useState(isCurrentUserFollowing);
   const profilePostsRef = useRef(null);
 
-  useEffect(() => {
-    console.log(isFollowing, "isFollowing currently is: ");
-  }, [isFollowing]);
+  const [isFollowing, setIsFollowing] = useState(null);
+  const navigate = useNavigate();
+
+  // if (userData !== null) {
+  //   const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
+  //   setIsFollowing(isCurrentUserFollowing);
+  // }
+
+  // useEffect(() => {
+  //   const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
+  //   setIsFollowing(isCurrentUserFollowing);
+  //   console.log(isFollowing, "isFollowing currently is: ");
+  // }, [userData]);
 
   async function handleViewFullPost(postId) {
     let docRef;
@@ -175,8 +185,52 @@ function Profile() {
   });
 
   useEffect(() => {
+    // handle abrupt link access to visitedUserData
+    async function handleVisitVisitedProfile() {
+      if (!visitedUserData) {
+        console.log("visiting profile", params.uid);
+        let tempVisitedUserData;
+        const docRef = doc(db, `users/${params.uid}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          navigate(`/${params.uid}`);
+          tempVisitedUserData = docSnap.data();
+          setVisitedUserData(tempVisitedUserData);
+          setComponentVars({
+            userAvatar: tempVisitedUserData.photoURL,
+            username: tempVisitedUserData.username,
+            totalPosts: tempVisitedUserData.totalPosts,
+            totalFollowers: tempVisitedUserData.followers.length,
+            totalFollowing: tempVisitedUserData.following.length,
+            userBio: tempVisitedUserData.bio,
+            userDisplayName: tempVisitedUserData.displayName,
+            whichUser: tempVisitedUserData,
+          });
+        } else {
+          navigate(`/${params.uid}`);
+          setIsProfilePageNotFoundActive(true);
+        }
+      } else {
+        setComponentVars({
+          userAvatar: visitedUserData.photoURL,
+          username: visitedUserData.username,
+          totalPosts: visitedUserData.totalPosts,
+          totalFollowers: visitedUserData.followers.length,
+          totalFollowing: visitedUserData.following.length,
+          userBio: visitedUserData.bio,
+          userDisplayName: visitedUserData.displayName,
+          whichUser: visitedUserData,
+        });
+      }
+    }
+
+    if (userData) {
+      const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
+      setIsFollowing(isCurrentUserFollowing);
+    }
+
     // console.log(isFollowing, "isFollowing currently: ");
-    if (params.uid === userData.uid || beforeFullPost.selfProfile) {
+    if (userData && (params.uid === userData.uid || beforeFullPost.selfProfile)) {
       setComponentVars({
         userAvatar: userData.photoURL,
         username: userData.username,
@@ -188,18 +242,8 @@ function Profile() {
         whichUser: userData,
       });
       // console.log(userData, "whichUser");
-    } else {
-      setComponentVars({
-        userAvatar: visitedUserData.photoURL,
-        username: visitedUserData.username,
-        totalPosts: visitedUserData.totalPosts,
-        totalFollowers: visitedUserData.followers.length,
-        totalFollowing: visitedUserData.following.length,
-        userBio: visitedUserData.bio,
-        userDisplayName: visitedUserData.displayName,
-        whichUser: visitedUserData,
-      });
-      // console.log(visitedUserData, "whichUser");
+    } else if (userData && (params.uid !== userData.uid || beforeFullPost.visitedProfile)) {
+      handleVisitVisitedProfile();
     }
   }, [userData, visitedUserData, params.uid]);
 
@@ -216,11 +260,11 @@ function Profile() {
             <div style={{ display: "flex" }}>
               <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
 
-              {(params.uid === userData.uid || beforeFullPost.selfProfile)
+              {(userData && (params.uid === userData.uid || beforeFullPost.selfProfile))
                 // eslint-disable-next-line
                 ? <button type="button" onClick={() => { setIsEditProfileActive(true); scrollY.current = window.scrollY; }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
 
-                : isFollowing
+                : (isFollowing !== null && isFollowing === true)
                 // eslint-disable-next-line
                 ? (
                   <button
@@ -237,7 +281,18 @@ function Profile() {
                   )
 
                 // eslint-disable-next-line
-                : <button onClick={handleFollowToggle} type="button" style={{ padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px" }}>Follow</button>}
+                : (isFollowing !== null && isFollowing === false) ? (
+                  <button
+                    onClick={handleFollowToggle}
+                    type="button"
+                    style={{
+                      padding: "5px 15px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", width: "90px",
+                    }}
+                  >
+                    Follow
+                  </button>
+                  )
+                    : <div />}
             </div>
             <div className="user-stats">
               <div className="posts" onClick={() => { profilePostsRef.current.scrollIntoView(); }}>

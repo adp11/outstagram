@@ -1,13 +1,13 @@
 import { getAuth } from "firebase/auth";
 import {
   addDoc,
-  arrayUnion, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc,
+  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where,
 } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import React, {
   useEffect, useContext, useState, useRef, useMemo,
 } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import uniqid from "uniqid";
 import { db, storage } from "../firebase";
 import { computeHowLongAgo } from "../utils";
@@ -18,7 +18,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 
 function FullPost() {
   const {
-    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive,
+    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive, setIsPostPageNotFoundActive, abruptPostView, isFullPostActive,
   } = useContext(UserContext);
   const navigate = useNavigate();
   const [isDropdownActive, setIsDropdownActive] = useState(false);
@@ -27,6 +27,7 @@ function FullPost() {
   const [postComments, setPostComments] = useState({});
   const [submitCommentError, setSubmitCommentError] = useState(null);
 
+  console.log(isFullPostActive, "isFullPostActive");
   // Conditional rendering
   const [componentVars, setComponentVars] = useState({
     authorId: "",
@@ -99,20 +100,14 @@ function FullPost() {
 
   function handleCloseFullPost(redirect = true) {
     setIsFullPostActive(false);
-    if (beforeFullPost.selfProfile) {
-      if (redirect) {
-        navigate(`/${userData.uid}`);
-      }
+    if (beforeFullPost.selfProfile && redirect) {
+      navigate(`/${userData.uid}`);
       setFullPostInfo(null);
-    } else if (beforeFullPost.visitedProfile) {
-      if (redirect) {
-        navigate(`/${visitedUserData.uid}`);
-      }
+    } else if (beforeFullPost.visitedProfile && redirect) {
+      navigate(`/${visitedUserData.uid}`);
       setFullPostInfo(null);
-    } else {
-      if (redirect) {
-        navigate("/");
-      }
+    } else if (beforeFullPost.newsfeed && redirect) {
+      navigate("/");
       setFullPostIndex(null);
     }
 
@@ -290,6 +285,50 @@ function FullPost() {
   }, []);
 
   useEffect(() => {
+    async function helper(document) {
+      const paramsPostId = window.location.pathname.substring(3); // window.href.pathname = "/p/:postId"
+      const q = query(collection(db, `users/${document.data().uid}/posts`), where("postId", "==", paramsPostId));
+      const qSnapshot = await getDocs(q);
+      console.log(qSnapshot.size, "qSnapshot.size");
+      if (qSnapshot.size === 0) {
+        return false;
+      }
+      qSnapshot.forEach((document2) => {
+        const {
+          authorId, authorUsername, authorPhotoURL, imageURL, filePath, postCaption, creationTime, comments, likes, postId,
+        } = document2.data();
+        setComponentVars({
+          authorId,
+          authorUsername,
+          authorPhotoURL,
+          postPictureURL: imageURL,
+          filePath,
+          postCaption,
+          postCreationTime: computeHowLongAgo(creationTime.seconds),
+          postCmts: comments,
+          postLikes: likes,
+          postId,
+          fromWhich: document2.data(),
+        });
+      });
+      return true;
+    }
+
+    async function handleVisitFullPost() {
+      let count = 0;
+      const querySnapshot = await getDocs(collection(db, "users"));
+      querySnapshot.forEach(async (document) => {
+        const result = await helper(document);
+        count += 1;
+        if (!result && count === querySnapshot.size) {
+          console.log("Display 404");
+          setIsFullPostActive(false);
+          navigate(window.location.pathname);
+          setIsPostPageNotFoundActive(true);
+        }
+      });
+    }
+
     console.log("componentVars triggered");
     if (beforeFullPost.newsfeed && fullPostIndex !== null) {
       setComponentVars({
@@ -319,6 +358,8 @@ function FullPost() {
         postId: fullPostInfo.postId,
         fromWhich: fullPostInfo,
       });
+    } else if (abruptPostView) {
+      handleVisitFullPost();
     }
   }, [fullPostInfo, newsfeed[fullPostIndex]]);
 

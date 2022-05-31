@@ -248,7 +248,7 @@ function Newsfeed() {
               {post.postCaption}
             </div>
             )}
-            <Link to={`p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
+            <Link to={`/p/${post.postId}`} onClick={() => { handleViewFullPost(index); }}>
               <div className="post-all-comments grey medium">
                 View all
                 {" "}

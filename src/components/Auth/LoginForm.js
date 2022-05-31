@@ -7,13 +7,14 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useParams } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
 import Snackbar from "../Snackbar";
 
 function LoginForm() {
-  const { setIsLoggedIn } = useContext(UserContext);
+  const { setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [userAuthInfo, setUserAuthInfo] = useState({
@@ -31,6 +32,10 @@ function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
       setIsLoggedIn(true);
+      if (/^\/p\//.test(window.location.pathname)) {
+        setIsFullPostActive(true);
+        setAbruptPostView(true);
+      }
     } catch (error) {
       if (error.code === AuthErrorCodes.INVALID_PASSWORD) {
         setLoginError({

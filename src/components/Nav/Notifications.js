@@ -1,6 +1,6 @@
 import {
   addDoc,
-  collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where,
+  collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, where,
 } from "firebase/firestore";
 import React, { useContext, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -133,11 +133,11 @@ function Notifications() {
     setIsDropdownActive(!isDropdownActive);
     setIsLoading(true);
 
-    const q = query(collection(db, `users/${userData.uid}/notifications`)); // , where("creationTime", "==", true)
+    const q = query(collection(db, `users/${userData.uid}/notifications`), orderBy("creationTime", "desc"));
     const querySnapshot = await getDocs(q);
     const tempNotificationList = [];
     querySnapshot.forEach((document) => {
-      insert(tempNotificationList, document.data()); // descending - most recent to oldest - big to small Unixtime
+      tempNotificationList.push(document.data());
     });
     setNotificationList(tempNotificationList);
     setIsLoading(false);
