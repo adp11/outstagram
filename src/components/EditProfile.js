@@ -63,23 +63,23 @@ function EditProfile() {
 
   async function updateAcrossPosts(publicImageURL) {
     // each user
-    allUserData.forEach(async (data) => {
-      const querySnapshot = await getDocs(collection(db, `users/${data.uid}/posts`));
-      // each post
-      querySnapshot.forEach(async (document) => {
-        const postRef = doc(db, `users/${data.uid}/posts/${document.id}`);
-        if (publicImageURL) {
-          await updateDoc(postRef, {
-            authorUsername: username,
-            authorPhotoURL: publicImageURL,
-          });
-        } else {
-          await updateDoc(postRef, {
-            authorUsername: username,
-          });
-        }
-      });
+    // allUserData.forEach(async (data) => {
+    const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/posts`));
+    // each post
+    querySnapshot.forEach(async (document) => {
+      const postRef = doc(db, `users/${userData.uid}/posts/${document.id}`);
+      if (publicImageURL) {
+        await updateDoc(postRef, {
+          authorUsername: username,
+          authorPhotoURL: publicImageURL,
+        });
+      } else {
+        await updateDoc(postRef, {
+          authorUsername: username,
+        });
+      }
     });
+    // });
     // fetchAllUserData(); // optional
   }
 
@@ -138,13 +138,7 @@ function EditProfile() {
   return (
     <div className="EditProfile" style={{ padding: "10px" }}>
       {/* eslint-disable-next-line */}
-      <i
-        onClick={() => { setIsEditProfileActive(false); }}
-        className="fa-solid fa-xmark"
-        style={{
-          position: "fixed", left: "97%", top: "2%", fontSize: "30px",
-        }}
-      />
+      <img src={`${window.location.origin}/images/x-mark.png`} style={{ position: "fixed", left: "97%", top: "2%", fontSize: "30px", width: "30px", height: "30px" }} onClick={() => { setIsEditProfileActive(false); }}></img>
 
       <div className="container">
         <div>

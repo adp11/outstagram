@@ -18,14 +18,17 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 
 function FullPost() {
   const {
-    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive, setIsPostPageNotFoundActive, abruptPostView, isFullPostActive,
+    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive, setIsPostPageNotFoundActive, abruptPostView, isFullPostActive, setAbruptPostView,
   } = useContext(UserContext);
   const navigate = useNavigate();
   const [isDropdownActive, setIsDropdownActive] = useState(false);
+  const [toResize, setToResize] = useState(false);
 
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
   const [submitCommentError, setSubmitCommentError] = useState(null);
+
+  const [clipboardMessage, setClipboardMessage] = useState(null);
 
   console.log(isFullPostActive, "isFullPostActive");
   // Conditional rendering
@@ -99,6 +102,7 @@ function FullPost() {
   }
 
   function handleCloseFullPost(redirect = true) {
+    setAbruptPostView(false);
     setIsFullPostActive(false);
     if (beforeFullPost.selfProfile && redirect) {
       navigate(`/${userData.uid}`);
@@ -106,7 +110,7 @@ function FullPost() {
     } else if (beforeFullPost.visitedProfile && redirect) {
       navigate(`/${visitedUserData.uid}`);
       setFullPostInfo(null);
-    } else if (beforeFullPost.newsfeed && redirect) {
+    } else {
       navigate("/");
       setFullPostIndex(null);
     }
@@ -315,13 +319,17 @@ function FullPost() {
     }
 
     async function handleVisitFullPost() {
+      let postIdFound = false;
       let count = 0;
       const querySnapshot = await getDocs(collection(db, "users"));
       querySnapshot.forEach(async (document) => {
         const result = await helper(document);
         count += 1;
-        if (!result && count === querySnapshot.size) {
-          console.log("Display 404");
+        if (result) {
+          // console.log("success");
+          postIdFound = true;
+        } else if (!result && count === querySnapshot.size && !postIdFound) {
+          // console.log("Display 404");
           setIsFullPostActive(false);
           navigate(window.location.pathname);
           setIsPostPageNotFoundActive(true);
@@ -380,19 +388,22 @@ function FullPost() {
     }
   }
 
+  function handleImageSize({ target: img }) {
+    console.log(img.naturalHeight, "img.naturalHeight");
+    console.log(img.naturalWidth, "img.naturalWidth");
+    if (Math.abs(img.naturalHeight - img.naturalWidth) < 100) {
+      setToResize(true);
+    }
+  }
+
   return (
     <div className={`FullPost ${(isLikeListActive) ? "blur" : ""}`}>
       {/* eslint-disable-next-line */}
-      <i
-        onClick={handleCloseFullPost}
-        className="fa-solid fa-xmark"
-        style={{
-          position: "fixed", left: "97%", top: "2%", fontSize: "30px",
-        }}
-      />
+      <img src={`${window.location.origin}/images/x-mark.png`} style={{ position: "fixed", left: "97%", top: "2%", fontSize: "30px", width: "30px", height: "30px" }} onClick={handleCloseFullPost}></img>
+
       <div className="fullpost-container">
         <div>
-          <img className="post-picture" src={postPictureURL} alt="" style={{ objectFit: "contain" }} />
+          <img onLoad={handleImageSize} className="post-picture" src={postPictureURL} alt="" style={{ objectFit: toResize ? "cover" : "contain" }} />
         </div>
 
         <div className="post-info">
@@ -457,7 +468,7 @@ function FullPost() {
                     {" "}
                     Delete
                   </div>
-                  <div>
+                  <div onClick={() => { console.log("clipped"); navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
                     <i className="fa-solid fa-link" />
                     {" "}
                     Copy link
@@ -465,7 +476,7 @@ function FullPost() {
                 </div>
               ) : (isDropdownActive && authorId !== userData.uid) ? (
                 <div className="dropdown" style={{ width: "150px", top: "-50px", right: "-50px" }}>
-                  <div>
+                  <div onClick={() => { console.log("clipped"); navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
                     <i className="fa-solid fa-link" />
                     {" "}
                     Copy link
@@ -506,6 +517,7 @@ function FullPost() {
       </div>
 
       {submitCommentError && <Snackbar snackBarMessage={submitCommentError} setSnackBarMessage={setSubmitCommentError} />}
+      {clipboardMessage && <Snackbar snackBarMessage={clipboardMessage} setSnackBarMessage={setClipboardMessage} />}
     </div>
   );
 }

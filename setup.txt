@@ -58,7 +58,10 @@ npx tailwindcss init
     added orderBy to notifs - FIXED
     routing/direct link access - FIXED
 
-    =============> ACTUALLY USE the whole app FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed.
+
+    ACTUALLY USE the whole app FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed - DONE
+    add clipboard - ADDED
+    handleImageSize when full post - ADDED
 
     TRIVIAL
     shortcut icon bug

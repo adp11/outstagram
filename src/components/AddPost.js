@@ -143,7 +143,7 @@ function AddPost() {
   return (
     <div className="AddPost">
       {/* eslint-disable-next-line */}
-      <i onClick={()=> {setIsAddPostActive(false)}} className="fa-solid fa-xmark" style={{ position: "fixed", left: "97%", top: "2%", fontSize: "30px" }} />
+      <img src={`${window.location.origin}/images/x-mark.png`} style={{ position: "fixed", left: "97%", top: "2%", fontSize: "30px", width: "30px", height: "30px" }} onClick={() => { setIsAddPostActive(false); }}></img>
       <div className="container">
         <div>
           <span className="bold">Create new post</span>

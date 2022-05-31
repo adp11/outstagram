@@ -61,9 +61,8 @@ function App() {
 
   /*
     1. fetch Newsfeed is designed to real-time listen to remote db
-    2. Notice: onSnapshot is the LAST code block to be executed in this useEffect()
-    3. There are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
-    4. 10 outermost keys at least in a PROPER "change.doc.data()" object
+    2. There are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
+    3. 10 outermost keys at least in a PROPER "change.doc.data()" object
     */
 
   function getRealTimeUpdates(q) {
@@ -74,7 +73,6 @@ function App() {
           const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
           tempNewsfeed.splice(deletePosition, 1);
         } else if (change.type === "added") {
-          // console.log(tempNewsfeed, "before add", change.doc.data(), "length", Object.keys(change.doc.data()).length);
           const data = change.doc.data();
           if (Object.keys(data).length >= 10) {
             insert(tempNewsfeed, change.doc.data()); // recent to old - big to small UnixTime
@@ -88,15 +86,13 @@ function App() {
           } else if (modifiedPosition === -1 && Object.keys(data).length >= 10) {
             insert(tempNewsfeed, change.doc.data());
           }
-          // console.log(tempNewsfeed, "tempNewsfeed after addPost", modifiedPosition);
         }
       });
-      console.log("tempNewsfeed before setNewsfeed()", tempNewsfeed);
       setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
     });
   }
 
-  // BUG: double rerender from 2 setNewsfeed() from 2 real-time listening blocks of code
+  // Don't factor out "posts from self" code block to prevent double rerender from 2 setNewsfeed() from 2 real-time listening
   function fetchNewsfeed() {
     const { following } = userData;
     if (following.length) {
@@ -118,7 +114,7 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, setFullPostIndex, scrollY, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, fullPostInfo, setFullPostInfo, setAllUserData, likeListInfo, setLikeListInfo, isLikeListActive, setIsLikeListActive, followListInfo, setFollowListInfo, isFollowListActive, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, abruptPostView, setAbruptPostView, isFullPostActive,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, isLikeListActive, isFollowListActive, isFullPostActive, likeListInfo, followListInfo, abruptPostView, scrollY, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView,
     }),
     [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, abruptPostView, isFullPostActive],
   );
@@ -133,9 +129,8 @@ function App() {
     }
 
     /*
-    1. Fetch allUserData is to get all users to be filtered/sorted when a user is using search box only
+    1. Fetch allUserData is used in search box only
     2. Fetch allUserData is NOT designed to real-time listen to remote db (e.g. new users logged)
-    3. querySnapshot.map() won't work. Use forEach()
     */
     async function fetchAllUserData() {
       const querySnapshot = await getDocs(collection(db, "users"));
@@ -143,8 +138,7 @@ function App() {
         const toBePushed = { ...document.data(), uid: document.id };
         tempAllUserData.push(toBePushed);
       });
-      setAllUserData([...tempAllUserData]);
-      // setAllUserData(tempAllUserData);
+      setAllUserData([...tempAllUserData]); // setAllUserData(tempAllUserData) won't work
     }
 
     if (isLoggedIn) {
@@ -159,6 +153,7 @@ function App() {
       setFullPostInfo(null);
       setIsProfilePageNotFoundActive(false);
       setIsPostPageNotFoundActive(false);
+      setAbruptPostView(false);
       scrollY.current = 0;
       if (stopRealTimeListen1) {
         stopRealTimeListen1();
@@ -170,8 +165,7 @@ function App() {
       }
     }
 
-    // prevent browser remember scroll position and auto scroll upon user refreshes the page.
-    // window.scrollTo(0, 0);
+    // window.scrollTo(0, 0); // optional: prevent browser remember scroll position and auto scroll upon user refreshes the page.
   }, [isLoggedIn]);
 
   useEffect(() => {
@@ -180,10 +174,6 @@ function App() {
     }
   }, [userData]);
 
-  // useEffect(() => {
-  //   console.log("newsfeed change because of add post somewhere else");
-  // }, [newsfeed]);
-
   /*
   1. Triggered upon both mouting and dependency changes
   2. Prefer abrupt scroll (not smooth)
@@ -191,7 +181,6 @@ function App() {
   useEffect(() => {
     if (!(isAddPostActive && isEditProfileActive && isFullPostActive && isLikeListActive && (isFollowListActive.followers || isFollowListActive.following))) {
       window.scrollTo(0, scrollY.current);
-      // scrollY.current = 0;
     }
   }, [isFullPostActive, isEditProfileActive, isAddPostActive, isLikeListActive, isFollowListActive]);
 
