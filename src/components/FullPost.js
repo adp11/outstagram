@@ -1,20 +1,17 @@
-import { getAuth } from "firebase/auth";
 import {
   addDoc,
-  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where,
+  collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where,
 } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import React, {
-  useEffect, useContext, useState, useRef, useMemo,
+  useEffect, useContext, useState, useRef,
 } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db, storage } from "../firebase";
 import { computeHowLongAgo } from "../utils";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
-
-const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function FullPost() {
   const {
@@ -23,14 +20,12 @@ function FullPost() {
   const navigate = useNavigate();
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [toResize, setToResize] = useState(false);
+  const [clipboardMessage, setClipboardMessage] = useState(null);
 
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
   const [submitCommentError, setSubmitCommentError] = useState(null);
 
-  const [clipboardMessage, setClipboardMessage] = useState(null);
-
-  console.log(isFullPostActive, "isFullPostActive");
   // Conditional rendering
   const [componentVars, setComponentVars] = useState({
     authorId: "",
@@ -219,12 +214,11 @@ function FullPost() {
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);
 
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) {
+      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) { // notice: serverTimestamp() retrieval
         const docSnap = await getDoc(postRef);
         if (docSnap.exists()) {
           setFullPostInfo(docSnap.data());
         }
-        // setFullPostInfo({ ...fullPostInfo, comments: newComments }) won't work bc of serverTimestamp()
       }
       if (postInfo.authorId !== userData.uid) {
         updateNotifications(postInfo, "comment", commentContent);
@@ -326,10 +320,8 @@ function FullPost() {
         const result = await helper(document);
         count += 1;
         if (result) {
-          // console.log("success");
           postIdFound = true;
         } else if (!result && count === querySnapshot.size && !postIdFound) {
-          // console.log("Display 404");
           setIsFullPostActive(false);
           navigate(window.location.pathname);
           setIsPostPageNotFoundActive(true);
@@ -374,8 +366,6 @@ function FullPost() {
   const {
     authorId, authorUsername, authorPhotoURL, postPictureURL, filePath, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
   } = componentVars;
-
-  // const providerValue = useMemo(() => handleCloseFullPost());
 
   async function handleVisitProfile(uid) {
     handleCloseFullPost(false); // prevent nagivate() 2 times

@@ -18,7 +18,7 @@ import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
 import EditProfile from "./components/EditProfile";
 import { insert } from "./utils";
-import PageNotFound from "./PageNotFound";
+import PageNotFound from "./components/PageNotFound";
 import LikeList from "./components/LikeList";
 import FollowList from "./components/FollowList";
 

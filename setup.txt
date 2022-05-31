@@ -29,54 +29,54 @@ npx tailwindcss init
     ],
     
 
-    view visitedProfile -> view full post --> selfProfile background bug - FIXED
-    operations on fullpost from visitedProfile bug - FIXED
+BUG BULK FIXES
+view visitedProfile -> view full post --> selfProfile background bug - FIXED
+operations on fullpost from visitedProfile bug - FIXED
 
-    comment seconds bug - FIXED
-    scroll bug - FIXED
-    postSnippet bug - FIXED 
-    
-    computeHowLongAgo - FIXED
-    order posts when popups on and not on bug - FIXED
-    add post real time bug - FIXED
-    include own posts bug - FIXED
+comment seconds bug - FIXED
+scroll bug - FIXED
+postSnippet bug - FIXED 
 
-    small UI fix (loading, editprofile form) - commit separate - FIXED
-    red heart liked - FIXED
-    editProfile (3 fields) - FIXED 
-    follow button beside username in fullpost - REMOVED
-    link profile from newsfeed - FIXED
+computeHowLongAgo - FIXED
+order posts when popups on and not on bug - FIXED
+add post real time bug - FIXED
+include own posts bug - FIXED
 
-    ======>>>>>>> UPDATED POSTS (editProfile) - FIXED
-    follow/unfollow display UI bug -- FIXED (need follow-up)
-    view like list - ADDED
-    view following/follower list - ADDED
-    deletePost - ADDED
-    notif - ADDED
-    replace getAuth() - FIXED
+small UI fix (loading, editprofile form) - commit separate - FIXED
+red heart liked - FIXED
+editProfile (3 fields) - FIXED 
+follow button beside username in fullpost - REMOVED
+link profile from newsfeed - FIXED
 
-    added orderBy to notifs - FIXED
-    routing/direct link access - FIXED
+======>>>>>>> update across posts (editProfile) - FIXED
+follow/unfollow display UI bug -- FIXED (need follow-up)
+view like list - ADDED
+view following/follower list - ADDED
+deletePost - ADDED
+notif - ADDED
+replace getAuth() - FIXED
 
+added orderBy to notifs - FIXED
+routing/direct link access - FIXED
 
-    ACTUALLY USE the whole app FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed - DONE
-    add clipboard - ADDED
-    handleImageSize when full post - ADDED
-
-    TRIVIAL
-    shortcut icon bug
-    TODO places
-    fullpost on --> previewprofile + nav lost bug 
-    
-
-    LATER:
-    clean up code
-    integration manual test, stimulate real app flow 
-    function reuse, setState reuse, useMemo props CODE CLEAN
+stimulate reall app flow FOR THE FIRST TIME to check what's lacking, what's to be CRUD-ed - DONE
+add clipboard - ADDED
+handleImageSize when full post - ADDED
 
 
-    FEATURES:
-    toggle theme
-    chat
+TRIVIAL - IGNORED:
+shortcut icon bug
+fullpost on --> previewprofile + nav lost bug 
+
+NOTICES:
+clean up code
+manual test everything, stimulate real app flow 
+function reuse across components, setState reuse, useMemo props CODE CLEAN
+project presentation on Github (michalosman) for resume
+
+TODO FEATURES:
+stimulate real app flow (2nd) with more users (5+)
+toggle theme
+chat
 
 

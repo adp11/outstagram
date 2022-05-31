@@ -1,11 +1,9 @@
 * {
   box-sizing: border-box;
-  /* font-size: 16px; */
 }
 
 .App {
   margin: 0;
-  /* background-color: #fafafa; */
   width: 100vw;
 }
 
@@ -114,7 +112,6 @@ input[type="search"] {
   align-items: center;
   font-size: 14px;
   padding: 12px 0;
-  /* border: 1px black solid; */
 }
 
 .Account .dropdown > *:hover, .search-result:hover, .FullPost .dropdown > *:hover {
@@ -378,10 +375,6 @@ input[type="search"] {
   gap: 15px;
 }
 
-/* ::-webkit-scrollbar {
-  width: 0;
-} */
-
 .comment-section .post-caption, .comment-section .post-comment {
   display: flex;
 }
@@ -393,7 +386,6 @@ input[type="search"] {
 
 /* Profile page ---------------------------------- */
 .Profile {
-  /* border: 1px green solid; */
   margin-top: 90px;
   display: flex;
   flex-direction: column;
@@ -401,7 +393,6 @@ input[type="search"] {
 }
 
 .profile-container {
-  /* border: 1px black solid; */
   max-width: 920px;
   display: flex;
   flex-direction: column;
@@ -410,7 +401,6 @@ input[type="search"] {
 .profile-summary {
   max-width: 680px;
   display: flex;
-  /* border: 1px black solid; */
 }
 
 .Profile .user-avatar {
@@ -628,7 +618,6 @@ footer > div {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* justify-content: center; */
   gap: 20px;
 }
 
@@ -801,7 +790,6 @@ form input:focus, textarea:focus {
 
 .blur {
   filter: blur(1px);
-  /* background-color: #fff; */
 }
 
 .opac {

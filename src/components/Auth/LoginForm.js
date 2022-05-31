@@ -7,11 +7,9 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { useParams } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
-import Snackbar from "../Snackbar";
 
 function LoginForm() {
   const { setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);

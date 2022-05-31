@@ -1,5 +1,5 @@
 import { getAuth, signOut } from "firebase/auth";
-import React, { useEffect, useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
@@ -69,7 +69,6 @@ function ProfilePreview() {
           <div className="grey medium">Following</div>
         </div>
       </div>
-
     </div>
   );
 }

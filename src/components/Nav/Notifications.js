@@ -1,12 +1,12 @@
 import {
   addDoc,
-  collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, where,
+  collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc,
 } from "firebase/firestore";
 import React, { useContext, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../../firebase";
-import { computeHowLongAgo, insert } from "../../utils";
+import { computeHowLongAgo } from "../../utils";
 import UserContext from "../Contexts/UserContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
@@ -51,10 +51,6 @@ function Notifications() {
           totalNotifs: docSnap.data().totalNotifs + 1,
         });
       }
-
-      // Set the "capital" field of the city 'DC'
-    } else if (notificationType === "like") {
-      //
     }
   }
 

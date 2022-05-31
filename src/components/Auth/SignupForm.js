@@ -40,7 +40,7 @@ function SignupForm() {
       updateProfile(getAuth().currentUser, {
         displayName: `${userAuthInfo.fullname}`,
       }).then(() => {
-        console.log("Profile updated successfully when creating new account");
+        // console.log("Profile updated successfully when creating new account");
       }).catch((error) => {
         setUpdateProfileError(error);
       });

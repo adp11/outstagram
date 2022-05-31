@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Notifications from "./Notifications";
 import Account from "./Account";
 import SearchBox from "./SearchBox";

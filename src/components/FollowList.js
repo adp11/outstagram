@@ -9,13 +9,12 @@ import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
-// lots of custom override css rules
+// Notice: many CSS inline rules in LikeList/FollowList
 function FollowList() {
   const {
     followListInfo, setFollowListInfo, setIsFollowListActive, userData, setVisitedUserData, setUserData, isFollowListActive,
   } = useContext(UserContext);
 
-  // Conditional rendering
   const [whichFollow, setWhichFollow] = useState(null);
   const navigate = useNavigate();
 
@@ -49,10 +48,6 @@ function FollowList() {
           totalNotifs: docSnap.data().totalNotifs + 1,
         });
       }
-
-      // Set the "capital" field of the city 'DC'
-    } else if (notificationType === "like") {
-      //
     }
   }
 

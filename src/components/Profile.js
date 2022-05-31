@@ -1,4 +1,3 @@
-import { getAuth } from "firebase/auth";
 import {
   addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
@@ -9,9 +8,6 @@ import uniqid from "uniqid";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
-import Snackbar from "./Snackbar";
-
-const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
@@ -23,17 +19,6 @@ function Profile() {
 
   const [isFollowing, setIsFollowing] = useState(null);
   const navigate = useNavigate();
-
-  // if (userData !== null) {
-  //   const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
-  //   setIsFollowing(isCurrentUserFollowing);
-  // }
-
-  // useEffect(() => {
-  //   const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
-  //   setIsFollowing(isCurrentUserFollowing);
-  //   console.log(isFollowing, "isFollowing currently is: ");
-  // }, [userData]);
 
   async function handleViewFullPost(postId) {
     let docRef;
@@ -96,10 +81,6 @@ function Profile() {
           totalNotifs: docSnap.data().totalNotifs + 1,
         });
       }
-
-      // Set the "capital" field of the city 'DC'
-    } else if (notificationType === "like") {
-      //
     }
   }
 
@@ -185,7 +166,6 @@ function Profile() {
   });
 
   useEffect(() => {
-    // handle abrupt link access to visitedUserData
     async function handleVisitVisitedProfile() {
       if (!visitedUserData) {
         console.log("visiting profile", params.uid);
@@ -229,7 +209,6 @@ function Profile() {
       setIsFollowing(isCurrentUserFollowing);
     }
 
-    // console.log(isFollowing, "isFollowing currently: ");
     if (userData && (params.uid === userData.uid || beforeFullPost.selfProfile)) {
       setComponentVars({
         userAvatar: userData.photoURL,
@@ -241,9 +220,8 @@ function Profile() {
         userDisplayName: userData.displayName,
         whichUser: userData,
       });
-      // console.log(userData, "whichUser");
     } else if (userData && (params.uid !== userData.uid || beforeFullPost.visitedProfile)) {
-      handleVisitVisitedProfile();
+      handleVisitVisitedProfile(); // handle abrupt link access to visitedUserData
     }
   }, [userData, visitedUserData, params.uid]);
 

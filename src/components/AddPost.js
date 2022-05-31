@@ -2,17 +2,10 @@ import React, { useEffect, useContext, useState } from "react";
 import {
   collection,
   addDoc,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  setDoc,
   updateDoc,
   doc,
   serverTimestamp,
   deleteDoc,
-  arrayUnion,
-  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -20,8 +13,6 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { getAuth } from "firebase/auth";
-// import uniqid from "uniqid";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Snackbar";
 import { db, storage } from "../firebase";
@@ -73,7 +64,6 @@ function AddPost() {
         // 3 - Generate a public URL for the file.
         const publicImageURL = await getDownloadURL(newImageRef);
 
-        // TODO: create variable to assign those fields into a 'data' and pass around
         // 4 - Update the rest of the form's input to Doc
         await updateDoc(postRef, {
           authorId: userData.uid,
@@ -89,22 +79,7 @@ function AddPost() {
         });
 
         setIsAddPostActive(false);
-        // TODO: 2 these functions should be put into code when click triggered
         updatetPostSnippets(publicImageURL, postRef.id);
-        // console.log({
-        //   postId: postRef.id,
-        //   postCaption: caption,
-        //   imageURL: publicImageURL,
-        //   storageURL: fileSnapshot.metadata.fullPath,
-        //   likes: {
-        //     likesList: [],
-        //     totalLikes: 0,
-        //   },
-        //   comments: {
-        //     twoLastComments: [],
-        //     totalComments: 0,
-        //   },
-        // }, "data of add post to database");
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);
 
@@ -123,7 +98,7 @@ function AddPost() {
       setAddPostError("You can only share images");
       return;
     }
-    setPreviewImageURL(URL.createObjectURL(fileSelected)); 
+    setPreviewImageURL(URL.createObjectURL(fileSelected));
     setFile(fileSelected);
   }
 
@@ -171,7 +146,7 @@ function AddPost() {
               {!previewImageURL && <small>File size limit 5 mb.</small>}
             </label>
           </div>
-          {/* override with 100% line 639 textarea */}
+          {/* override with 100% textarea in App.css*/}
           <textarea onChange={(e) => { setCaption(e.target.value); }} style={{ width: "75%" }} placeholder="Enter caption..." />
           {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />}
           <button onSubmit={handleAddPostSubmission} type="button submit" className="btn btn-outline-primary">POST</button>

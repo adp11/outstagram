@@ -5,7 +5,6 @@ import {
   doc,
   collection,
   getDocs,
-  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -22,7 +21,7 @@ const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=
 
 function EditProfile() {
   const {
-    userData, allUserData, setUserData, setIsEditProfileActive, fetchAllUserData,
+    userData, setUserData, setIsEditProfileActive,
   } = useContext(UserContext);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -62,10 +61,7 @@ function EditProfile() {
   }
 
   async function updateAcrossPosts(publicImageURL) {
-    // each user
-    // allUserData.forEach(async (data) => {
     const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/posts`));
-    // each post
     querySnapshot.forEach(async (document) => {
       const postRef = doc(db, `users/${userData.uid}/posts/${document.id}`);
       if (publicImageURL) {
@@ -79,8 +75,6 @@ function EditProfile() {
         });
       }
     });
-    // });
-    // fetchAllUserData(); // optional
   }
 
   async function handleEditProfileSubmission(e) {
@@ -175,7 +169,6 @@ function EditProfile() {
           <div className="form-row">
             <label className="bold" htmlFor="fullname">Full Name</label>
             <input id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} type="text" defaultValue={userData && userData.displayName} />
-            {/* <textarea id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} defaultValue={(userData && userData.displayName)} /> */}
           </div>
           <div className="form-row">
             <label className="bold" htmlFor="bio">Bio</label>

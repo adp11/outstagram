@@ -1,13 +1,12 @@
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import React, {
-  useContext, useEffect, useRef, useState,
-} from "react";
+import {
+  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
+} from "firebase/firestore";
+import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
-// lots of custom override css rules
 function LikeList() {
   const {
     likeListInfo, setIsLikeListActive, userData, setVisitedUserData, setLikeListInfo, setUserData, setIsFullPostActive, setBeforeFullPost, beforeFullPost, setFullPostInfo, setFullPostIndex,
@@ -45,10 +44,6 @@ function LikeList() {
           totalNotifs: docSnap.data().totalNotifs + 1,
         });
       }
-
-      // Set the "capital" field of the city 'DC'
-    } else if (notificationType === "like") {
-      //
     }
   }
 
