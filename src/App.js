@@ -21,6 +21,8 @@ import { insert } from "./utils";
 import PageNotFound from "./components/PageNotFound";
 import LikeList from "./components/LikeList";
 import FollowList from "./components/FollowList";
+import Chat from "./components/Chat";
+import SearchChat from "./components/SearchChat";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -200,7 +202,9 @@ function App() {
             {isLoggedIn && (
             <Routes>
               {/* eslint-disable-next-line */}
-              <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
+              {/* <Route path="/" element={<Chat />} /> */}
+              <Route path="/" element={<SearchChat />} />
+              {/* <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} /> */}
               {!isProfilePageNotFoundActive && <Route path="/:uid" element={<Profile />} />}
               {isProfilePageNotFoundActive && <Route path="/:uid" element={<PageNotFound />} />}
               {/* eslint-disable-next-line */}

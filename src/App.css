@@ -241,7 +241,7 @@ input[type="search"] {
   width: 100%;
 }
 
-.post-comment-box > textarea {
+.post-comment-box > textarea, .post-message-box > textarea {
   width: 90%;
   /* add height if texts go beyond certain point */
   height: 50px;
@@ -317,6 +317,144 @@ input[type="search"] {
   background-color: black;
   color: #fff;
 }
+
+/* Chat ---------------------------------- */
+.Chat {
+  margin-top: 60px;
+  width: 100vw;
+  height: calc(100vh - 60px);
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  background-color: #fafafa;
+}
+
+.chat-container {
+  min-width: 500px;
+  border: 1px #dbdbdb solid;
+  background-color: #fff;
+  flex: 1;
+  max-width: 900px;
+  height: 95%;
+  display: grid;
+  grid-template-columns: 0.35fr 0.65fr;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas: 
+  "active-chats-header full-chat-header"
+  "active-chat-list full-chat";
+}
+
+.active-chats-header {
+  grid-area: active-chats-header;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  border-bottom: 1px #dbdbdb solid;
+  border-right: 1px #dbdbdb solid;
+}
+
+.active-chats-header svg {
+  position: relative;
+  left: 20px;
+}
+
+.active-chats-list {
+  grid-area: active-chat-list;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border-right: 1px #dbdbdb solid;
+}
+
+.active-chat {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.full-chat-header {
+  grid-area: full-chat-header;
+  display: flex;
+  align-items: center;
+  padding: 20px 30px;
+  position: relative;
+  border-bottom: 1px #dbdbdb solid;
+}
+
+.full-chat-header svg {
+  position: absolute;
+  right: 30px;
+}
+
+.full-chat {
+  grid-area: full-chat;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-message-box {
+  height: 15%;
+  /* border: 1px black solid; */
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  gap: 20px;
+}
+
+.post-message-box > textarea {
+  /* add height if texts go beyond certain point. JS to make it 50% to 80% . Adjust padding too*/
+  /* height: 40%;  */
+  border-radius: 30px;
+  padding: 10px 20px;
+  border: 1px #dbdbdb solid;
+  width: 85%;
+}
+
+.post-message-box > textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.messages {
+  height: 900px;
+  max-height: 59.6vh; /* custom calculated by accessing viewport height */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+  padding: 20px;
+}
+
+.self-message {
+  background-color: #efefef;
+  padding: 14px;
+  border-radius: 20px;
+  align-self: flex-end;
+  max-width: 45%;
+}
+
+.other-message {
+  display: flex;
+  align-self: flex-start;
+  align-items: flex-end;
+  gap: 5px;
+  max-width: 50%;
+}
+
+.other-message > div {
+  border-radius: 20px;
+  padding: 14px;
+  border: 1px #efefef solid;
+}
+
+
+
 
 /* Full post ---------------------------------- */
 .FullPost {
@@ -589,7 +727,7 @@ footer > div {
 
 
 /* Add post form ----------------------------------  */
-.AddPost, .EditProfile, .LikeList, .FollowList {
+.AddPost, .EditProfile, .LikeList, .FollowList, .SearchChat {
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -600,7 +738,7 @@ footer > div {
   z-index: 3;
 }
 
-.AddPost .container, .EditProfile .container, .LikeList .container, .FollowList .container {
+.AddPost .container, .EditProfile .container, .LikeList .container, .FollowList .container, .SearchChat .container {
   background-color: #fff;
   width: 380px;
   /* height: 480px; */
@@ -716,8 +854,12 @@ footer > div {
 }
 
 @media only screen and (max-width: 700px) {
-  input[type="search"], .SearchBox svg, .SearchBox .dropdown {
+  input[type="search"], .SearchBox svg, .SearchBox .dropdown, .active-chats-header, .active-chats-list {
     display: none;
+  }
+
+  .chat-container {
+    grid-template-columns: 1fr;
   }
 
   .Profile .user-avatar {

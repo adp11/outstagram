@@ -69,12 +69,12 @@ shortcut icon bug
 fullpost on --> previewprofile + nav lost bug 
 
 NOTICES:
-clean up code
-manual test everything, stimulate real app flow 
 function reuse across components, setState reuse, useMemo props CODE CLEAN
 project presentation on Github (michalosman) for resume
 
-TODO FEATURES:
+TODO LIST:
+popups folder, google photoURL bug
+advanced, visual-appealing UI (windy effects while waiting for pics, loading image URL, oustagram, nav auto close, add WRD)
 stimulate real app flow (2nd) with more users (5+)
 toggle theme
 chat
