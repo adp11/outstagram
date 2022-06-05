@@ -13,11 +13,11 @@ import {
 } from "firebase/storage";
 import { db, storage } from "../firebase";
 import UserContext from "./Contexts/UserContext";
-import Snackbar from "./Snackbar";
+import Snackbar from "./Popups/Snackbar";
 import { computeHowLongAgo, insert } from "../utils";
 import ChatContext from "./Contexts/ChatContext";
-import SearchChat from "./SearchChat";
-import FullImage from "./FullImage";
+import SearchChat from "./Popups/SearchChat";
+import FullImage from "./Popups/FullImage";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
@@ -201,7 +201,6 @@ function Chat() {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages]);
-  
 
   useEffect(() => {
     const tempActiveRoomList = [];
@@ -332,7 +331,7 @@ function Chat() {
                 </svg>
                 {isDropdownActive && (
             /* eslint-disable-next-line */
-            <div onClick={() => {setNotImplementedError("Sorry. This feature is not yet implemented!")}} className="dropdown" style={{ position: "absolute", top: "40px", left: "-60px", width: "150px" }}>
+            <div onClick={() => {setNotImplementedError("Sorry! This feature is not yet implemented.")}} className="dropdown" style={{ position: "absolute", top: "40px", left: "-60px", width: "150px" }}>
               <div style={{ color: "#ed4956", fontWeight: "500", paddingLeft: "20px" }}>
                 Delete chat
               </div>

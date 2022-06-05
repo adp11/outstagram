@@ -32,7 +32,7 @@ function LoginForm() {
       setIsLoggedIn(true);
       if (/^\/p\//.test(window.location.pathname)) {
         setIsFullPostActive(true);
-        setAbruptPostView(true);
+        setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
       }
     } catch (error) {
       if (error.code === AuthErrorCodes.INVALID_PASSWORD) {
@@ -52,7 +52,10 @@ function LoginForm() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
     const { uid, displayName, photoURL } = getAuth().currentUser;
-
+    if (/^\/p\//.test(window.location.pathname)) {
+      setIsFullPostActive(true);
+      setAbruptPostView(`uid_${uid}`);
+    }
     // If first time logged in, initialize Field Values in Firestore db
     const docRef = doc(db, `users/uid_${uid}`);
     const docSnap = await getDoc(docRef);
@@ -78,7 +81,7 @@ function LoginForm() {
     <div className="auth-container">
       <div className="login-container">
         <div>
-          <img src={`${window.location.origin}/images/header.png`} alt="Instagram" style={{ width: "175px", height: "51px", margin: "40px 0" }} />
+          <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" style={{ width: "175px", height: "61px", margin: "40px 0" }} />
         </div>
         <form onSubmit={loginEmailPassword}>
           <div className="form-row">

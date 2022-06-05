@@ -9,6 +9,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 
+const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
+
 // no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
@@ -233,7 +235,7 @@ function Profile() {
     <div className="Profile">
       <div className="profile-container">
         <div className="profile-summary">
-          <img src={userAvatar} alt="" className="user-avatar" />
+          <img src={userAvatar || IMAGE_PLACEHOLDER_URL} alt="" className="user-avatar" />
           <div className="user-info">
             <div style={{ display: "flex" }}>
               <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>

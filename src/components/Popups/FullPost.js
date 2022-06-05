@@ -8,10 +8,12 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
-import { db, storage } from "../firebase";
-import { computeHowLongAgo } from "../utils";
-import UserContext from "./Contexts/UserContext";
+import { db, storage } from "../../firebase";
+import { computeHowLongAgo } from "../../utils";
+import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
+
+const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
 function FullPost() {
   const {
@@ -214,7 +216,7 @@ function FullPost() {
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);
 
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) { // notice: serverTimestamp() retrieval
+      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) { // notice: serverTimestamp() retrieval
         const docSnap = await getDoc(postRef);
         if (docSnap.exists()) {
           setFullPostInfo(docSnap.data());
@@ -247,7 +249,7 @@ function FullPost() {
       });
       updatePostSnippets("unlike", postInfo);
       // FullPost coming from Profile doesn't get realtime update (newsfeed[fullPostIndex] is auto-updated) --> manual update by setFullPostInfo()
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) {
+      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) {
         setFullPostInfo({ ...fullPostInfo, likes: newLikes });
       }
     } else {
@@ -261,7 +263,7 @@ function FullPost() {
         likes: newLikes,
       });
       updatePostSnippets("like", postInfo);
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile) {
+      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) {
         setFullPostInfo({ ...fullPostInfo, likes: newLikes });
       }
       if (postInfo.authorId !== userData.uid) {
@@ -285,29 +287,46 @@ function FullPost() {
   useEffect(() => {
     async function helper(document) {
       const paramsPostId = window.location.pathname.substring(3); // window.href.pathname = "/p/:postId"
-      const q = query(collection(db, `users/${document.data().uid}/posts`), where("postId", "==", paramsPostId));
+      const documentData = document.data();
+      const q = query(collection(db, `users/${documentData.uid}/posts`), where("postId", "==", paramsPostId));
       const qSnapshot = await getDocs(q);
       console.log(qSnapshot.size, "qSnapshot.size");
       if (qSnapshot.size === 0) {
         return false;
       }
-      qSnapshot.forEach((document2) => {
-        const {
-          authorId, authorUsername, authorPhotoURL, imageURL, filePath, postCaption, creationTime, comments, likes, postId,
-        } = document2.data();
-        setComponentVars({
-          authorId,
-          authorUsername,
-          authorPhotoURL,
-          postPictureURL: imageURL,
-          filePath,
-          postCaption,
-          postCreationTime: computeHowLongAgo(creationTime.seconds),
-          postCmts: comments,
-          postLikes: likes,
-          postId,
-          fromWhich: document2.data(),
-        });
+      qSnapshot.forEach(async (document2) => {
+        // const {
+        //   authorId, authorUsername, authorPhotoURL, imageURL, filePath, postCaption, creationTime, comments, likes, postId,
+        // } = document2.data();
+        console.log("post ID FOUND");
+        // if ((userData && document2.data().authorId === userData.uid) || (document2.data().authorId === abruptPostView)) {
+        //   setBeforeFullPost({
+        //     newsfeed: false,
+        //     selfProfile: true,
+        //     visitedProfile: false,
+        //   });
+        // } else {
+        //   setBeforeFullPost({
+        //     newsfeed: false,
+        //     selfProfile: false,
+        //     visitedProfile: true,
+        //   });
+        // }
+        setFullPostInfo(document2.data());
+
+        // setComponentVars({
+        //   authorId,
+        //   authorUsername,
+        //   authorPhotoURL,
+        //   postPictureURL: imageURL,
+        //   filePath,
+        //   postCaption,
+        //   postCreationTime: computeHowLongAgo(creationTime.seconds),
+        //   postCmts: comments,
+        //   postLikes: likes,
+        //   postId,
+        //   fromWhich: document2.data(),
+        // });
       });
       return true;
     }
@@ -344,7 +363,7 @@ function FullPost() {
         postId: newsfeed[fullPostIndex].postId,
         fromWhich: newsfeed[fullPostIndex],
       });
-    } else if ((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && fullPostInfo !== null) {
+    } else if (((beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) && fullPostInfo !== null)) {
       setComponentVars({
         authorId: fullPostInfo.authorId,
         authorUsername: fullPostInfo.authorUsername,
@@ -393,19 +412,19 @@ function FullPost() {
 
       <div className="fullpost-container">
         <div>
-          <img onLoad={handleImageSize} className="post-picture" src={postPictureURL} alt="" style={{ objectFit: toResize ? "cover" : "contain" }} />
+          <img onLoad={handleImageSize} className="post-picture" src={postPictureURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ objectFit: ((!postPictureURL) || (postPictureURL && toResize)) ? "cover" : "contain" }} />
         </div>
 
         <div className="post-info">
           <div className="user-profile">
-            <img className="user-avatar" src={authorPhotoURL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
+            <img className="user-avatar" src={authorPhotoURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
             <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
             {/* <span className="medium bold" style={{ color: "#0095f6", marginLeft: "10px" }}>Following</span> */}
           </div>
           <div className="comment-section">
             {postCaption && (
               <div className="post-caption">
-                <img className="user-avatar" src={authorPhotoURL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
+                <img className="user-avatar" src={authorPhotoURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
                 <div>
                   <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
                   {" "}
@@ -500,7 +519,7 @@ function FullPost() {
             )}
 
           <form onSubmit={handleSubmitPostComment} className="post-comment-box">
-            <textarea ref={textareaRef} onChange={(e) => { setPostComments({ ...postComments, [postId]: e.target.value }); }} type="text" placeholder="Add a comment..." value={(postComments[postId]) || ""} />
+            <textarea ref={textareaRef} onChange={(e) => { setPostComments({ ...postComments, [postId]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e); }} type="text" placeholder="Add a comment..." value={(postComments[postId]) || ""} />
             <span onClick={handleSubmitPostComment} className="submit-btn" type="submit">Post</span>
           </form>
         </div>

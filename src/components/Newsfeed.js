@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
-import Snackbar from "./Snackbar";
+import Snackbar from "./Popups/Snackbar";
 import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
@@ -273,7 +273,7 @@ function Newsfeed() {
             <div className="grey extrasmall" style={{ margin: "0 20px" }}>{computeHowLongAgo(post.creationTime.seconds, false)}</div>
 
             <form onSubmit={(e) => { handleSubmitPostComment(e, index); }} className="post-comment-box">
-              <textarea onChange={(e) => { console.log({ ...postComments, [post.postId]: e.target.value }); setPostComments({ ...postComments, [post.postId]: e.target.value }); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
+              <textarea onChange={(e) => { console.log({ ...postComments, [post.postId]: e.target.value }); setPostComments({ ...postComments, [post.postId]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e, index); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
               <span onClick={(e) => { handleSubmitPostComment(e, index); }} className="submit-btn" type="submit">Post</span>
             </form>
           </div>

@@ -3,6 +3,8 @@ import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
+const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
+
 function ProfilePreview() {
   const {
     userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo,
@@ -41,7 +43,7 @@ function ProfilePreview() {
       <div className="user-profile">
         <Link to={`/uid_${getAuth().currentUser.uid}`}>
           <div>
-            <img src={userData && userData.photoURL} alt="profile" />
+            <img src={userData ? userData.photoURL : IMAGE_PLACEHOLDER_URL} alt="profile" />
           </div>
         </Link>
         <Link to={`/uid_${getAuth().currentUser.uid}`}>

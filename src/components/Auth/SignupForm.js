@@ -11,13 +11,14 @@ import { auth, db } from "../../firebase";
 import AuthContext from "../Contexts/AuthContext";
 import UserContext from "../Contexts/UserContext";
 import { capitalizeFirebaseAuthError } from "../../utils";
-import Snackbar from "../Snackbar";
+import Snackbar from "../Popups/Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function SignupForm() {
-  const { setIsLoggedIn } = useContext(UserContext);
+  const { setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,11 @@ function SignupForm() {
     try {
       setIsLoading(true);
       await createUserWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
+
+      if (/^\/p\//.test(window.location.pathname)) {
+        setIsFullPostActive(true);
+        setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
+      }
 
       // Because there's no paramater for displayName in createUserWithEmailAndPassword()
       updateProfile(getAuth().currentUser, {
@@ -70,7 +76,10 @@ function SignupForm() {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(getAuth(), provider);
     const { uid, displayName, photoURL } = getAuth().currentUser;
-
+    if (/^\/p\//.test(window.location.pathname)) {
+      setIsFullPostActive(true);
+      setAbruptPostView(`uid_${uid}`);
+    }
     // If first time logged in, initialize Field Values in Firestore db
     const docRef = doc(db, `users/uid_${uid}`);
     const docSnap = await getDoc(docRef);
@@ -96,7 +105,7 @@ function SignupForm() {
     <div className="auth-container">
       <div className="signup-container">
         <div>
-          <img src={`${window.location.origin}/images/header.png`} alt="Instagram" style={{ width: "175px", height: "51px" }} />
+          <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" style={{ width: "175px", height: "61px" }} />
           {/* eslint-disable-next-line */}
           <p style={{ textAlign: "center", fontSize: "18px", fontWeight: "600", color: "#8e8e8e" }} >
             Sign up to see photos and videos from your friends

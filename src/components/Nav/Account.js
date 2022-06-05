@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import React, { useContext, useState } from "react";
 import UserContext from "../Contexts/UserContext";
 
+const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
+
 function Account() {
   const { setIsLoggedIn, userData, setIsProfilePageNotFoundActive } = useContext(UserContext);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
@@ -16,7 +18,7 @@ function Account() {
     <div className="Account">
       <div className="profile-avatar" onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
         <img
-          src={userData && userData.photoURL}
+          src={userData ? userData.photoURL : IMAGE_PLACEHOLDER_URL}
           alt="pic"
           style={{ width: "26px", height: "26px", borderRadius: "50%" }}
         />

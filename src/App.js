@@ -12,15 +12,15 @@ import Newsfeed from "./components/Newsfeed";
 import ProfilePreview from "./components/ProfilePreview";
 import Profile from "./components/Profile";
 import Auth from "./components/Auth/Auth";
-import AddPost from "./components/AddPost";
-import FullPost from "./components/FullPost";
+import AddPost from "./components/Popups/AddPost";
+import FullPost from "./components/Popups/FullPost";
 import UserContext from "./components/Contexts/UserContext";
 import { db } from "./firebase";
-import EditProfile from "./components/EditProfile";
+import EditProfile from "./components/Popups/EditProfile";
 import { insert } from "./utils";
 import PageNotFound from "./components/PageNotFound";
-import LikeList from "./components/LikeList";
-import FollowList from "./components/FollowList";
+import LikeList from "./components/Popups/LikeList";
+import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
@@ -177,6 +177,7 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
+      console.log("WHEN I AM FETCHING NEWSFEED (POST ABRUPT)");
       fetchNewsfeed();
     }
   }, [userData]);
@@ -214,8 +215,8 @@ function App() {
               {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
               {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
               {/* eslint-disable-next-line */}
-              {(beforeFullPost.newsfeed) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
-              {(beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && <Route path="/p/:postId" element={<Profile />} />}
+              {(beforeFullPost.newsfeed && !abruptPostView) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
+              {((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && !abruptPostView) && <Route path="/p/:postId" element={<Profile />} />}
               {isPostPageNotFoundActive && <Route path="/p/:postId" element={<PageNotFound />} />}
             </Routes>
             )}

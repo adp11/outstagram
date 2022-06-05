@@ -33,7 +33,7 @@ function Nav() {
     <div className={`Nav ${(isSearchChatActive) ? "blur opac" : (isFullImageActive) ? "blur2 opac2" : ""}`}>
       <div className="nav-container">
         <div onClick={refresh}>
-          <img src={`${window.location.origin}/images/header.png`} alt="Instagram" className="header" />
+          <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" className="header" />
         </div>
         <SearchBox />
         <div className="nav-buttons">

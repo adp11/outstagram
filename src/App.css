@@ -5,6 +5,7 @@
 .App {
   margin: 0;
   width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Navigation bar ---------------------------------- */
@@ -31,8 +32,8 @@
 }
 
 .header {
-  width: 110px;
-  height: auto;
+  width: 130px;
+  height: 45px; /* height: auto */
 }
 
 .nav-buttons {
@@ -866,7 +867,11 @@ footer > div {
 
   .chat-container {
     grid-template-columns: 1fr;
+    grid-template-areas: 
+    "full-chat-header"
+    "full-chat";
   }
+  
 
   .Profile .user-avatar {
     width: 77px;

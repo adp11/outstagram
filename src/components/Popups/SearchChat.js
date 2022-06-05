@@ -6,11 +6,11 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
-import UserContext from "./Contexts/UserContext";
-import { db } from "../firebase";
+import UserContext from "../Contexts/UserContext";
+import { db } from "../../firebase";
 import Snackbar from "./Snackbar";
-import { computeHowLongAgo } from "../utils";
-import ChatContext from "./Contexts/ChatContext";
+import { computeHowLongAgo } from "../../utils";
+import ChatContext from "../Contexts/ChatContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState } from "react";
-import UserContext from "./Contexts/UserContext";
-import ChatContext from "./Contexts/ChatContext";
+import UserContext from "../Contexts/UserContext";
+import ChatContext from "../Contexts/ChatContext";
 
 function FullImage() {
   const { setIsFullImageActive } = useContext(UserContext);

@@ -4,8 +4,8 @@ import {
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
-import { db } from "../firebase";
-import UserContext from "./Contexts/UserContext";
+import { db } from "../../firebase";
+import UserContext from "../Contexts/UserContext";
 
 function LikeList() {
   const {

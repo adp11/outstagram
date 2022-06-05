@@ -13,8 +13,8 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import UserContext from "./Contexts/UserContext";
-import { db, storage } from "../firebase";
+import UserContext from "../Contexts/UserContext";
+import { db, storage } from "../../firebase";
 import Snackbar from "./Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";

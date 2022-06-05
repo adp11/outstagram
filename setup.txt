@@ -71,18 +71,22 @@ routing bug (/chat FIXED, /chat/:roomId FIXED)
 editprofile -> update rooms - ADDED
 chat notifications - ADDED
 
+popups folder, outstagram - DONE
+google photoURL bug - UNSEEN
+fix operations on abrupt access full post - FIXED
+(windy effects while waiting for pics) - FIXED
+post comment enter - FIXED
 
-
-TODO LIST: 
-popups folder, google photoURL bug
-advanced, visual-appealing UI (windy effects while waiting for pics, loading image URL, oustagram, nav auto close, add WRD)
 stimulate real app flow (2nd) with more users (5+)
 toggle theme
 
 TRIVIAL - IGNORED:
+nav popups
 shortcut icon bug
 fullpost on --> previewprofile + nav lost bug 
 
 NOTES:
+clean and visual-appealing UI 
+add more WRD
 function reuse across components, setState reuse, useMemo props CODE CLEAN
 project presentation on Github (michalosman) for resume
