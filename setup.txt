@@ -29,7 +29,8 @@ npx tailwindcss init
     ],
     
 
-BUG BULK FIXES
+                                              BUG FIXES - FIRST BATCH
+
 view visitedProfile -> view full post --> selfProfile background bug - FIXED
 operations on fullpost from visitedProfile bug - FIXED
 
@@ -63,20 +64,25 @@ stimulate reall app flow FOR THE FIRST TIME to check what's lacking, what's to b
 add clipboard - ADDED
 handleImageSize when full post - ADDED
 
+                                      BUG FIXES - SECOND BATCH (new branch - chat feature)
+
+visit profile in full chat header and back bug - FIXED
+routing bug (/chat FIXED, /chat/:roomId FIXED)
+editprofile -> update rooms - ADDED
+chat notifications - ADDED
+
+
+
+TODO LIST: 
+popups folder, google photoURL bug
+advanced, visual-appealing UI (windy effects while waiting for pics, loading image URL, oustagram, nav auto close, add WRD)
+stimulate real app flow (2nd) with more users (5+)
+toggle theme
 
 TRIVIAL - IGNORED:
 shortcut icon bug
 fullpost on --> previewprofile + nav lost bug 
 
-NOTICES:
+NOTES:
 function reuse across components, setState reuse, useMemo props CODE CLEAN
 project presentation on Github (michalosman) for resume
-
-TODO LIST:
-popups folder, google photoURL bug
-advanced, visual-appealing UI (windy effects while waiting for pics, loading image URL, oustagram, nav auto close, add WRD)
-stimulate real app flow (2nd) with more users (5+)
-toggle theme
-chat
-
-

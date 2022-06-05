@@ -65,6 +65,7 @@ function LoginForm() {
         bio: "",
         totalPosts: 0,
         totalNotifs: 0,
+        totalChatNotifs: 0,
         postSnippets: [],
         followers: [],
         following: [],

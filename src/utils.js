@@ -42,20 +42,20 @@ function computeHowLongAgo(unixTime, abbreviation = true) {
 }
 
 // find the location to insert a key into a sorted descending list
-function binarySearch(arr, key, start, end) {
+function binarySearch(arr, key, start, end, field) {
   if (start > end) return start;
 
   const mid = Math.floor((start + end) / 2);
-  if (arr[mid].creationTime.seconds === key.creationTime.seconds) return mid;
-  if (arr[mid].creationTime.seconds > key.creationTime.seconds) return binarySearch(arr, key, mid + 1, end);
-  return binarySearch(arr, key, start, mid - 1);
+  if (arr[mid][field].seconds === key[field].seconds) return mid;
+  if (arr[mid][field].seconds > key[field].seconds) return binarySearch(arr, key, mid + 1, end, field);
+  return binarySearch(arr, key, start, mid - 1, field);
 }
 
-function insert(arr, element) {
+function insert(arr, element, field) {
   if (arr.length === 0) {
     arr.push(element);
   } else {
-    const pos = binarySearch(arr, element, 0, arr.length - 1);
+    const pos = binarySearch(arr, element, 0, arr.length - 1, field);
     arr.splice(pos, 0, element);
   }
 }

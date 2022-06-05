@@ -5,6 +5,7 @@ import {
   doc,
   collection,
   getDocs,
+  getDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -77,6 +78,52 @@ function EditProfile() {
     });
   }
 
+  async function updateAcrossRooms(publicImageURL) {
+    const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/rooms`));
+    querySnapshot.forEach(async (document) => {
+      const documentData = document.data();
+      const roomRef = doc(db, `users/${userData.uid}/rooms/${documentData.roomId}`);
+      if (publicImageURL) {
+        await updateDoc(roomRef, {
+          "membersInfo.self": {
+            username,
+            displayName,
+            photoURL: publicImageURL,
+          },
+        });
+
+        const docSnap = await getDoc(roomRef);
+        if (docSnap.exists()) {
+          await updateDoc(doc(db, `users/${docSnap.data().members[1]}/rooms/${documentData.roomId}`), {
+            "membersInfo.other": {
+              username,
+              displayName,
+              photoURL: publicImageURL,
+            },
+          });
+        }
+      } else {
+        await updateDoc(roomRef, {
+          "membersInfo.self": {
+            username,
+            photoURL: userData.photoURL,
+            displayName,
+          },
+        });
+        const docSnap = await getDoc(roomRef);
+        if (docSnap.exists()) {
+          await updateDoc(doc(db, `users/${docSnap.data().members[1]}/rooms/${documentData.roomId}`), {
+            "membersInfo.other": {
+              username,
+              photoURL: docSnap.data().photoURL,
+              displayName,
+            },
+          });
+        }
+      }
+    });
+  }
+
   async function handleEditProfileSubmission(e) {
     e.preventDefault();
     let newImageRef;
@@ -95,9 +142,10 @@ function EditProfile() {
         });
       }
 
-      setIsEditProfileActive(false);
       updateUserData(publicImageURL);
       updateAcrossPosts(publicImageURL);
+      updateAcrossRooms(publicImageURL);
+      setIsEditProfileActive(false);
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);
       await deleteObject(newImageRef); // undo code executed inside try block

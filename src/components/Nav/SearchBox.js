@@ -56,7 +56,7 @@ function SearchBox() {
         <line fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="16.511" x2="22" y1="16.511" y2="22" />
       </svg>
 
-      <input onFocus={() => { setIsSearchActive(true); }} onChange={(e) => { handleQuery(e.target.value.toLowerCase()); }} type="search" placeholder="Search" maxLength="20" />
+      <input onFocus={() => { setIsSearchActive(true); }} onChange={(e) => { handleQuery(e.target.value.trim().toLowerCase()); }} type="search" placeholder="Search" maxLength="20" />
 
       {isSearchActive && (
       <div className="dropdown" ref={dropdownRef}>

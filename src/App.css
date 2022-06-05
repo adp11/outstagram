@@ -95,7 +95,7 @@ input[type="search"] {
   position: relative;
 }
 
-.Account .dropdown, .FullPost .dropdown {
+.Account .dropdown, .FullPost .dropdown, .Chat .dropdown {
   box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
   border-radius: 10px;
   position: absolute;
@@ -107,7 +107,7 @@ input[type="search"] {
   flex-direction: column;
 }
 
-.Account .dropdown > *, .FullPost .dropdown > * {
+.Account .dropdown > *, .FullPost .dropdown > *, .Chat .dropdown > * {
   display: flex;
   align-items: center;
   font-size: 14px;
@@ -363,14 +363,14 @@ input[type="search"] {
   grid-area: active-chat-list;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  padding: 10px 0;
   border-right: 1px #dbdbdb solid;
 }
 
 .active-chat {
   display: flex;
   gap: 10px;
+  padding: 10px 20px;
   align-items: center;
 }
 
@@ -380,15 +380,15 @@ input[type="search"] {
   align-items: center;
   padding: 20px 30px;
   position: relative;
-  border-bottom: 1px #dbdbdb solid;
 }
 
-.full-chat-header svg {
+.full-chat-header .more {
   position: absolute;
   right: 30px;
 }
 
 .full-chat {
+  border-top: 1px #dbdbdb solid;
   grid-area: full-chat;
   height: 100%;
   max-height: 100%;
@@ -405,7 +405,7 @@ input[type="search"] {
   align-items: center;
   justify-content: center;
   padding: 0 20px;
-  gap: 20px;
+  gap: 10px;
 }
 
 .post-message-box > textarea {
@@ -443,7 +443,7 @@ input[type="search"] {
   display: flex;
   align-self: flex-start;
   align-items: flex-end;
-  gap: 5px;
+  gap: 10px;
   max-width: 50%;
 }
 
@@ -727,7 +727,7 @@ footer > div {
 
 
 /* Add post form ----------------------------------  */
-.AddPost, .EditProfile, .LikeList, .FollowList, .SearchChat {
+.AddPost, .EditProfile, .LikeList, .FollowList, .SearchChat, .FullImage {
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -750,6 +750,12 @@ footer > div {
   gap: 10px;
   padding: 10px;
   z-index: 4;
+}
+
+.FullImage .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .AddPost form, .LikeList .list, .FollowList .list {
@@ -902,7 +908,7 @@ footer > div {
 }
 
 /* utilities */
-.profile-card, .logout-shortcut:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover, .user-avatar:hover, .username:hover, .post-likes:hover, .src-avatar:hover, .user-stats > *:hover {
+.profile-card, .logout-shortcut:hover, .profile-card img:hover, .header:hover, .NewsfeedPost .user-picture:hover, .user-preview span:hover, .post-btns > *:hover, .post-all-comments:hover, .post-likes span:hover, .post-comment-box .post-btn:hover, .nav-buttons > *:hover, .profile-stats>*:hover, .profile-username button:hover, .login-container span:hover, .signup-container span:hover, .login-box span:hover, .signup-box span:hover, .login-provider:hover, .Auth img:hover, .file-upload-container label:hover, .user-avatar:hover, .username:hover, .post-likes:hover, .src-avatar:hover, .user-stats > *:hover, .send-message:hover, .active-chat:hover, .drop-heart:hover, .send-image:hover, .messages img:hover, .Chat .dropdown > *:hover, .more:hover {
   cursor: pointer;
 }
 
@@ -934,8 +940,16 @@ form input:focus, textarea:focus {
   filter: blur(1px);
 }
 
+.blur2 {
+  filter: blur(3px);
+}
+
 .opac {
   opacity: 0.5;
+}
+
+.opac2 {
+  opacity: 0.8;
 }
 
 .cut1 {
@@ -950,6 +964,14 @@ form input:focus, textarea:focus {
   white-space: nowrap;
   overflow: hidden;
   max-width: 200px;
+}
+
+.cut {
+  display: inline-block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 120px;
 }
 
 a, a:hover {

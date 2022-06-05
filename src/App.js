@@ -22,7 +22,6 @@ import PageNotFound from "./components/PageNotFound";
 import LikeList from "./components/LikeList";
 import FollowList from "./components/FollowList";
 import Chat from "./components/Chat";
-import SearchChat from "./components/SearchChat";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -36,6 +35,9 @@ function App() {
   });
   const [isProfilePageNotFoundActive, setIsProfilePageNotFoundActive] = useState(false);
   const [isPostPageNotFoundActive, setIsPostPageNotFoundActive] = useState(false);
+  const [isRoomPageNotFoundActive, setIsRoomPageNotFoundActive] = useState(false);
+  const [isSearchChatActive, setIsSearchChatActive] = useState(false);
+  const [isFullImageActive, setIsFullImageActive] = useState(false);
   const [abruptPostView, setAbruptPostView] = useState(false);
 
   const [userData, setUserData] = useState(null);
@@ -60,6 +62,8 @@ function App() {
   const scrollY = useRef(0);
   let stopRealTimeListen1 = null;
   let stopRealTimeListen2 = null;
+  const unsubscribeFromRealTimeMessages = {};
+  const didFetchActiveRooms = false;
 
   /*
     1. fetch Newsfeed is designed to real-time listen to remote db
@@ -77,7 +81,7 @@ function App() {
         } else if (change.type === "added") {
           const data = change.doc.data();
           if (Object.keys(data).length >= 10) {
-            insert(tempNewsfeed, change.doc.data()); // recent to old - big to small UnixTime
+            insert(tempNewsfeed, change.doc.data(), "creationTime"); // recent to old - big to small UnixTime
           }
         } else {
           console.log("before modified");
@@ -86,7 +90,7 @@ function App() {
           if (modifiedPosition !== -1) {
             tempNewsfeed.splice(modifiedPosition, 1, data);
           } else if (modifiedPosition === -1 && Object.keys(data).length >= 10) {
-            insert(tempNewsfeed, change.doc.data());
+            insert(tempNewsfeed, change.doc.data(), "creationTime");
           }
         }
       });
@@ -116,9 +120,9 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, isLikeListActive, isFollowListActive, isFullPostActive, likeListInfo, followListInfo, abruptPostView, scrollY, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView,
+      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, isLikeListActive, isFollowListActive, isFullPostActive, likeListInfo, followListInfo, abruptPostView, isSearchChatActive, scrollY, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, unsubscribeFromRealTimeMessages, isFullImageActive, setIsFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, setIsRoomPageNotFoundActive,
     }),
-    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, abruptPostView, isFullPostActive],
+    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, abruptPostView, isFullPostActive, isSearchChatActive, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive],
   );
 
   useEffect(() => {
@@ -155,6 +159,7 @@ function App() {
       setFullPostInfo(null);
       setIsProfilePageNotFoundActive(false);
       setIsPostPageNotFoundActive(false);
+      setIsRoomPageNotFoundActive(false);
       setAbruptPostView(false);
       scrollY.current = 0;
       if (stopRealTimeListen1) {
@@ -202,11 +207,12 @@ function App() {
             {isLoggedIn && (
             <Routes>
               {/* eslint-disable-next-line */}
-              {/* <Route path="/" element={<Chat />} /> */}
-              <Route path="/" element={<SearchChat />} />
-              {/* <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} /> */}
+              <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
+              <Route path="/chat" element={<Chat />} />
               {!isProfilePageNotFoundActive && <Route path="/:uid" element={<Profile />} />}
               {isProfilePageNotFoundActive && <Route path="/:uid" element={<PageNotFound />} />}
+              {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
+              {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
               {/* eslint-disable-next-line */}
               {(beforeFullPost.newsfeed) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
               {(beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && <Route path="/p/:postId" element={<Profile />} />}
