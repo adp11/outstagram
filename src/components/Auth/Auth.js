@@ -25,7 +25,7 @@ function Auth() {
         </div>
         <div>
           <span>
-            © 2022 Instagram from
+            © 2022 Outstagram from
             {" "}
             <a href="https://github.com/adp11">adp11</a>
           </span>

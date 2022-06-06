@@ -15,18 +15,23 @@ import Snackbar from "./Snackbar";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
+// FullPost can come from 4 sources: abrupt access, visited profile, self profile, and newsfeed
 function FullPost() {
   const {
-    userData, visitedUserData, newsfeed, setIsFullPostActive, fullPostIndex, setFullPostIndex, beforeFullPost, setBeforeFullPost, fullPostInfo, setFullPostInfo, setVisitedUserData, setAllUserData, allUserData, setUserData, setIsLikeListActive, setLikeListInfo, scrollY, isLikeListActive, setIsPostPageNotFoundActive, abruptPostView, isFullPostActive, setAbruptPostView,
+    userData, allUserData, visitedUserData, newsfeed, scrollY, fullPostIndex, beforeFullPost, fullPostInfo, isLikeListActive, abruptPostView,
+    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfo, setVisitedUserData, setAllUserData, setUserData, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setAbruptPostView,
   } = useContext(UserContext);
-  const navigate = useNavigate();
-  const [isDropdownActive, setIsDropdownActive] = useState(false);
-  const [toResize, setToResize] = useState(false);
-  const [clipboardMessage, setClipboardMessage] = useState(null);
 
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
+  const [clipboardMessage, setClipboardMessage] = useState(null);
+  const [notImplementedError, setNotImplementedError] = useState(false);
+  const [toResize, setToResize] = useState(false);
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
   const [submitCommentError, setSubmitCommentError] = useState(null);
+
+  const navigate = useNavigate();
+  const textareaRef = useRef();
 
   // Conditional rendering
   const [componentVars, setComponentVars] = useState({
@@ -42,7 +47,6 @@ function FullPost() {
     postId: "",
     fromWhich: null,
   });
-  const textareaRef = useRef();
 
   async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
     const collectionPath = `users/${authorId}/notifications`;
@@ -107,9 +111,10 @@ function FullPost() {
     } else if (beforeFullPost.visitedProfile && redirect) {
       navigate(`/${visitedUserData.uid}`);
       setFullPostInfo(null);
-    } else {
+    } else if ((beforeFullPost.newsfeed && redirect) || abruptPostView) { // closing abrupt full post redirects to newsfeed
       navigate("/");
       setFullPostIndex(null);
+      setFullPostInfo(null);
     }
 
     setBeforeFullPost({
@@ -124,7 +129,6 @@ function FullPost() {
     setIsDropdownActive(false);
     handleCloseFullPost();
     await deleteDoc(doc(db, `users/${authorId}/posts/${postId}`));
-    console.log("deleting ...");
 
     // delete in Storage
     const imageRef = ref(storage, filePath);
@@ -139,7 +143,6 @@ function FullPost() {
     tempUserData.totalPosts -= 1;
     tempUserData.postSnippets = tempUserData.postSnippets.filter((postSnippet) => postSnippet.postId !== postId);
     setUserData(tempUserData);
-    console.log(tempUserData, "tempUserData");
     const docRef = doc(db, `users/${authorId}`);
     await setDoc(docRef, tempUserData);
   }
@@ -172,16 +175,12 @@ function FullPost() {
     // UI rerender for postSnippets in userData/allUserData
     if (beforeFullPost.selfProfile || (beforeFullPost.newsfeed && postInfo.authorId === userData.uid)) {
       setUserData(tempData);
-      console.log(tempData, "tempData in self");
     } else if (beforeFullPost.visitedProfile) {
       setVisitedUserData(tempData);
-      console.log(tempData, "tempData in visited");
     } else if (beforeFullPost.newsfeed && postInfo.authorId !== userData.uid) {
       const tempAllUserData = [...allUserData];
       const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
-      console.log(userPos, "userPos");
       tempAllUserData.splice(userPos, 1, tempData);
-      console.log(tempAllUserData, "tempAllUserData");
       setAllUserData(tempAllUserData);
     }
   }
@@ -216,7 +215,7 @@ function FullPost() {
       setPostComments({ ...postComments, [postInfo.postId]: "" });
       updatePostSnippets("comment", postInfo);
 
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) { // notice: serverTimestamp() retrieval
+      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) { // getDoc again because of needing to retrieve serverTimestamp() value
         const docSnap = await getDoc(postRef);
         if (docSnap.exists()) {
           setFullPostInfo(docSnap.data());
@@ -242,7 +241,7 @@ function FullPost() {
     }
     const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
     const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === userData.uid);
-    if (targetIndex !== -1) {
+    if (targetIndex !== -1) { // unlike
       newLikes = postInfo.likes.filter((like, idx) => idx !== targetIndex);
       await updateDoc(postRef, {
         likes: newLikes,
@@ -252,7 +251,7 @@ function FullPost() {
       if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) {
         setFullPostInfo({ ...fullPostInfo, likes: newLikes });
       }
-    } else {
+    } else { // like
       newLikes = postInfo.likes.concat({
         sourceId: userData.uid,
         sourcePhotoURL: userData.photoURL,
@@ -269,6 +268,22 @@ function FullPost() {
       if (postInfo.authorId !== userData.uid) {
         updateNotifications(postInfo, "like");
       }
+    }
+  }
+
+  async function handleVisitProfile(uid) {
+    handleCloseFullPost(false); // prevent nagivate() 2 times
+    const docRef = doc(db, `users/${uid}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      navigate(`/${uid}`);
+      setVisitedUserData(docSnap.data());
+    }
+  }
+
+  function handleImageSize({ target: img }) {
+    if (Math.abs(img.naturalHeight - img.naturalWidth) < 100) {
+      setToResize(true);
     }
   }
 
@@ -290,47 +305,17 @@ function FullPost() {
       const documentData = document.data();
       const q = query(collection(db, `users/${documentData.uid}/posts`), where("postId", "==", paramsPostId));
       const qSnapshot = await getDocs(q);
-      console.log(qSnapshot.size, "qSnapshot.size");
       if (qSnapshot.size === 0) {
         return false;
       }
       qSnapshot.forEach(async (document2) => {
-        // const {
-        //   authorId, authorUsername, authorPhotoURL, imageURL, filePath, postCaption, creationTime, comments, likes, postId,
-        // } = document2.data();
-        console.log("post ID FOUND");
-        // if ((userData && document2.data().authorId === userData.uid) || (document2.data().authorId === abruptPostView)) {
-        //   setBeforeFullPost({
-        //     newsfeed: false,
-        //     selfProfile: true,
-        //     visitedProfile: false,
-        //   });
-        // } else {
-        //   setBeforeFullPost({
-        //     newsfeed: false,
-        //     selfProfile: false,
-        //     visitedProfile: true,
-        //   });
-        // }
         setFullPostInfo(document2.data());
-
-        // setComponentVars({
-        //   authorId,
-        //   authorUsername,
-        //   authorPhotoURL,
-        //   postPictureURL: imageURL,
-        //   filePath,
-        //   postCaption,
-        //   postCreationTime: computeHowLongAgo(creationTime.seconds),
-        //   postCmts: comments,
-        //   postLikes: likes,
-        //   postId,
-        //   fromWhich: document2.data(),
-        // });
       });
       return true;
     }
 
+    // logic: find a way/workaround with async code to setFullPostInfo() if finding postId and redirect to PageNotFound otherwise
+    // caveats: could've improved by returning right away upon true (not loop over all)
     async function handleVisitFullPost() {
       let postIdFound = false;
       let count = 0;
@@ -348,7 +333,6 @@ function FullPost() {
       });
     }
 
-    console.log("componentVars triggered");
     if (beforeFullPost.newsfeed && fullPostIndex !== null) {
       setComponentVars({
         authorId: newsfeed[fullPostIndex].authorId,
@@ -378,32 +362,13 @@ function FullPost() {
         fromWhich: fullPostInfo,
       });
     } else if (abruptPostView) {
-      handleVisitFullPost();
+      handleVisitFullPost(); // handle abrupt view of full post
     }
   }, [fullPostInfo, newsfeed[fullPostIndex]]);
 
   const {
     authorId, authorUsername, authorPhotoURL, postPictureURL, filePath, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
   } = componentVars;
-
-  async function handleVisitProfile(uid) {
-    handleCloseFullPost(false); // prevent nagivate() 2 times
-    console.log("visiting profile", uid);
-    const docRef = doc(db, `users/${uid}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      navigate(`/${uid}`);
-      setVisitedUserData(docSnap.data());
-    }
-  }
-
-  function handleImageSize({ target: img }) {
-    console.log(img.naturalHeight, "img.naturalHeight");
-    console.log(img.naturalWidth, "img.naturalWidth");
-    if (Math.abs(img.naturalHeight - img.naturalWidth) < 100) {
-      setToResize(true);
-    }
-  }
 
   return (
     <div className={`FullPost ${(isLikeListActive) ? "blur" : ""}`}>
@@ -419,7 +384,6 @@ function FullPost() {
           <div className="user-profile">
             <img className="user-avatar" src={authorPhotoURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
             <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
-            {/* <span className="medium bold" style={{ color: "#0095f6", marginLeft: "10px" }}>Following</span> */}
           </div>
           <div className="comment-section">
             {postCaption && (
@@ -461,7 +425,7 @@ function FullPost() {
               <path d="M20.656 17.008a9.993 9.993 0 10-3.59 3.615L22 22z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
             </svg>
 
-            <svg className="share" color="black" fill="#8e8e8e" height="24" role="img" viewBox="0 0 24 24" width="24">
+            <svg onClick={() => { setNotImplementedError("Sorry! This feature is not yet implemented. "); }} className="share" color="black" fill="#8e8e8e" height="24" role="img" viewBox="0 0 24 24" width="24">
               <line fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" x1="22" x2="9.218" y1="3" y2="10.083" />
               <polygon fill="none" points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
             </svg>
@@ -472,12 +436,12 @@ function FullPost() {
               </svg>
               {(isDropdownActive && authorId === userData.uid) ? (
                 <div className="dropdown" style={{ width: "150px", top: "-100px", right: "-50px" }}>
-                  <div onClick={() => { console.log("is about to delete"); handleDeletePost(authorId, postId, filePath); }}>
+                  <div onClick={() => { handleDeletePost(authorId, postId, filePath); }}>
                     <i className="fa-solid fa-trash-can" />
                     {" "}
                     Delete
                   </div>
-                  <div onClick={() => { console.log("clipped"); navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
+                  <div onClick={() => { navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
                     <i className="fa-solid fa-link" />
                     {" "}
                     Copy link
@@ -485,7 +449,7 @@ function FullPost() {
                 </div>
               ) : (isDropdownActive && authorId !== userData.uid) ? (
                 <div className="dropdown" style={{ width: "150px", top: "-50px", right: "-50px" }}>
-                  <div onClick={() => { console.log("clipped"); navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
+                  <div onClick={() => { navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
                     <i className="fa-solid fa-link" />
                     {" "}
                     Copy link
@@ -525,6 +489,7 @@ function FullPost() {
         </div>
       </div>
 
+      {notImplementedError && <Snackbar snackBarMessage={notImplementedError} setSnackBarMessage={setNotImplementedError} />}
       {submitCommentError && <Snackbar snackBarMessage={submitCommentError} setSnackBarMessage={setSubmitCommentError} />}
       {clipboardMessage && <Snackbar snackBarMessage={clipboardMessage} setSnackBarMessage={setClipboardMessage} />}
     </div>

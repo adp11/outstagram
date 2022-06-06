@@ -7,6 +7,8 @@ import { getAuth } from "firebase/auth";
 import {
   collection, doc, getDoc, getDocs, onSnapshot, query,
 } from "firebase/firestore";
+import { insert } from "./utils";
+import { db } from "./firebase";
 import Nav from "./components/Nav/Nav";
 import Newsfeed from "./components/Newsfeed";
 import ProfilePreview from "./components/ProfilePreview";
@@ -15,9 +17,7 @@ import Auth from "./components/Auth/Auth";
 import AddPost from "./components/Popups/AddPost";
 import FullPost from "./components/Popups/FullPost";
 import UserContext from "./components/Contexts/UserContext";
-import { db } from "./firebase";
 import EditProfile from "./components/Popups/EditProfile";
-import { insert } from "./utils";
 import PageNotFound from "./components/PageNotFound";
 import LikeList from "./components/Popups/LikeList";
 import FollowList from "./components/Popups/FollowList";
@@ -66,16 +66,15 @@ function App() {
   const didFetchActiveRooms = false;
 
   /*
-    1. fetch Newsfeed is designed to real-time listen to remote db
-    2. There are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
+    1. fetchNewsfeed() is meant to real-time listen to remote db
+    2. Logic in getRealTimeUpdates(): there are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
     3. 10 outermost keys at least in a PROPER "change.doc.data()" object
-    */
+  */
 
   function getRealTimeUpdates(q) {
     return onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "removed") {
-          console.log("before removed");
           const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
           tempNewsfeed.splice(deletePosition, 1);
         } else if (change.type === "added") {
@@ -84,7 +83,6 @@ function App() {
             insert(tempNewsfeed, change.doc.data(), "creationTime"); // recent to old - big to small UnixTime
           }
         } else {
-          console.log("before modified");
           const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
           const data = change.doc.data();
           if (modifiedPosition !== -1) {
@@ -118,39 +116,39 @@ function App() {
     }
   }
 
+  async function fetchUserData() {
+    const docRef = doc(db, `users/uid_${getAuth().currentUser.uid}`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      setUserData(docSnap.data());
+    }
+  }
+
+  /*
+  1. allUserData is used in search box and search chat only
+  2. fetAllUserData() is NOT real-time listening to remote db (e.g. new users signed up)
+  */
+  async function fetchAllUserData() {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach((document) => {
+      const toBePushed = { ...document.data(), uid: document.id };
+      tempAllUserData.push(toBePushed);
+    });
+    setAllUserData([...tempAllUserData]); // setAllUserData(tempAllUserData) won't work
+  }
+
   const providerValue = useMemo(
     () => ({
-      userData, visitedUserData, allUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, isLikeListActive, isFollowListActive, isFullPostActive, likeListInfo, followListInfo, abruptPostView, isSearchChatActive, scrollY, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, unsubscribeFromRealTimeMessages, isFullImageActive, setIsFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, setIsRoomPageNotFoundActive,
+      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive,
     }),
-    [userData, allUserData, visitedUserData, newsfeed, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, abruptPostView, isFullPostActive, isSearchChatActive, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive],
+    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive],
   );
 
   useEffect(() => {
-    async function fetchUserData() {
-      const docRef = doc(db, `users/uid_${getAuth().currentUser.uid}`);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setUserData(docSnap.data());
-      }
-    }
-
-    /*
-    1. Fetch allUserData is used in search box only
-    2. Fetch allUserData is NOT designed to real-time listen to remote db (e.g. new users logged)
-    */
-    async function fetchAllUserData() {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      querySnapshot.forEach((document) => {
-        const toBePushed = { ...document.data(), uid: document.id };
-        tempAllUserData.push(toBePushed);
-      });
-      setAllUserData([...tempAllUserData]); // setAllUserData(tempAllUserData) won't work
-    }
-
     if (isLoggedIn) {
       fetchUserData();
       fetchAllUserData();
-    } else {
+    } else { // reset all states basically
       setUserData(null);
       setVisitedUserData(null);
       setAllUserData([]);
@@ -177,8 +175,8 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      console.log("WHEN I AM FETCHING NEWSFEED (POST ABRUPT)");
       fetchNewsfeed();
+      fetchAllUserData();
     }
   }, [userData]);
 
@@ -214,8 +212,9 @@ function App() {
               {isProfilePageNotFoundActive && <Route path="/:uid" element={<PageNotFound />} />}
               {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
               {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
-              {/* eslint-disable-next-line */}
+              {/* act as a background while fullpost is on */}
               {(beforeFullPost.newsfeed && !abruptPostView) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
+              {/* act as a background while fullpost is on */}
               {((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && !abruptPostView) && <Route path="/p/:postId" element={<Profile />} />}
               {isPostPageNotFoundActive && <Route path="/p/:postId" element={<PageNotFound />} />}
             </Routes>

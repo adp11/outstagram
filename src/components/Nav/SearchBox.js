@@ -10,6 +10,7 @@ function SearchBox() {
   const { allUserData, setVisitedUserData } = useContext(UserContext);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchActive, setIsSearchActive] = useState(false);
+
   const dropdownRef = useRef(null);
   const searchBoxRef = useRef(null);
   const navigate = useNavigate();

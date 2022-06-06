@@ -30,7 +30,7 @@ function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
       setIsLoggedIn(true);
-      if (/^\/p\//.test(window.location.pathname)) {
+      if (/^\/p\//.test(window.location.pathname)) { // if there's abrupt access to fullpost
         setIsFullPostActive(true);
         setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
       }

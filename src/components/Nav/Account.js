@@ -6,7 +6,7 @@ import UserContext from "../Contexts/UserContext";
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
 function Account() {
-  const { setIsLoggedIn, userData, setIsProfilePageNotFoundActive } = useContext(UserContext);
+  const { userData, setIsLoggedIn, setIsProfilePageNotFoundActive } = useContext(UserContext);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const navigate = useNavigate();
 

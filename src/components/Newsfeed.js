@@ -1,9 +1,8 @@
-import { getAuth } from "firebase/auth";
 import {
   addDoc,
   arrayUnion, collection, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
@@ -20,6 +19,7 @@ function Newsfeed() {
 
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
+  const [notImplementedError, setNotImplementedError] = useState(false);
 
   async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
     const collectionPath = `users/${authorId}/notifications`;
@@ -126,7 +126,6 @@ function Newsfeed() {
   async function handleSubmitPostComment(e, index) {
     e.preventDefault();
     const postInfo = newsfeed[index];
-    console.log(postInfo.postId, "postInfo.postId");
     if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
       const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
       const cmtId = uniqid();
@@ -177,7 +176,6 @@ function Newsfeed() {
   }
 
   async function handleVisitProfile(uid) {
-    console.log("visiting profile", uid);
     const docRef = doc(db, `users/${uid}`);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
@@ -213,7 +211,7 @@ function Newsfeed() {
                 <path d="M20.656 17.008a9.993 9.993 0 10-3.59 3.615L22 22z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
               </svg>
 
-              <svg className="share" color="black" fill="#8e8e8e" height="24" role="img" viewBox="0 0 24 24" width="24">
+              <svg onClick={() => { setNotImplementedError("Sorry! This feature is not yet implemented. "); }} className="share" color="black" fill="#8e8e8e" height="24" role="img" viewBox="0 0 24 24" width="24">
                 <line fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" x1="22" x2="9.218" y1="3" y2="10.083" />
                 <polygon fill="none" points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
               </svg>
@@ -273,7 +271,7 @@ function Newsfeed() {
             <div className="grey extrasmall" style={{ margin: "0 20px" }}>{computeHowLongAgo(post.creationTime.seconds, false)}</div>
 
             <form onSubmit={(e) => { handleSubmitPostComment(e, index); }} className="post-comment-box">
-              <textarea onChange={(e) => { console.log({ ...postComments, [post.postId]: e.target.value }); setPostComments({ ...postComments, [post.postId]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e, index); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
+              <textarea onChange={(e) => { setPostComments({ ...postComments, [post.postId]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e, index); }} type="text" placeholder="Add a comment..." value={postComments[post.postId] || ""} />
               <span onClick={(e) => { handleSubmitPostComment(e, index); }} className="submit-btn" type="submit">Post</span>
             </form>
           </div>
@@ -287,6 +285,7 @@ function Newsfeed() {
             </div>
           )}
       </div>
+      {notImplementedError && <Snackbar snackBarMessage={notImplementedError} setSnackBarMessage={setNotImplementedError} />}
       {submitCommentError && <Snackbar snackBarMessage={submitCommentError} setSnackBarMessage={setSubmitCommentError} />}
     </div>
   );

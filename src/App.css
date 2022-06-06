@@ -5,7 +5,6 @@
 .App {
   margin: 0;
   width: 100vw;
-  overflow-x: hidden;
 }
 
 /* Navigation bar ---------------------------------- */
@@ -366,6 +365,7 @@ input[type="search"] {
   flex-direction: column;
   padding: 10px 0;
   border-right: 1px #dbdbdb solid;
+  overflow-y: auto;
 }
 
 .active-chat {
@@ -400,7 +400,6 @@ input[type="search"] {
 
 .post-message-box {
   height: 15%;
-  /* border: 1px black solid; */
   flex: 1;
   display: flex;
   align-items: center;
@@ -410,7 +409,7 @@ input[type="search"] {
 }
 
 .post-message-box > textarea {
-  /* add height if texts go beyond certain point. JS to make it 50% to 80% . Adjust padding too*/
+  /* could've added height if texts go beyond certain point. JS to make it 50% to 80% . Adjust padding too*/
   /* height: 40%;  */
   border-radius: 30px;
   padding: 10px 20px;
@@ -742,7 +741,7 @@ footer > div {
 .AddPost .container, .EditProfile .container, .LikeList .container, .FollowList .container, .SearchChat .container {
   background-color: #fff;
   width: 380px;
-  /* height: 480px; */
+  max-height: 550px;
   border: 1px #dbdbdb solid;
   border-radius: 10px;
   display: flex;

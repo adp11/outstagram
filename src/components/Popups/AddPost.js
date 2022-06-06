@@ -20,26 +20,27 @@ import { db, storage } from "../../firebase";
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function AddPost() {
-  const { setIsAddPostActive, userData, setUserData } = useContext(UserContext);
+  const { userData, setIsAddPostActive, setUserData } = useContext(UserContext);
 
-  const [isLoading, setIsLoading] = useState(false);
   const [addPostError, setAddPostError] = useState(null);
   const [previewImageURL, setPreviewImageURL] = useState(null);
   const [caption, setCaption] = useState(null);
   const [file, setFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function updatetPostSnippets(publicImageURL, postId) {
+  async function updatePostSnippets(publicImageURL, postId) {
     if (userData) {
-      userData.postSnippets.push({
+      const tempUserData = { ...userData };
+      tempUserData.postSnippets.push({
         postId,
         imageURL: publicImageURL,
         totalComments: 0,
         totalLikes: 0,
       });
-      userData.totalPosts += 1;
-      setUserData(userData);
+      tempUserData.totalPosts += 1;
+      setUserData(tempUserData);
       const docRef = doc(db, `users/${userData.uid}`);
-      await updateDoc(docRef, { postSnippets: userData.postSnippets, totalPosts: userData.totalPosts });
+      await updateDoc(docRef, { postSnippets: tempUserData.postSnippets, totalPosts: tempUserData.totalPosts });
     }
   }
 
@@ -79,7 +80,7 @@ function AddPost() {
         });
 
         setIsAddPostActive(false);
-        updatetPostSnippets(publicImageURL, postRef.id);
+        updatePostSnippets(publicImageURL, postRef.id);
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);
 
@@ -146,7 +147,7 @@ function AddPost() {
               {!previewImageURL && <small>File size limit 5 mb.</small>}
             </label>
           </div>
-          {/* override with 100% textarea in App.css*/}
+          {/* override with 100% textarea in App.css */}
           <textarea onChange={(e) => { setCaption(e.target.value); }} style={{ width: "75%" }} placeholder="Enter caption..." />
           {isLoading && <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />}
           <button onSubmit={handleAddPostSubmission} type="button submit" className="btn btn-outline-primary">POST</button>

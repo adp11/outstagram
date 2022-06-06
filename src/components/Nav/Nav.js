@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { doc, updateDoc } from "firebase/firestore";
 import Notifications from "./Notifications";
 import Account from "./Account";
@@ -9,13 +9,12 @@ import { db } from "../../firebase";
 
 function Nav() {
   const {
-    setIsAddPostActive, fetchNewsfeed, scrollY, isSearchChatActive, isFullImageActive, userData, setUserData,
+    userData, isSearchChatActive, scrollY, isFullImageActive, setIsAddPostActive, fetchNewsfeed, setUserData,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
   async function handleCloseChatNotifications() {
     if (userData.totalChatNotifs > 0) {
-      console.log("close chat notif")
       setUserData({ ...userData, totalChatNotifs: 0 });
       const docRef = doc(db, `users/${userData.uid}`);
       await updateDoc(docRef, {
@@ -29,6 +28,7 @@ function Nav() {
     window.scrollTo(0, 0);
     navigate("/");
   }
+
   return (
     <div className={`Nav ${(isSearchChatActive) ? "blur opac" : (isFullImageActive) ? "blur2 opac2" : ""}`}>
       <div className="nav-container">
@@ -38,7 +38,7 @@ function Nav() {
         <SearchBox />
         <div className="nav-buttons">
           {(window.location.pathname === "/") ? (
-            <svg className="Home" color="#262626" fill="#262626" height="24" width="24">
+            <svg onClick={refresh} className="Home" color="#262626" fill="#262626" height="24" width="24">
               <path d="M22 23h-6.001a1 1 0 01-1-1v-5.455a2.997 2.997 0 10-5.993 0V22a1 1 0 01-1 1H2a1 1 0 01-1-1V11.543a1.002 1.002 0 01.31-.724l10-9.543a1.001 1.001 0 011.38 0l10 9.543a1.002 1.002 0 01.31.724V22a1 1 0 01-1 1z" />
             </svg>
           ) : (

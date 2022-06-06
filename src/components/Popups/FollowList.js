@@ -12,7 +12,7 @@ import UserContext from "../Contexts/UserContext";
 // Notice: many CSS inline rules in LikeList/FollowList
 function FollowList() {
   const {
-    followListInfo, setFollowListInfo, setIsFollowListActive, userData, setVisitedUserData, setUserData, isFollowListActive,
+    userData, followListInfo, isFollowListActive, setFollowListInfo, setIsFollowListActive, setVisitedUserData, setUserData,
   } = useContext(UserContext);
 
   const [whichFollow, setWhichFollow] = useState(null);

@@ -1,12 +1,10 @@
-import { getAuth } from "firebase/auth";
 import {
-  addDoc,
-  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc,
+  collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc,
 } from "firebase/firestore";
 import React, {
   useContext, useEffect, useMemo, useRef, useState,
 } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import uniqid from "uniqid";
 import {
   deleteObject, getDownloadURL, ref, uploadBytesResumable,
@@ -23,28 +21,36 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function Chat() {
   const {
-    userData, isSearchChatActive, setIsSearchChatActive, setVisitedUserData, unsubscribeFromRealTimeMessages, isFullImageActive, setIsFullImageActive, setIsRoomPageNotFoundActive,
+    userData, isFullImageActive, unsubscribeFromRealTimeMessages, isSearchChatActive,
+    setIsSearchChatActive, setVisitedUserData, setIsFullImageActive, setIsRoomPageNotFoundActive,
   } = useContext(UserContext);
-  let { didFetchActiveRooms } = useContext(UserContext);
-  const [isDropdownActive, setIsDropdownActive] = useState(false);
+  let { didFetchActiveRooms } = useContext(UserContext); // why? reassign later
+
   const [messages, setMessages] = useState([]);
   const [activeRoomList, setActiveRoomList] = useState([]);
   const [whichRoomActive, setWhichRoomActive] = useState(null);
   const [texts, setTexts] = useState({});
-  const [sendImageError, setSendImageError] = useState(null);
-  const [notImplementedError, setNotImplementedError] = useState(false);
   const [previewImageURL, setPreviewImageURL] = useState(null);
   const [fullImageURL, setFullImageURL] = useState(null);
+
+  const [sendImageError, setSendImageError] = useState(null);
+  const [notImplementedError, setNotImplementedError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const tempMessages = [];
-  let unsubscribeFromRealTimeActiveRooms;
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
 
   const params = useParams();
   const navigate = useNavigate();
   const messagesRef = useRef();
 
+  const tempMessages = [];
+  let unsubscribeFromRealTimeActiveRooms;
+
+  /*
+  There are 3 types of value in field 'message': [heartdropped], ${content}, [image]
+  There are 2 types of value in field 'lastMessageSent': [image], ${content}
+  */
   async function updateLastMessageSent(messageId) {
-    // retrieve back creationTime to update lastMessageSent/lastMessageSentTime fields (since serverTimestamp() cannot be assigned)
+    // retrieve creationTime to update lastMessageSent/lastMessageSentTime fields (since serverTimestamp() cannot be assigned to a variable)
     const docRef = doc(db, `rooms/${whichRoomActive.roomId}/messages/${messageId}`);
     const docSnap = await getDoc(docRef);
 
@@ -149,18 +155,16 @@ function Chat() {
   }
 
   async function handleViewFullRoom(room) {
-    const q = query(collection(db, `rooms/${room.roomId}/messages`), orderBy("messageTime")); // add limit and loading effect upon scroll
+    const q = query(collection(db, `rooms/${room.roomId}/messages`), orderBy("messageTime")); // could've added limit (notice potential realtime listening bug) and loading effect upon scroll
     const unsubscribe = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const data = change.doc.data();
-          console.log("before add change", change.doc.data());
           if (data.messageTime !== null && Object.keys(data).length >= 3) {
             tempMessages.push(change.doc.data());
           }
         } else if (change.type === "modified") {
           const data = change.doc.data();
-          console.log("before add change", change.doc.data());
           if (data.messageTime !== null && Object.keys(data).length >= 3) {
             tempMessages.push(change.doc.data());
           }
@@ -177,27 +181,22 @@ function Chat() {
     });
 
     // DETACH REAL TIME LISTENING TO MESSAGES
-    console.log("old", unsubscribeFromRealTimeMessages);
     const targetUnsubscribe = unsubscribeFromRealTimeMessages[room.roomId];
     if (targetUnsubscribe) {
-      console.log("delete old, add new");
       targetUnsubscribe();
       unsubscribeFromRealTimeMessages[room.roomId] = unsubscribe;
     } else {
-      console.log("add new");
       unsubscribeFromRealTimeMessages[room.roomId] = unsubscribe;
     }
-    console.log("new", unsubscribeFromRealTimeMessages);
     navigate(`/chat/${room.roomId}`);
   }
 
   const providerValue = useMemo(() => ({
-    messages, setMessages, setWhichRoomActive, setActiveRoomList, activeRoomList, handleViewFullRoom, fullImageURL, setFullImageURL,
+    messages, activeRoomList, fullImageURL, setMessages, setWhichRoomActive, setActiveRoomList, handleViewFullRoom, setFullImageURL,
   }), [messages, activeRoomList, fullImageURL]);
 
   useEffect(() => {
-    if (messagesRef.current) {
-      console.log("doing scroll after changes in messages");
+    if (messagesRef.current) { // to the bottom of the messages display
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages]);
@@ -205,10 +204,9 @@ function Chat() {
   useEffect(() => {
     const tempActiveRoomList = [];
     async function fetchAllActiveRooms() {
-      const q = query(collection(db, `users/${userData.uid}/rooms`)); // add limit to active chats list
+      const q = query(collection(db, `users/${userData.uid}/rooms`)); // could've added limit to active chats list and load more upon scroll
       unsubscribeFromRealTimeActiveRooms = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
-          console.log("change", change.doc.data());
           if (change.type === "added" && change.doc.data().lastMessageSentTime) {
             insert(tempActiveRoomList, change.doc.data(), "lastMessageSentTime");
           } else if (change.type === "added" && !change.doc.data().lastMessageSentTime) {
@@ -219,10 +217,10 @@ function Chat() {
             tempActiveRoomList.splice(toBeRemoved, 1);
             tempActiveRoomList.unshift(change.doc.data());
           } else if (change.type === "removed") {
-            tempActiveRoomList.splice(change.oldIndex, 1);
+            const toBeRemoved = tempActiveRoomList.findIndex((chat) => chat.roomId === change.doc.data().roomId);
+            tempActiveRoomList.splice(toBeRemoved, 1);
           }
         });
-        console.log(tempActiveRoomList, "tempActiveRoomList");
         setActiveRoomList([...tempActiveRoomList]);
       });
     }
@@ -232,9 +230,7 @@ function Chat() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         handleViewFullRoom(docSnap.data());
-        console.log("view full room sucess");
       } else {
-        console.log("view full room fail");
         setIsRoomPageNotFoundActive(true);
         navigate(window.location.pathname);
       }
@@ -242,7 +238,6 @@ function Chat() {
 
     // handle abrupt access to /chat
     if (userData && !didFetchActiveRooms) {
-      console.log("when it is fetched?");
       fetchAllActiveRooms();
       didFetchActiveRooms = true;
       setIsRoomPageNotFoundActive(false);
@@ -252,19 +247,15 @@ function Chat() {
       }
 
       return () => {
-        console.log(tempActiveRoomList, "rooms to be checked for deletion");
-        tempActiveRoomList.forEach(async (room) => {
+        tempActiveRoomList.forEach(async (room) => { // delete chat rooms that user created but didn't message before outing
           if (room.lastMessageSentTime === null) {
-            console.log("room to be deleted", room.roomId);
             await deleteDoc(doc(db, `users/${room.members[0]}/rooms/${room.roomId}`));
             await deleteDoc(doc(db, `users/${room.members[1]}/rooms/${room.roomId}`));
           }
         });
-        console.log("about to unsubscribe 1");
         unsubscribeFromRealTimeActiveRooms();
         const roomIds = Object.keys(unsubscribeFromRealTimeMessages);
         roomIds.forEach((roomId) => {
-          console.log("about to unsubscribe 2", roomId);
           const unsubscribe = unsubscribeFromRealTimeMessages[roomId];
           unsubscribe();
         });
@@ -277,7 +268,7 @@ function Chat() {
       <div className={`Chat ${(isSearchChatActive) ? "blur opac" : (isFullImageActive) ? "blur2 opac2" : ""}`} style={{ position: (isSearchChatActive || isFullImageActive) && "fixed" }}>
         <div className="chat-container">
           <div className="active-chats-header">
-            <div className="bold cut">{userData && userData.username}</div>
+            <div onClick={() => { handleVisitProfile(userData.uid); }} className="bold cut username">{userData && userData.username}</div>
             <svg className="send-message" onClick={() => { setIsSearchChatActive(true); }} aria-label="New message" color="#262626" fill="#262626" height="24" role="img" viewBox="0 0 24 24" width="24">
               <path d="M12.202 3.203H5.25a3 3 0 00-3 3V18.75a3 3 0 003 3h12.547a3 3 0 003-3v-6.952" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
               <path d="M10.002 17.226H6.774v-3.228L18.607 2.165a1.417 1.417 0 012.004 0l1.224 1.225a1.417 1.417 0 010 2.004z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
@@ -331,7 +322,7 @@ function Chat() {
                 </svg>
                 {isDropdownActive && (
             /* eslint-disable-next-line */
-            <div onClick={() => {setNotImplementedError("Sorry! This feature is not yet implemented.")}} className="dropdown" style={{ position: "absolute", top: "40px", left: "-60px", width: "150px" }}>
+            <div onClick={() => {setNotImplementedError("Sorry! This feature is not yet implemented."); setIsDropdownActive(false); }} className="dropdown" style={{ position: "absolute", top: "40px", left: "-60px", width: "150px" }}>
               <div style={{ color: "#ed4956", fontWeight: "500", paddingLeft: "20px" }}>
                 Delete chat
               </div>

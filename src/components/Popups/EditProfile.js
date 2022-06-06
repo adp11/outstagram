@@ -21,23 +21,21 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function EditProfile() {
-  const {
-    userData, setUserData, setIsEditProfileActive,
-  } = useContext(UserContext);
+  const { userData, setUserData, setIsEditProfileActive } = useContext(UserContext);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [editProfileError, setEditProfileError] = useState(false);
   const [previewImageURL, setPreviewImageURL] = useState(null);
   const [bio, setBio] = useState(userData.bio);
   const [username, setUsername] = useState(userData.username);
   const [displayName, setDisplayName] = useState(userData.displayName);
   const [file, setFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editProfileError, setEditProfileError] = useState(false);
 
   async function updateUserData(publicImageURL) {
     const tempUserData = { ...userData };
-
     const docRef = doc(db, `users/${userData.uid}`);
-    if (publicImageURL) {
+
+    if (publicImageURL) { // handle the case where there's no new image uploaded
       await updateDoc(docRef, {
         bio,
         displayName,
@@ -61,6 +59,7 @@ function EditProfile() {
     setUserData(tempUserData);
   }
 
+  // only update some basic fields but not everywhere (e.g. inside comments or like lists)
   async function updateAcrossPosts(publicImageURL) {
     const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/posts`));
     querySnapshot.forEach(async (document) => {
@@ -212,7 +211,7 @@ function EditProfile() {
           </div>
           <div className="form-row">
             <label className="bold" htmlFor="username">Username</label>
-            <input id="username" onChange={(e) => { console.log(e.target.value); setUsername(e.target.value); }} type="text" defaultValue={userData && userData.username} />
+            <input id="username" onChange={(e) => { setUsername(e.target.value); }} type="text" defaultValue={userData && userData.username} />
           </div>
           <div className="form-row">
             <label className="bold" htmlFor="fullname">Full Name</label>

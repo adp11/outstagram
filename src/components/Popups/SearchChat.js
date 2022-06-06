@@ -1,28 +1,21 @@
-import { getAuth } from "firebase/auth";
 import {
-  addDoc,
-  arrayUnion, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc, where,
+  collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where,
 } from "firebase/firestore";
-import React, { useContext, useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import uniqid from "uniqid";
+import React, { useContext, useState } from "react";
 import UserContext from "../Contexts/UserContext";
 import { db } from "../../firebase";
-import Snackbar from "./Snackbar";
-import { computeHowLongAgo } from "../../utils";
 import ChatContext from "../Contexts/ChatContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function SearchChat() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { setIsSearchChatActive, allUserData, userData } = useContext(UserContext);
-  const modifedAllUserData = allUserData.filter((data) => (data.uid !== userData.uid));
+  const { userData, allUserData, setIsSearchChatActive } = useContext(UserContext);
+  const { activeRoomList, setActiveRoomList, handleViewFullRoom } = useContext(ChatContext);
+
+  const modifedAllUserData = allUserData.filter((data) => (data.uid !== userData.uid)); // exclude self
+
   const [searchResults, setSearchResults] = useState(modifedAllUserData);
-  const {
-    messages, setMessages, setWhichRoomActive, setActiveRoomList, activeRoomList, handleViewFullRoom,
-  } = useContext(ChatContext);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   function handleQuery(value) {
     if (value) {
@@ -40,8 +33,7 @@ function SearchChat() {
     const q = query(roomsRef, where("members", "array-contains", otherUid));
 
     const querySnapshot = await getDocs(q);
-    // room already existed, then open all messages from that chat room
-    if (querySnapshot.size > 0) {
+    if (querySnapshot.size > 0) { // if room already existed, then open all messages from that chat room
       querySnapshot.forEach((document) => {
         const { roomId } = document.data();
         // push that active chat on top of the list
@@ -55,9 +47,7 @@ function SearchChat() {
         setIsSearchChatActive(false);
         handleViewFullRoom(document.data());
       });
-
-    // otherwise, create a new room
-    } else {
+    } else { // otherwise, initialize a new room in `users/uid/rooms/roomId`
       const roomRef = doc(collection(db, `users/${userData.uid}/rooms`));
       let roomInfo;
       let otherInfo;
@@ -92,35 +82,14 @@ function SearchChat() {
           creationTime: serverTimestamp(),
         });
       }
-      console.log("finished creating for self");
 
-      // retrieve back creationTime to create room for the other too (since serverTimestamp() cannot be assigned)
+      // retrieve creationTime to create room for the other too (since serverTimestamp() cannot be assigned to a variable)
       const docRef2 = doc(db, `users/${userData.uid}/rooms/r_${roomRef.id}`);
       const docSnap2 = await getDoc(docRef2);
 
       if (docSnap2.exists()) {
         roomInfo.creationTime = docSnap2.data().creationTime;
 
-        // create room for the other
-        // roomInfo2 = {
-        //   roomId: `r_${roomRef.id}`,
-        //   members: [otherUid, userData.uid],
-        //   membersInfo: {
-        //     self: {
-        //       photoURL: otherInfo.photoURL,
-        //       username: otherInfo.username,
-        //       displayName: otherInfo.displayName,
-        //     },
-        //     other: {
-        //       photoURL: userData.photoURL,
-        //       username: userData.username,
-        //       displayName: userData.displayName,
-        //     },
-        //   },
-        //   creationTime: roomInfo.creationTime,
-        //   lastMessageSent: "",
-        //   lastMessageSentTime: null,
-        // };
         await setDoc(doc(db, `users/${otherUid}/rooms/r_${roomRef.id}`), {
           roomId: `r_${roomRef.id}`,
           members: [otherUid, userData.uid],
@@ -141,7 +110,6 @@ function SearchChat() {
           lastMessageSentTime: null,
         });
       }
-      console.log("finished creating for other");
       tempActiveRoomList.unshift(roomInfo);
       setActiveRoomList(tempActiveRoomList);
       setIsLoading(false);
@@ -175,7 +143,6 @@ function SearchChat() {
             <line fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" x1="20.649" x2="3.354" y1="20.649" y2="3.354"></line>
           </svg>
         </div>
-        {/* onFocus={() => { setIsSearchActive(true); }} onChange={(e) => { handleQuery(e.target.value.toLowerCase()); }} */}
         <input type="search" placeholder="Search..." maxLength="20" onChange={(e) => { handleQuery(e.target.value.trim().toLowerCase()); }} />
         {isLoading ? (
           <img src={LOADING_IMAGE_URL} alt="loading" style={{ width: "24px", height: "24px" }} />
@@ -190,7 +157,6 @@ function SearchChat() {
                 </div>
               </div>
             ))}
-            {/* <div className="no-result bold grey" style={{ textAlign: "center" }}>No users found.</div> */}
           </div>
         )}
       </div>

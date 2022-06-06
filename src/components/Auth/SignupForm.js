@@ -14,7 +14,6 @@ import { capitalizeFirebaseAuthError } from "../../utils";
 import Snackbar from "../Popups/Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
-const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function SignupForm() {
@@ -36,7 +35,6 @@ function SignupForm() {
     try {
       setIsLoading(true);
       await createUserWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
-
       if (/^\/p\//.test(window.location.pathname)) {
         setIsFullPostActive(true);
         setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
@@ -46,7 +44,7 @@ function SignupForm() {
       updateProfile(getAuth().currentUser, {
         displayName: `${userAuthInfo.fullname}`,
       }).then(() => {
-        // console.log("Profile updated successfully when creating new account");
+        console.log("Profile updated successfully when creating new account");
       }).catch((error) => {
         setUpdateProfileError(error);
       });
@@ -108,7 +106,7 @@ function SignupForm() {
           <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" style={{ width: "175px", height: "61px" }} />
           {/* eslint-disable-next-line */}
           <p style={{ textAlign: "center", fontSize: "18px", fontWeight: "600", color: "#8e8e8e" }} >
-            Sign up to see photos and videos from your friends
+            Sign up to see photos from and chat with your friends
           </p>
           {/* eslint-disable-next-line */}
           <div onClick={logInProvider} className="login-provider grey bold">

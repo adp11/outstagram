@@ -9,7 +9,7 @@ import UserContext from "../Contexts/UserContext";
 
 function LikeList() {
   const {
-    likeListInfo, setIsLikeListActive, userData, setVisitedUserData, setLikeListInfo, setUserData, setIsFullPostActive, setBeforeFullPost, beforeFullPost, setFullPostInfo, setFullPostIndex,
+    userData, likeListInfo, beforeFullPost, setIsLikeListActive, setVisitedUserData, setLikeListInfo, setUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setFullPostIndex,
   } = useContext(UserContext);
 
   const navigate = useNavigate();
@@ -52,7 +52,6 @@ function LikeList() {
     let tempTargetUserData;
 
     if (type === "unfollow") {
-      console.log("start unfollow");
       const positionInFollowing = userData.following.findIndex((user) => user.uid === likeInfo.sourceId);
       tempCurrentUserData = { ...userData };
 
@@ -71,9 +70,7 @@ function LikeList() {
         tempTargetUserData.followers.splice(positionInFollowers, 1);
         await updateDoc(docRef, { followers: tempTargetUserData.followers });
       }
-      console.log("end unfollow");
     } else {
-      console.log("start follow");
       const {
         sourceDisplayname, sourceId, sourcePhotoURL, sourceUsername,
       } = likeInfo;
@@ -104,7 +101,6 @@ function LikeList() {
         await updateDoc(docRef, { followers: tempTargetUserData.followers });
       }
       updateNotifications(tempTargetUserData, "follow");
-      console.log("end follow");
     }
   }
 

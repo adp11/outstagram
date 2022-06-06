@@ -13,11 +13,12 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function Notifications() {
   const {
-    userData, setUserData, setVisitedUserData, scrollY, setBeforeFullPost, setIsFullPostActive, setFullPostInfo,
+    userData, scrollY, setUserData, setVisitedUserData, setBeforeFullPost, setIsFullPostActive, setFullPostInfo,
   } = useContext(UserContext);
-  const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const params = useParams();
   const navigate = useNavigate();
 
@@ -135,6 +136,7 @@ function Notifications() {
     querySnapshot.forEach((document) => {
       tempNotificationList.push(document.data());
     });
+
     setNotificationList(tempNotificationList);
     setIsLoading(false);
     handleCloseNotifications(false);
@@ -166,7 +168,6 @@ function Notifications() {
     }
     // cannot reuse handleVisitProfile() because of its async function and invalid 'params.postId' below
 
-    navigate(`/p/${sourcePostId}`);
     scrollY.current = window.scrollY;
     setIsFullPostActive(true);
     if (params.uid === sourceAuthorId || params.postId) {
@@ -189,6 +190,7 @@ function Notifications() {
     if (docSnap.exists()) {
       setFullPostInfo(docSnap.data());
     }
+    navigate(`/p/${sourcePostId}`);
   }
 
   return (

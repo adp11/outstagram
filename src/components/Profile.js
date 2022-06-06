@@ -11,22 +11,23 @@ import UserContext from "./Contexts/UserContext";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
-// no setNewsfeed because same function of onSnapshot
 function Profile() {
   const {
-    userData, setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, scrollY, setFullPostInfo, beforeFullPost, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
+    userData, beforeFullPost, scrollY,
+    setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
-  const params = useParams();
-  const profilePostsRef = useRef(null);
 
   const [isFollowing, setIsFollowing] = useState(null);
+
+  const params = useParams();
+  const profilePostsRef = useRef(null);
   const navigate = useNavigate();
 
   async function handleViewFullPost(postId) {
     let docRef;
     scrollY.current = window.scrollY;
     setIsFullPostActive(true);
-    if (params.uid === userData.uid || params.postId) {
+    if (params.uid === userData.uid || params.postId) { // handle view posts from a) profile and b) abrupt access
       setBeforeFullPost({
         newsfeed: false,
         selfProfile: true,
@@ -92,8 +93,7 @@ function Profile() {
     const tempUserData = { ...userData };
     const tempVisitedUserData = { ...visitedUserData };
 
-    // if following
-    if (positionInFollowing === -1) {
+    if (positionInFollowing === -1) { // if following
       // update current user's following data
       tempUserData.following.push({
         uid: params.uid,
@@ -116,8 +116,7 @@ function Profile() {
 
       setIsFollowing(true);
       updateNotifications(tempVisitedUserData, "follow");
-      // if unfollowing
-    } else {
+    } else { // if unfollowing
       // update current user's following data
       tempUserData.following.splice(positionInFollowing, 1);
       setUserData(tempUserData);
@@ -170,7 +169,6 @@ function Profile() {
   useEffect(() => {
     async function handleVisitVisitedProfile() {
       if (!visitedUserData) {
-        console.log("visiting profile", params.uid);
         let tempVisitedUserData;
         const docRef = doc(db, `users/${params.uid}`);
         const docSnap = await getDoc(docRef);
@@ -206,7 +204,7 @@ function Profile() {
       }
     }
 
-    if (userData) {
+    if (userData) { // handle abrupt access to /:uid
       const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
       setIsFollowing(isCurrentUserFollowing);
     }
