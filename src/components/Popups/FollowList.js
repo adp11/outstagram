@@ -158,8 +158,8 @@ function FollowList() {
           <svg
             onClick={() => { setIsFollowListActive({ followers: false, following: false }); setFollowListInfo({ followers: [], following: [] }); }}
             aria-label="Close"
-            color="#262626"
-            fill="#262626"
+            color="currentColor"
+            fill="currentColor"
             height="18"
             role="img"
             viewBox="0 0 24 24"

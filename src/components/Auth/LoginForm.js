@@ -12,7 +12,7 @@ import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
 
 function LoginForm() {
-  const { setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
+  const { darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [userAuthInfo, setUserAuthInfo] = useState({
@@ -81,7 +81,7 @@ function LoginForm() {
     <div className="auth-container">
       <div className="login-container">
         <div>
-          <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" style={{ width: "175px", height: "61px", margin: "40px 0" }} />
+          <img src={`${window.location.origin}/images/${darkMode ? "header-dark.png" : "header-light.png"}`} alt="Instagram" style={{ width: "175px", height: "61px", margin: "40px 0" }} />
         </div>
         <form onSubmit={loginEmailPassword}>
           <div className="form-row">

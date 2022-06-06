@@ -179,8 +179,10 @@ function EditProfile() {
   return (
     <div className="EditProfile" style={{ padding: "10px" }}>
       {/* eslint-disable-next-line */}
-      <img src={`${window.location.origin}/images/x-mark.png`} style={{ position: "fixed", left: "97%", top: "2%", fontSize: "30px", width: "30px", height: "30px" }} onClick={() => { setIsEditProfileActive(false); }}></img>
-
+      <svg aria-label="Close" color="#262626" fill="#262626" height="18" role="img" viewBox="0 0 24 24" width="18" onClick={() => { setIsEditProfileActive(false); }} style={{ position: "fixed", right: "10px", top: "10px", fontSize: "30px", width: "30px", height: "30px" }}>
+        <polyline fill="none" points="20.643 3.357 12 12 3.353 20.647" stroke="#262626" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
+        <line fill="none" stroke="#262626" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" x1="20.649" x2="3.354" y1="20.649" y2="3.354" />
+      </svg>
       <div className="container">
         <div>
           <span style={{ fontWeight: "600" }}>Edit Profile</span>

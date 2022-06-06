@@ -163,8 +163,8 @@ function LikeList() {
           <svg
             onClick={() => { setIsLikeListActive(false); setLikeListInfo({}); }}
             aria-label="Close"
-            color="#262626"
-            fill="#262626"
+            color="currentColor"
+            fill="currentColor"
             height="18"
             role="img"
             viewBox="0 0 24 24"
@@ -206,8 +206,8 @@ function LikeList() {
               <svg
                 onClick={() => { setIsLikeListActive(false); setLikeListInfo({}); }}
                 aria-label="Close"
-                color="#262626"
-                fill="#262626"
+                color="currentColor"
+                fill="currentColor"
                 height="18"
                 role="img"
                 viewBox="0 0 24 24"

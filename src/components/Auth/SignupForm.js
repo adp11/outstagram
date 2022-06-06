@@ -17,7 +17,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function SignupForm() {
-  const { setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
+  const { darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +103,7 @@ function SignupForm() {
     <div className="auth-container">
       <div className="signup-container">
         <div>
-          <img src={`${window.location.origin}/images/header2.png`} alt="Instagram" style={{ width: "175px", height: "61px" }} />
+          <img src={`${window.location.origin}/images/${darkMode ? "header-dark.png" : "header-light.png"}`} alt="Instagram" style={{ width: "175px", height: "61px" }} />
           {/* eslint-disable-next-line */}
           <p style={{ textAlign: "center", fontSize: "18px", fontWeight: "600", color: "#8e8e8e" }} >
             Sign up to see photos from and chat with your friends
