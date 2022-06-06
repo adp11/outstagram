@@ -279,7 +279,7 @@ function Chat() {
           <div className="active-chats-list">
             {activeRoomList.map((room) => (
               // eslint-disable-next-line
-              <div onClick={() => { handleViewFullRoom(room); }} className="active-chat" style={{backgroundColor: (whichRoomActive && (room.roomId === whichRoomActive.roomId) && darkMode) ? "#efefef" : (whichRoomActive && (room.roomId === whichRoomActive.roomId) && !darkMode) ? "#262626": ""}} key={room.roomId}>
+              <div onClick={() => { handleViewFullRoom(room); }} className="active-chat" style={{backgroundColor: (whichRoomActive && (room.roomId === whichRoomActive.roomId) && !darkMode) ? "#efefef" : (whichRoomActive && (room.roomId === whichRoomActive.roomId) && darkMode) ? "#262626": ""}} key={room.roomId}>
                 <img
                   src={room.membersInfo.other.photoURL}
                   alt="user pic"

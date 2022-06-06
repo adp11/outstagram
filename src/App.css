@@ -29,7 +29,6 @@
   margin: 0;
   width: 100vw;
   background-color: var(--color-base-bg1);
-  /* border: 1px var(--color-base-bg1) solid; */
   overflow-x: hidden;
 }
 
@@ -889,6 +888,16 @@ footer > div {
 
 .EditProfile button {
   margin-left: 35%;
+}
+
+
+/* Snackbar ---------------------------------- */
+.Snackbar {
+  background-color: var(--color-base-text);
+}
+
+.Snackbar * {
+  color: var(--color-base-bg0);
 }
 
 @media only screen and (max-width: 700px) {

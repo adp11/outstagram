@@ -79,7 +79,7 @@ fix operations on abrupt access full post - FIXED
 post comment enter - FIXED
 
 rigorous manual test + last bug batch fixes (if any) + (clean up codebase + good document) - DONE
-toggle theme
+toggle theme - ADDED
 
 last bug bulk:
 third button on post - DONE
@@ -104,6 +104,7 @@ stimulate real app flow with more users (5+)
 could've reused functions across components and states (notice parent-children passing and the hiearchy)
 could've added more realtime listening for remote db (e.g. userData, allUserData, and some more), depended less on client data 
 could've added limit, orderBy but please notice a) detachments/memory leaks and b) potential realtime listening bug (e.g. when adding) (because only a set number of items inside the collection is being listened, but not the entire collection)
+could've made styling rules more organized and systematic
 
 make UI clean and visual-appealing 
 add more WRD

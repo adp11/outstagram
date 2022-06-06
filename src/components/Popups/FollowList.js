@@ -223,7 +223,7 @@ function FollowList() {
             <line fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" x1="20.649" x2="3.354" y1="20.649" y2="3.354"></line>
               </svg>
               <p className="bold" style={{ fontSize: "18px" }}>{ isFollowListActive.followers ? "No followers yet" : "No following yet"}</p>
-              <p className="grey medium">{isFollowListActive.followers ? "Quick tip: Comment on posts you've read to get noticed." : "Quick tip: Click Follow on people's profile to explore Instagram."}</p>
+              <p className="grey medium">{isFollowListActive.followers ? "Quick tip: Comment on posts you've read to get noticed." : "Quick tip: Click Follow on people's profile to explore Outstagram."}</p>
             </div>
           )}
         </div>

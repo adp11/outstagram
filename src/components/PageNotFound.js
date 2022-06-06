@@ -10,7 +10,7 @@ function PageNotFound() {
         <p className="grey">
           The link you followed may be broken, or the page may have been removed.
           {" "}
-          <Link to="/">Go back to Instagram.</Link>
+          <Link to="/">Go back to Outstagram.</Link>
         </p>
       </div>
     </div>

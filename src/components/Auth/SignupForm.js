@@ -103,7 +103,7 @@ function SignupForm() {
     <div className="auth-container">
       <div className="signup-container">
         <div>
-          <img src={`${window.location.origin}/images/${darkMode ? "header-dark.png" : "header-light.png"}`} alt="Instagram" style={{ width: "175px", height: "61px" }} />
+          <img src={`${window.location.origin}/images/${darkMode ? "header-dark.png" : "header-light.png"}`} alt="Outstagram" style={{ width: "175px", height: "61px" }} />
           {/* eslint-disable-next-line */}
           <p style={{ textAlign: "center", fontSize: "18px", fontWeight: "600", color: "#8e8e8e" }} >
             Sign up to see photos from and chat with your friends
