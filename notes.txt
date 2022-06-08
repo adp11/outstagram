@@ -108,7 +108,7 @@ could've made styling rules more organized and systematic
 
 make UI clean and visual-appealing 
 add more WRD
-project presentation on Github for resume (marketing)
+project presentation on Github for resume (folder structure, readme)
 hosting service
 
 code clean while building (don't EVER save for later)

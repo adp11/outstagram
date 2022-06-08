@@ -39,7 +39,7 @@ function App() {
   const [isSearchChatActive, setIsSearchChatActive] = useState(false);
   const [isFullImageActive, setIsFullImageActive] = useState(false);
   const [abruptPostView, setAbruptPostView] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
 
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
