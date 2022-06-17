@@ -29,11 +29,6 @@ function Auth() {
             {" "}
             <a href="https://github.com/adp11">adp11</a>
           </span>
-          <span className="grey">
-            Credit to
-            {" "}
-            <a href="https://www.theodinproject.com/lessons/node-path-javascript-javascript-final-project">The Odin Project (TOP)</a>
-          </span>
         </div>
       </footer> */}
     </div>

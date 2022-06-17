@@ -87,6 +87,11 @@ visit profile in active chats header - DONE
 edit profile -> no updates in search box (fetchAllUserData() again) - DONE
 add post -> no updates in totalPosts --> updateTpostSnippets (immutable) - DONE
 
+after advanced CSS:
+search results overflow (fixed), hover post snippets (fixed), fix footer
+make UI clean - DONE
+project presentation on Github for resume (folder structure, readme)
+hosting service (netlify)
 
                                         TRIVIAL/IGNORED/NOT IMPLEMENTED:
 add post small image container resize 
@@ -105,11 +110,6 @@ could've reused functions across components and states (notice parent-children p
 could've added more realtime listening for remote db (e.g. userData, allUserData, and some more), depended less on client data 
 could've added limit, orderBy but please notice a) detachments/memory leaks and b) potential realtime listening bug (e.g. when adding) (because only a set number of items inside the collection is being listened, but not the entire collection)
 could've made styling rules more organized and systematic
-
-make UI clean and visual-appealing 
-add more WRD
-project presentation on Github for resume (folder structure, readme)
-hosting service
 
 code clean while building (don't EVER save for later)
 avoid long breaks (10+ days) at all costs 

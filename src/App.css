@@ -25,11 +25,14 @@
   color: var(--color-base-text);
 }
 
+body {
+  overflow-x: hidden;
+}
+
 .App {
   margin: 0;
   width: 100vw;
   background-color: var(--color-base-bg1);
-  overflow-x: hidden;
 }
 
 /* Navigation bar ---------------------------------- */
@@ -89,6 +92,8 @@ input[type="search"] {
   top: 50px;
   left: 15px;
   font-size: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .SearchBox .no-result {
@@ -206,7 +211,8 @@ input[type="search"] {
 .Newsfeed {
   display: flex;
   justify-content: center;
-  margin-top: 90px;
+  margin-top: 60px;
+  padding: 30px;
 }
 
 .newsfeed-container {
@@ -553,7 +559,8 @@ input[type="search"] {
 
 /* Profile page ---------------------------------- */
 .Profile {
-  margin-top: 90px;
+  padding: 30px 0;
+  margin-top: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -630,7 +637,7 @@ input[type="search"] {
 
 .profile-post-stats {
   top: calc(50% - 20px);
-  left: calc(25%);
+  left: calc(30%);
   position: absolute;
   display: none;
 }
@@ -642,14 +649,12 @@ input[type="search"] {
 
 .profile-post:hover > .profile-post-stats {
   display: flex;
-  align-items: center;
   cursor: pointer;
 }
 
 .profile-post-stats span {
   font-weight: 600;
   margin: 0 5px;
-  color: black;
 }
 
 .profile-post-stats span:nth-of-type(2) {
@@ -925,6 +930,10 @@ footer > div {
 
   .Profile .user-info {
     gap: 5px;
+  }
+
+  .profile-post:hover > .profile-post-stats {
+    left: calc(12%);
   }
 }
 

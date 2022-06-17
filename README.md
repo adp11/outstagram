@@ -1,70 +1,127 @@
-# Getting Started with Create React App
+<div id="top"></div>
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <img src="./public/images/logo.png" alt="Logo" width="80" height="80">
+  <h3 align="center">Outstagram</h3>
+  <p align="center">
+    A full-stack clone of Instagram's core features and UI.
+    <br />
+    <a href="https://adp11-oustagram.netlify.app">View Demo</a> 👈
+  </p>
+</div>
 
-## Available Scripts
 
-In the project directory, you can run:
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
-### `npm test`
+[![Demo Picture 1][product-screenshot1]](https://adp11-oustagram.netlify.app)
+[![Demo Picture 2][product-screenshot2]](https://adp11-oustagram.netlify.app)
+[![Demo Picture 3][product-screenshot3]](https://adp11-oustagram.netlify.app)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Features
+1. Realtime Newsfeed
+    - Browse latest posts from followers
+    - Like, comment, and share posts
+    - View full post
+    - Add/delete posts
+2. Realtime Messaging
+    - Exchange both texts and images
+3. View/Edit/Visit profile
+    - Follow/unfollow users
+4. Authentication
+    - Email/Password
+    - OAuth from Google Provider
+5. Notifications
+6. Search for users
+7. Toggle theme
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+<!-- BUILT WITH EXAMPLES -->
+## Built with
+- [JavaScript](https://www.javascript.com/)
+- [ReactJS](https://reactjs.org/)
+- [Firebase](https://firebase.google.com/)
+- [React Router](https://reactrouter.com/)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-### `npm run eject`
+<!-- GETTING STARTED -->
+## Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+To get a local copy up and running follow these simple example steps.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Prerequisites
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+* Install npm
+  ```sh
+  npm install npm@latest -g
+  ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Installation
 
-## Learn More
+1. Clone the repo
+   ```sh
+   git clone https://github.com/adp11/outstagram.git
+   ```
+2. Change directory
+   ```sh
+   cd outstagram
+   ```
+3. Install npm packages
+   ```sh
+   npm install
+   ```
+3. Navigate to `./build/index.html` file. Press `Alt + B` to view in your default web browser
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-To learn React, check out the [React documentation](https://reactjs.org/).
 
-### Code Splitting
+<!-- USAGE EXAMPLES -->
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+[![Demo Gif][product-demo]](https://adp11-oustagram.netlify.app)
 
-### Analyzing the Bundle Size
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### Making a Progressive Web App
+<!-- CONTACT -->
+## Contact
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Andrew Pham - [@facebook](https://www.facebook.com/profile.php?id=100008330377004)
 
-### Advanced Configuration
+Project Link: [https://adp11-oustagram.netlify.app](https://adp11-oustagram.netlify.app)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+<p align="right">(<a href="#top">back to top</a>)</p>
 
-### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[product-screenshot1]: ./public/images/demo1.png
+[product-screenshot2]: ./public/images/demo2.png
+[product-screenshot3]: ./public/images/demo3.png
+[product-demo]: ./public/images/outstagram.gif
