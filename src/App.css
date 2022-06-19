@@ -564,7 +564,7 @@ input[type="search"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: calc(100vh - 90px);
+  min-height: calc(100vh - 60px);
 }
 
 .profile-container {
@@ -672,6 +672,7 @@ input[type="search"] {
   align-items: center;
   justify-content: center;
   gap: 50px;
+  min-height: 100vh;
 }
 
 .Auth * {

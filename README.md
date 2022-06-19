@@ -8,7 +8,7 @@
   <p align="center">
     A full-stack clone of Instagram's core features and UI.
     <br />
-    <a href="https://adp11-oustagram.netlify.app">View Demo</a> 👈
+    <a href="https://adp11-outstagram.netlify.app/">View Demo</a> 👈
   </p>
 </div>
 
@@ -37,9 +37,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Demo Picture 1][product-screenshot1]](https://adp11-oustagram.netlify.app)
-[![Demo Picture 2][product-screenshot2]](https://adp11-oustagram.netlify.app)
-[![Demo Picture 3][product-screenshot3]](https://adp11-oustagram.netlify.app)
+[![Demo Picture 1][product-screenshot1]](https://adp11-outstagram.netlify.app/)
+[![Demo Picture 2][product-screenshot2]](https://adp11-outstagram.netlify.app/)
+[![Demo Picture 3][product-screenshot3]](https://adp11-outstagram.netlify.app/)
 
 ### Features
 1. Realtime Newsfeed
@@ -104,7 +104,7 @@ To get a local copy up and running follow these simple example steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-[![Demo Gif][product-demo]](https://adp11-oustagram.netlify.app)
+[![Demo Gif][product-demo]](https://adp11-outstagram.netlify.app/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -114,7 +114,7 @@ To get a local copy up and running follow these simple example steps.
 
 Andrew Pham - [@facebook](https://www.facebook.com/profile.php?id=100008330377004)
 
-Project Link: [https://adp11-oustagram.netlify.app](https://adp11-oustagram.netlify.app)
+Project Link: [https://adp11-outstagram.netlify.app/](https://adp11-outstagram.netlify.app/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
