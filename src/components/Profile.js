@@ -179,7 +179,7 @@ function Profile() {
           setComponentVars({
             userAvatar: tempVisitedUserData.photoURL,
             username: tempVisitedUserData.username,
-            totalPosts: tempVisitedUserData.totalPosts,
+            totalPosts: tempVisitedUserData.posts.length,
             totalFollowers: tempVisitedUserData.followers.length,
             totalFollowing: tempVisitedUserData.following.length,
             userBio: tempVisitedUserData.bio,
@@ -194,7 +194,7 @@ function Profile() {
         setComponentVars({
           userAvatar: visitedUserData.photoURL,
           username: visitedUserData.username,
-          totalPosts: visitedUserData.totalPosts,
+          totalPosts: visitedUserData.posts.length,
           totalFollowers: visitedUserData.followers.length,
           totalFollowing: visitedUserData.following.length,
           userBio: visitedUserData.bio,
@@ -213,7 +213,7 @@ function Profile() {
       setComponentVars({
         userAvatar: userData.photoURL,
         username: userData.username,
-        totalPosts: userData.totalPosts,
+        totalPosts: userData.posts.length,
         totalFollowers: userData.followers.length,
         totalFollowing: userData.following.length,
         userBio: userData.bio,

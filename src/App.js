@@ -7,6 +7,7 @@ import { getAuth } from "firebase/auth";
 import {
   collection, doc, getDoc, getDocs, onSnapshot, query,
 } from "firebase/firestore";
+import io from "socket.io-client";
 import { insert } from "./utils";
 import { db } from "./firebase";
 import Nav from "./components/Nav/Nav";
@@ -24,6 +25,7 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
+  // const socket = io("http://localhost:4000", { transports: ["websocket"] });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
   const [isEditProfileActive, setIsEditProfileActive] = useState(false);
@@ -58,97 +60,45 @@ function App() {
     following: [],
   });
 
-  const tempNewsfeed = []; // for state immutability
-  const tempAllUserData = []; // for state immutability
   const scrollY = useRef(0);
-  let stopRealTimeListen1 = null;
-  let stopRealTimeListen2 = null;
   const unsubscribeFromRealTimeMessages = {};
   const didFetchActiveRooms = false;
 
-  /*
-    1. fetchNewsfeed() is meant to real-time listen to remote db
-    2. Logic in getRealTimeUpdates(): there are 3 stages of change to db (creationTime: null (added), creationTime: [value] (modified), 10-key object: [full values] (modified))
-    3. 10 outermost keys at least in a PROPER "change.doc.data()" object
-  */
-
-  function getRealTimeUpdates(q) {
-    return onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "removed") {
-          const deletePosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-          tempNewsfeed.splice(deletePosition, 1);
-        } else if (change.type === "added") {
-          const data = change.doc.data();
-          if (Object.keys(data).length >= 10) {
-            insert(tempNewsfeed, change.doc.data(), "creationTime"); // recent to old - big to small UnixTime
-          }
-        } else {
-          const modifiedPosition = tempNewsfeed.findIndex((post) => post.postId === change.doc.id);
-          const data = change.doc.data();
-          if (modifiedPosition !== -1) {
-            tempNewsfeed.splice(modifiedPosition, 1, data);
-          } else if (modifiedPosition === -1 && Object.keys(data).length >= 10) {
-            insert(tempNewsfeed, change.doc.data(), "creationTime");
-          }
-        }
-      });
-      setNewsfeed([...tempNewsfeed]); // setNewsfeed(tempNewsfeed) won't work
-    });
-  }
-
-  // Don't factor out "posts from self" code block to prevent double rerender from 2 setNewsfeed() from 2 real-time listening
-  function fetchNewsfeed() {
-    const { following } = userData;
-    if (following.length) {
-      // posts from self
-      const q1 = query(collection(db, `users/${userData.uid}/posts`));
-      stopRealTimeListen1 = getRealTimeUpdates(q1);
-
-      // posts from people user follows
-      following.forEach((followee) => {
-        const q2 = query(collection(db, `users/${followee.uid}/posts`));
-        stopRealTimeListen2 = getRealTimeUpdates(q2);
-      });
-    } else {
-      // posts from self
-      const q1 = query(collection(db, `users/${userData.uid}/posts`));
-      stopRealTimeListen1 = getRealTimeUpdates(q1);
-    }
-  }
-
-  async function fetchUserData() {
-    const docRef = doc(db, `users/uid_${getAuth().currentUser.uid}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      setUserData(docSnap.data());
-    }
-  }
-
-  /*
-  1. allUserData is used in search box and search chat only
-  2. fetAllUserData() is NOT real-time listening to remote db (e.g. new users signed up)
-  */
-  async function fetchAllUserData() {
-    const querySnapshot = await getDocs(collection(db, "users"));
-    querySnapshot.forEach((document) => {
-      const toBePushed = { ...document.data(), uid: document.id };
-      tempAllUserData.push(toBePushed);
-    });
-    setAllUserData([...tempAllUserData]); // setAllUserData(tempAllUserData) won't work
-  }
-
   const providerValue = useMemo(
     () => ({
-      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setFullPostIndex, fetchNewsfeed, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeed, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
     }),
     [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
   );
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetchUserData();
-      fetchAllUserData();
+      const socket = io("http://localhost:4000", { transports: ["websocket"] });
+
+      // socket.on("userDataChange", (data) => {
+      //   if (data._id === userData._id) { // if change happens to self user, then replace
+      //     setUserData(data.fullDocument);
+      //   } else { // new user signed up/added
+
+      //   }
+      // });
+
+      socket.on("newsfeedChange", (data) => {
+        // only care about post change in db if the author's post is in current user's following list
+        console.log("post change has been sent to frontend", data.createdAt);
+        if (userData._id === data.author._id || userData.following.includes(data.author._id)) {
+          const dataChangePos = newsfeed.findIndex((post) => post._id === data._id);
+          let tempNewsfeed;
+          if (dataChangePos > -1) { // modified
+            console.log("post modified in newsfeed");
+            tempNewsfeed = newsfeed.splice(dataChangePos, 1, data);
+          } else { // added
+            console.log("post added in newsfeed");
+            tempNewsfeed = [data].concat(newsfeed);
+          }
+          setNewsfeed(tempNewsfeed);
+        }
+      });
     } else { // reset all states basically
       setUserData(null);
       setVisitedUserData(null);
@@ -161,25 +111,11 @@ function App() {
       setIsRoomPageNotFoundActive(false);
       setAbruptPostView(false);
       scrollY.current = 0;
-      if (stopRealTimeListen1) {
-        stopRealTimeListen1();
-        stopRealTimeListen1 = null;
-      }
-      if (stopRealTimeListen2) {
-        stopRealTimeListen2();
-        stopRealTimeListen2 = null;
-      }
+      // add code for detach listening from socket and realtime mongo
     }
 
     // window.scrollTo(0, 0); // optional: prevent browser remember scroll position and auto scroll upon user refreshes the page.
   }, [isLoggedIn]);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchNewsfeed();
-      fetchAllUserData();
-    }
-  }, [userData]);
 
   /*
   1. Triggered upon both mouting and dependency changes
@@ -214,7 +150,17 @@ function App() {
               {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
               {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
               {/* act as a background while fullpost is on */}
-              {(beforeFullPost.newsfeed && !abruptPostView) && <Route path="/p/:postId" element={(<><Newsfeed /><ProfilePreview /></>)} />}
+              {(beforeFullPost.newsfeed && !abruptPostView) && (
+              <Route
+                path="/p/:postId"
+                element={(
+                  <>
+                    <Newsfeed />
+                    <ProfilePreview />
+                  </>
+)}
+              />
+              )}
               {/* act as a background while fullpost is on */}
               {((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && !abruptPostView) && <Route path="/p/:postId" element={<Profile />} />}
               {isPostPageNotFoundActive && <Route path="/p/:postId" element={<PageNotFound />} />}

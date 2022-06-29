@@ -1,17 +1,8 @@
 import React, { useEffect, useContext, useState } from "react";
 import {
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  serverTimestamp,
-  deleteDoc,
-} from "firebase/firestore";
-import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-  deleteObject,
 } from "firebase/storage";
 import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
@@ -28,65 +19,56 @@ function AddPost() {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  async function updatePostSnippets(publicImageURL, postId) {
-    if (userData) {
-      const tempUserData = { ...userData };
-      tempUserData.postSnippets.push({
-        postId,
-        imageURL: publicImageURL,
-        totalComments: 0,
-        totalLikes: 0,
-      });
-      tempUserData.totalPosts += 1;
-      setUserData(tempUserData);
-      const docRef = doc(db, `users/${userData.uid}`);
-      await updateDoc(docRef, { postSnippets: tempUserData.postSnippets, totalPosts: tempUserData.totalPosts });
-    }
-  }
-
   async function handleAddPostSubmission(e) {
     e.preventDefault();
     if (file) { // prevent submitting form before uploading file
-      let postRef;
-      let newImageRef;
+      // let newImageRef;
       try {
         setIsLoading(true);
-        // 1 - Create a Doc of this post first to get postRef.
-        const collectionPath = `users/${userData.uid}/posts`;
-        postRef = await addDoc(collection(db, collectionPath), {
-          creationTime: serverTimestamp(),
-        });
 
-        // 2 - Upload the image to Cloud Storage, using that postRef.
-        const filePath = `${userData.uid}/${postRef.id}/${file.name}`;
-        newImageRef = ref(storage, filePath);
+        // 1 - Upload the image to Cloud Storage, using that postRef.
+        const filePath = `${userData._id}/posts/${file.name}`;
+        const newImageRef = ref(storage, filePath);
         const fileSnapshot = await uploadBytesResumable(newImageRef, file);
 
-        // 3 - Generate a public URL for the file.
+        // 2 - Generate a public URL for the file.
         const publicImageURL = await getDownloadURL(newImageRef);
 
-        // 4 - Update the rest of the form's input to Doc
-        await updateDoc(postRef, {
-          authorId: userData.uid,
-          authorPhotoURL: userData.photoURL,
-          authorUsername: userData.username,
-          postId: postRef.id,
-          postCaption: caption,
-          imageURL: publicImageURL,
-          storageURL: fileSnapshot.metadata.fullPath,
-          filePath,
-          likes: [],
-          comments: [],
-        });
+        console.log(publicImageURL, "publicImageURL");
 
-        setIsAddPostActive(false);
-        updatePostSnippets(publicImageURL, postRef.id);
+        // 3 - Add to db
+        const options = {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            author: userData._id,
+            postCaption: caption,
+            imageURL: publicImageURL,
+            storageURL: fileSnapshot.metadata.fullPath,
+            filePath,
+            likes: [],
+            comments: [],
+          }),
+        };
+
+        fetch("http://localhost:4000/addpost", options)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.errorMsg) {
+              setAddPostError(data.errorMsg);
+            } else {
+              // take new data to setUserData()
+              // console.log("updated data", data.user);
+              // setUserData(data.user);
+              setIsAddPostActive(false);
+            }
+          });
       } catch (error) {
+        console.log("error with firebase", error);
         setAddPostError(`Uploading Error: ${error}`);
-
-        // undo code executed inside try block
-        await deleteDoc(postRef);
-        await deleteObject(newImageRef);
       }
     } else {
       setAddPostError("You must upload a file image.");

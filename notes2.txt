@@ -1,0 +1,65 @@
+request to server app.post('/signup', (req, res) => {
+  1. create user in mongodb
+    hash password -> create a final object with full initialized values of that user -> .save()
+  2. Attach token
+    sign token by jwt.sign() -> res.cookie('token', token, { httpOnly: true }) -> send.json(user data)
+})
+
+
+frontend handle response(user data) [Token was saved in cookie already] {
+  NO fetchUserData() and fetchAllUserData() in useEffect() in App.js
+  NO fetchNewsfeed() in another useEffect()
+  1. setUserData(userdata)
+  2. setAllUserData(allUserData)
+  3. setNewsfeed() (realtime in server)
+}
+
+// await createUserWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
+// if (/^\/p\//.test(window.location.pathname)) {
+//   setIsFullPostActive(true);
+//   setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
+// }
+
+// await setDoc(doc(db, `users/uid_${getAuth().currentUser.uid}`), {
+//   uid: `uid_${getAuth().currentUser.uid}`,
+//   username: userAuthInfo.username,
+//   displayName: userAuthInfo.fullname,
+//   photoURL: DUMMY_AVATAR_URL,
+//   bio: "",
+//   totalPosts: 0,
+//   totalNotifs: 0,
+//   totalChatNotifs: 0,
+//   postSnippets: [],
+//   followers: [],
+//   following: [],
+// });
+
+
+// async function logInProvider() {
+  //   const provider = new GoogleAuthProvider();
+  //   await signInWithPopup(getAuth(), provider);
+  //   const { uid, displayName, photoURL } = getAuth().currentUser;
+  //   if (/^\/p\//.test(window.location.pathname)) {
+  //     setIsFullPostActive(true);
+  //     setAbruptPostView(`uid_${uid}`);
+  //   }
+  //   // If first time logged in, initialize Field Values in Firestore db
+  //   const docRef = doc(db, `users/uid_${uid}`);
+  //   const docSnap = await getDoc(docRef);
+  //   if (!docSnap.exists()) {
+  //     await setDoc(doc(db, `users/uid_${uid}`), {
+  //       uid: `uid_${uid}`,
+  //       username: `u_${uid}`,
+  //       displayName,
+  //       photoURL,
+  //       bio: "",
+  //       totalPosts: 0,
+  //       totalNotifs: 0,
+  //       totalChatNotifs: 0,
+  //       postSnippets: [],
+  //       followers: [],
+  //       following: [],
+  //     });
+  //   }
+  //   setIsLoggedIn(true);
+  // }

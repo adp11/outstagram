@@ -12,7 +12,8 @@ function capitalizeFirebaseAuthError(message) {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
 
-function computeHowLongAgo(unixTime, abbreviation = true) {
+function computeHowLongAgo(mongoTime, abbreviation = true) {
+  const unixTime = Math.floor(new Date(mongoTime).getTime() / 1000);
   const diff = differenceInMinutes(new Date(), new Date(unixTime * 1000));
   let result = Math.floor(diff / YEAR_IN_MIN);
   if (result < 1) {
