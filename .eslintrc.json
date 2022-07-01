@@ -26,6 +26,7 @@
         "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
         "quotes": [2, "double", { "avoidEscape": true }],
         "no-nested-ternary": "off",
-        "no-underscore-dangle": "off"
+        "no-underscore-dangle": "off",
+        "no-alert": "off"
     }
 }

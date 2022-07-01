@@ -25,7 +25,6 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
-  // const socket = io("http://localhost:4000", { transports: ["websocket"] });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
   const [isEditProfileActive, setIsEditProfileActive] = useState(false);
@@ -64,9 +63,16 @@ function App() {
   const unsubscribeFromRealTimeMessages = {};
   const didFetchActiveRooms = false;
 
+  // not able to access state in socket event handlers
+  const newsfeedRef = useRef(newsfeed);
+  function setNewsfeedHelper(data) {
+    newsfeedRef.current = data;
+    setNewsfeed(data);
+  }
+
   const providerValue = useMemo(
     () => ({
-      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeed, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
     }),
     [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
   );
@@ -75,35 +81,43 @@ function App() {
     if (isLoggedIn) {
       const socket = io("http://localhost:4000", { transports: ["websocket"] });
 
-      // socket.on("userDataChange", (data) => {
-      //   if (data._id === userData._id) { // if change happens to self user, then replace
-      //     setUserData(data.fullDocument);
-      //   } else { // new user signed up/added
+      // client-side
+      socket.on("connect", () => {
+        console.log(socket.id);
+      });
 
-      //   }
-      // });
+      socket.on("userDataChange", (data) => {
+        // self user modified
+        if (data.user && data.user._id === userData._id) {
+          console.log("self user change", data);
+          setUserData(data.user);
+        } else if (data.addedUser) { // new user signed up/added
+          console.log("new user added");
+          setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
+        }
+      });
 
       socket.on("newsfeedChange", (data) => {
         // only care about post change in db if the author's post is in current user's following list
-        console.log("post change has been sent to frontend", data.createdAt);
+        console.log("newsfeed change", data);
         if (userData._id === data.author._id || userData.following.includes(data.author._id)) {
-          const dataChangePos = newsfeed.findIndex((post) => post._id === data._id);
-          let tempNewsfeed;
+          const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
           if (dataChangePos > -1) { // modified
             console.log("post modified in newsfeed");
-            tempNewsfeed = newsfeed.splice(dataChangePos, 1, data);
+            const tempNewsfeed = [...newsfeedRef.current];
+            tempNewsfeed.splice(dataChangePos, 1, data);
+            setNewsfeedHelper(tempNewsfeed);
           } else { // added
             console.log("post added in newsfeed");
-            tempNewsfeed = [data].concat(newsfeed);
+            setNewsfeedHelper([data].concat(newsfeedRef.current));
           }
-          setNewsfeed(tempNewsfeed);
         }
       });
     } else { // reset all states basically
       setUserData(null);
       setVisitedUserData(null);
       setAllUserData([]);
-      setNewsfeed([]);
+      setNewsfeedHelper([]);
       setFullPostIndex(null);
       setFullPostInfo(null);
       setIsProfilePageNotFoundActive(false);

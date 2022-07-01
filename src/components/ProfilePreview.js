@@ -52,7 +52,7 @@ function ProfilePreview() {
       </div>
       <div className="stats medium">
         <div className="posts" onClick={() => { navigate(`/${userData._id}`); }}>
-          <div className="bold medium">{userData.posts.length}</div>
+          <div className="bold medium">{userData.postSnippets.length}</div>
           <div className="grey medium">Posts</div>
         </div>
         <div className="followers" onClick={() => { handleViewFollowList(userData.followers, "followers"); }}>

@@ -7,7 +7,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function SignupForm() {
   const {
-    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserData, setAllUserData, setNewsfeed,
+    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserData, setAllUserData, setNewsfeedHelper,
   } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
@@ -51,7 +51,7 @@ function SignupForm() {
         } else {
           setUserData(data.user);
           setAllUserData(data.users);
-          setNewsfeed(data.newsfeed);
+          setNewsfeedHelper(data.newsfeed);
           setIsLoggedIn(true);
         }
         setIsLoading(false);

@@ -6,7 +6,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function LoginForm() {
   const {
-    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserData, setAllUserData, setNewsfeed,
+    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserData, setAllUserData, setNewsfeedHelper,
   } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
@@ -45,7 +45,6 @@ function LoginForm() {
     fetch("http://localhost:4000/login", options)
       .then((response) => response.json())
       .then((data) => {
-        console.log("Fetched success");
         if (errorMsgs.indexOf(data.errorMsg) === 0) {
           setLoginError({
             usernameError: true,
@@ -59,7 +58,7 @@ function LoginForm() {
         } else {
           setUserData(data.user);
           setAllUserData(data.users);
-          setNewsfeed(data.newsfeed);
+          setNewsfeedHelper(data.newsfeed);
           setIsLoggedIn(true);
         }
         setIsLoading(false);

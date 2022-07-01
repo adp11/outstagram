@@ -184,17 +184,17 @@ function LikeList() {
         <div className="list" style={{ width: "100%", overflow: "auto", marginBottom: "10px" }}>
           {postLikes.length > 0 ? postLikes.map((like) => (
             //  eslint-disable-next-line
-            <div className="item" style={{ display: "flex", alignItems: "center", width: "100%", padding: "0px 15px" }} key={like.sourceId}>
-              <img src={like.sourcePhotoURL} alt="user's pic" className="src-avatar" onClick={() => { handleVisitProfile(like.sourceId); }} />
+            <div className="item" style={{ display: "flex", alignItems: "center", width: "100%", padding: "0px 15px" }} key={like._id}>
+              <img src={like.photoURL} alt="user's pic" className="src-avatar" onClick={() => { handleVisitProfile(like._id); }} />
               <div>
-                <div className="bold medium cut1 username" onClick={() => { handleVisitProfile(like.sourceId); }}>{like.sourceUsername}</div>
-                <div className="grey medium">{like.sourceDisplayname}</div>
+                <div className="bold medium cut1 username" onClick={() => { handleVisitProfile(like._id); }}>{like.sourceUsername}</div>
+                <div className="grey medium">{like.displayName}</div>
               </div>
 
-              {(userData.following.findIndex((followee) => followee.uid === like.sourceId) !== -1) ? (
+              {(userData.following.findIndex((followee) => followee.uid === like._id) !== -1) ? (
                 //  eslint-disable-next-line
                 <button type="button" style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500", fontSize: "14px", marginLeft: "auto" }}onClick={() => {handleFollowToggle(like, "unfollow")}}>Following</button>
-              ) : (like.sourceId === userData.uid) ? (
+              ) : (like._id === userData.uid) ? (
                 <div /> // null element
               ) : (
                 //  eslint-disable-next-line

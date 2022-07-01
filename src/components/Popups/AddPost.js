@@ -34,8 +34,6 @@ function AddPost() {
         // 2 - Generate a public URL for the file.
         const publicImageURL = await getDownloadURL(newImageRef);
 
-        console.log(publicImageURL, "publicImageURL");
-
         // 3 - Add to db
         const options = {
           method: "POST",
@@ -60,14 +58,10 @@ function AddPost() {
             if (data.errorMsg) {
               setAddPostError(data.errorMsg);
             } else {
-              // take new data to setUserData()
-              // console.log("updated data", data.user);
-              // setUserData(data.user);
               setIsAddPostActive(false);
             }
           });
       } catch (error) {
-        console.log("error with firebase", error);
         setAddPostError(`Uploading Error: ${error}`);
       }
     } else {

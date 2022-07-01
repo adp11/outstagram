@@ -2,7 +2,7 @@ import {
   addDoc,
   arrayUnion, collection, doc, getDoc, serverTimestamp, updateDoc,
 } from "firebase/firestore";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import uniqid from "uniqid";
 import { db } from "../firebase";
@@ -21,50 +21,85 @@ function Newsfeed() {
   const [postComments, setPostComments] = useState({});
   const [notImplementedError, setNotImplementedError] = useState(false);
 
-  async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
-    const collectionPath = `users/${authorId}/notifications`;
-    // update to Notifications subcollection
-    const notifRef = await addDoc(collection(db, collectionPath), {
-      creationTime: serverTimestamp(),
-    });
+  // async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
+  //   const collectionPath = `users/${authorId}/notifications`;
+  //   // update to Notifications subcollection
+  //   const notifRef = await addDoc(collection(db, collectionPath), {
+  //     creationTime: serverTimestamp(),
+  //   });
 
-    if (notificationType === "like") {
-      await updateDoc(notifRef, {
-        notifId: uniqid(),
-        sourceDisplayname: userData.displayName,
-        sourceId: userData.uid,
-        sourceUsername: userData.username,
-        sourcePhotoURL: userData.photoURL,
-        type: "like",
-        sourceAuthorId: authorId,
-        sourcePostId: postId,
-        sourcePostPictureURL: imageURL,
-      });
-    } else {
-      await updateDoc(notifRef, {
-        notifId: uniqid(),
-        sourceDisplayname: userData.displayName,
-        sourceId: userData.uid,
-        sourceUsername: userData.username,
-        sourcePhotoURL: userData.photoURL,
-        type: "comment",
-        content: commentContent,
-        sourceAuthorId: authorId,
-        sourcePostId: postId,
-        sourcePostPictureURL: imageURL,
-      });
-    }
+  //   if (notificationType === "like") {
+  //     await updateDoc(notifRef, {
+  //       notifId: uniqid(),
+  //       sourceDisplayname: userData.displayName,
+  //       sourceId: userData.uid,
+  //       sourceUsername: userData.username,
+  //       sourcePhotoURL: userData.photoURL,
+  //       type: "like",
+  //       sourceAuthorId: authorId,
+  //       sourcePostId: postId,
+  //       sourcePostPictureURL: imageURL,
+  //     });
+  //   } else {
+  //     await updateDoc(notifRef, {
+  //       notifId: uniqid(),
+  //       sourceDisplayname: userData.displayName,
+  //       sourceId: userData.uid,
+  //       sourceUsername: userData.username,
+  //       sourcePhotoURL: userData.photoURL,
+  //       type: "comment",
+  //       content: commentContent,
+  //       sourceAuthorId: authorId,
+  //       sourcePostId: postId,
+  //       sourcePostPictureURL: imageURL,
+  //     });
+  //   }
 
-    // update to totalNotifs snippet
-    const docRef = doc(db, `users/${authorId}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const tempTotalNotifs = docSnap.data().totalNotifs + 1;
-      await updateDoc(docRef, {
-        totalNotifs: tempTotalNotifs,
-      });
-    }
-  }
+  //   // update to totalNotifs snippet
+  //   const docRef = doc(db, `users/${authorId}`);
+  //   const docSnap = await getDoc(docRef);
+  //   if (docSnap.exists()) {
+  //     const tempTotalNotifs = docSnap.data().totalNotifs + 1;
+  //     await updateDoc(docRef, {
+  //       totalNotifs: tempTotalNotifs,
+  //     });
+  //   }
+  // }
+  // async function updatePostSnippets(type, postInfo) {
+  //   const userRef = doc(db, `users/${postInfo.authorId}`);
+  //   const docSnap = await getDoc(userRef);
+  //   const tempAllUserData = [...allUserData];
+  //   let tempData;
+  //   if (docSnap.exists()) {
+  //     tempData = docSnap.data();
+  //     const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
+  //     if (type === "unlike") {
+  //       tempData.postSnippets[snippetPos].totalLikes -= 1;
+  //       await updateDoc(userRef, {
+  //         postSnippets: tempData.postSnippets,
+  //       });
+  //     } else if (type === "like") {
+  //       tempData.postSnippets[snippetPos].totalLikes += 1;
+  //       await updateDoc(userRef, {
+  //         postSnippets: tempData.postSnippets,
+  //       });
+  //     } else if (type === "comment") {
+  //       tempData.postSnippets[snippetPos].totalComments += 1;
+  //       await updateDoc(userRef, {
+  //         postSnippets: tempData.postSnippets,
+  //       });
+  //     }
+  //   }
+
+  //   // UI rerender for postSnippets in userData/allUserData
+  //   if (postInfo.authorId === userData.uid) {
+  //     setUserData(tempData);
+  //   } else {
+  //     const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
+  //     tempAllUserData.splice(userPos, 1, tempData);
+  //     setAllUserData(tempAllUserData);
+  //   }
+  // }
 
   function handleViewFullPost(index) {
     scrollY.current = window.scrollY;
@@ -86,93 +121,79 @@ function Newsfeed() {
     });
   }
 
-  async function updatePostSnippets(type, postInfo) {
-    const userRef = doc(db, `users/${postInfo.authorId}`);
-    const docSnap = await getDoc(userRef);
-    const tempAllUserData = [...allUserData];
-    let tempData;
-    if (docSnap.exists()) {
-      tempData = docSnap.data();
-      const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
-      if (type === "unlike") {
-        tempData.postSnippets[snippetPos].totalLikes -= 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      } else if (type === "like") {
-        tempData.postSnippets[snippetPos].totalLikes += 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      } else if (type === "comment") {
-        tempData.postSnippets[snippetPos].totalComments += 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      }
-    }
-
-    // UI rerender for postSnippets in userData/allUserData
-    if (postInfo.authorId === userData.uid) {
-      setUserData(tempData);
-    } else {
-      const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
-      tempAllUserData.splice(userPos, 1, tempData);
-      setAllUserData(tempAllUserData);
-    }
-  }
-
-  // Quick dirty workaround with [cmtId] since array elements are not supported with serverTimestamp()
   async function handleSubmitPostComment(e, index) {
     e.preventDefault();
+
     const postInfo = newsfeed[index];
-    if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
-      const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-      const cmtId = uniqid();
-      const commentContent = postComments[postInfo.postId];
-      await updateDoc(postRef, {
-        [cmtId]: serverTimestamp(),
-        comments: arrayUnion({
-          sourceId: userData.uid,
-          sourcePhotoURL: userData.photoURL,
-          sourceUsername: userData.username,
-          sourceComment: commentContent,
-          sourceCommentTime: cmtId,
+    if (postComments[postInfo._id] && postComments[postInfo._id].trim()) {
+      const options = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",
+          commenterId: userData._id, // for notif
+          postId: postInfo._id, // for post itself
+          authorId: postInfo.author._id, // for postSnippets of that author
+          isSelfComment: postInfo.author._id === userData._id,
+          content: postComments[postInfo._id],
         }),
-      });
-      setPostComments({ ...postComments, [postInfo.postId]: "" });
-      updatePostSnippets("comment", postInfo);
-      if (postInfo.authorId !== userData.uid) {
-        updateNotifications(postInfo, "comment", commentContent);
-      }
+      };
+
+      fetch("http://localhost:4000/addComment", options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errMsg) alert(data.errMsg);
+          else {
+            setPostComments({ ...postComments, [postInfo._id]: "" });
+          }
+        });
     } else {
       setSubmitCommentError("Posting empty comments error");
     }
   }
 
-  async function handleLikePost(index) { // toggle
+  function handleLikePost(index) { // toggle
     const postInfo = newsfeed[index];
-    const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === userData.uid);
-    if (targetIndex !== -1) {
-      await updateDoc(postRef, {
-        likes: postInfo.likes.filter((like, idx) => idx !== targetIndex),
-      });
-      updatePostSnippets("unlike", postInfo);
-    } else {
-      await updateDoc(postRef, {
-        likes: arrayUnion({
-          sourceId: userData.uid,
-          sourcePhotoURL: userData.photoURL,
-          sourceUsername: userData.username,
-          sourceDisplayname: userData.displayName,
+    let options;
+    const targetIndex = postInfo.likes.findIndex((like) => like._id === userData._id);
+    if (targetIndex > -1) {
+      console.log("about to unlike");
+      options = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "unlike",
+          likerId: userData._id, // id of the person who liked
+          postId: postInfo._id, // id of post
+          authorId: postInfo.author._id, // owner of post
         }),
-      });
-      updatePostSnippets("like", postInfo);
-      if (postInfo.authorId !== userData.uid) {
-        updateNotifications(postInfo, "like");
-      }
+      };
+    } else {
+      console.log("about to like");
+      options = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "like",
+          isSelfLike: postInfo.author._id === userData._id,
+          likerId: userData._id,
+          postId: postInfo._id,
+          authorId: postInfo.author._id,
+        }),
+      };
     }
+    fetch("http://localhost:4000/handleLikePost", options)
+      .then((response) => response.json())
+      .then((data) => { if (data.errMsg) alert(data.errMsg); });
   }
 
   async function handleVisitProfile(uid) {
@@ -183,6 +204,11 @@ function Newsfeed() {
       setVisitedUserData(docSnap.data());
     }
   }
+
+  // useEffect(() => {
+  //   console.log("new newsfeed after like/change");
+  //   console.log(newsfeed);
+  // }, [newsfeed]);
 
   return (
     <div className="Newsfeed">
@@ -217,11 +243,11 @@ function Newsfeed() {
               </svg>
             </div>
 
-            {post.likes.length > 10 ? (
+            {post.likes.length > 0 ? (
               <div className="post-likes medium" onClick={() => { handleViewLikeList(post.likes); }}>
                 Liked by
                 {" "}
-                <span className="username medium bold">{post.likes[post.likes.length - 1].author.username}</span>
+                <span className="username medium bold">{post.likes[post.likes.length - 1].username}</span>
                 {" "}
                 and
                 {" "}
@@ -257,12 +283,16 @@ function Newsfeed() {
             </Link>
             <div className="comment-snippet">
               <div className="comment medium">
-                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 2].author._id); }}>{post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].author.username}</span>
+                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 2].commenter._id); }}>
+                  {post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].commenter.username}
+                </span>
                 {" "}
                 {post.comments[post.comments.length - 2] && post.comments[post.comments.length - 2].content}
               </div>
               <div className="comment medium">
-                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 1].author._id); }}>{post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].author.username}</span>
+                <span className="username bold medium" onClick={() => { handleVisitProfile(post.comments[post.comments.length - 1].commenter._id); }}>
+                  {post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].commenter.username}
+                </span>
                 {" "}
                 {post.comments[post.comments.length - 1] && post.comments[post.comments.length - 1].content}
               </div>

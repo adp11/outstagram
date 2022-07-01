@@ -4,11 +4,13 @@ const { Schema } = mongoose;
 
 const NotificationSchema = new Schema(
   {
-    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    from: { type: Schema.Types.ObjectId, ref: "User", required: true },
     type: { type: String, required: true, enum: ["like", "comment", "follow"] },
     post: { type: Schema.Types.ObjectId, ref: "Post" },
+    to: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    commentContent: { type: String },
   },
-  { timeStamps: true },
+  { timestamps: true },
 );
 
 // Export model
