@@ -7,7 +7,7 @@ import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 function SearchBox() {
-  const { allUserData, setVisitedUserData } = useContext(UserContext);
+  const { allUserData, setVisitedUserDataHelper } = useContext(UserContext);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchActive, setIsSearchActive] = useState(false);
 
@@ -15,14 +15,28 @@ function SearchBox() {
   const searchBoxRef = useRef(null);
   const navigate = useNavigate();
 
-  async function handleVisitProfile(uid) {
-    const docRef = doc(db, `users/${uid}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      setVisitedUserData(docSnap.data());
-    }
-    setIsSearchActive(false);
-    navigate(`/${uid}`);
+  async function handleVisitProfile(_id) {
+    const options = {
+      method: "GET",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch(`http://localhost:4000/users/${_id}`, options)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errMsg === "No user found") {
+          navigate(`/u/${_id}`);
+          setIsSearchActive(false);
+        } else if (data.errMsg) {
+          alert(data.errMsg);
+        } else {
+          navigate(`/u/${_id}`);
+          setIsSearchActive(false);
+          setVisitedUserDataHelper(data);
+        }
+      });
   }
 
   function useOutsideAlerter(ref1, ref2) {
@@ -62,7 +76,7 @@ function SearchBox() {
       {isSearchActive && (
       <div className="dropdown" ref={dropdownRef}>
         {searchResults.length ? searchResults.map((result) => (
-          <div className="search-result" key={result.uid} onClick={() => { handleVisitProfile(result.uid); }}>
+          <div className="search-result" key={result._id} onClick={() => { handleVisitProfile(result._id); }}>
             <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
             <div>
               <div className="bold medium cut1">{result.username}</div>

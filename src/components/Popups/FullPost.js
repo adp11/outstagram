@@ -19,7 +19,7 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 function FullPost() {
   const {
     userData, allUserData, visitedUserData, newsfeed, scrollY, fullPostIndex, beforeFullPost, fullPostInfo, isLikeListActive, abruptPostView,
-    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfo, setVisitedUserData, setAllUserData, setUserData, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setAbruptPostView,
+    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfo, setVisitedUserDataHelper, setAllUserData, setUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setAbruptPostView,
   } = useContext(UserContext);
 
   const [isDropdownActive, setIsDropdownActive] = useState(false);
@@ -142,7 +142,7 @@ function FullPost() {
     const tempUserData = { ...userData };
     tempUserData.totalPosts -= 1;
     tempUserData.postSnippets = tempUserData.postSnippets.filter((postSnippet) => postSnippet.postId !== postId);
-    setUserData(tempUserData);
+    setUserDataHelper(tempUserData);
     const docRef = doc(db, `users/${authorId}`);
     await setDoc(docRef, tempUserData);
   }
@@ -174,9 +174,9 @@ function FullPost() {
 
     // UI rerender for postSnippets in userData/allUserData
     if (beforeFullPost.selfProfile || (beforeFullPost.newsfeed && postInfo.authorId === userData.uid)) {
-      setUserData(tempData);
+      setUserDataHelper(tempData);
     } else if (beforeFullPost.visitedProfile) {
-      setVisitedUserData(tempData);
+      setVisitedUserDataHelper(tempData);
     } else if (beforeFullPost.newsfeed && postInfo.authorId !== userData.uid) {
       const tempAllUserData = [...allUserData];
       const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
@@ -277,7 +277,7 @@ function FullPost() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       navigate(`/${uid}`);
-      setVisitedUserData(docSnap.data());
+      setVisitedUserDataHelper(docSnap.data());
     }
   }
 

@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Post = require("../models/post");
-const Notification = require("../models/notification");
 
 // Skip validation and sanitization
 exports.addPost = (req, res, next) => {
@@ -26,8 +25,6 @@ exports.addPost = (req, res, next) => {
   });
 };
 
-// like: post, notif (not self like), postSNippet, unreadNotifs
-// unlike: post, postSnippet
 exports.handleLikePost = (req, res, next) => {
   const {
     type, likerId, postId, authorId, isSelfLike,
@@ -78,26 +75,22 @@ exports.handleLikePost = (req, res, next) => {
       function (callback) {
         Post.findByIdAndUpdate(postId, { $push: { likes: likerId } }, callback);
       },
-      // update notifications
+      // multiple updates for user
       function () {
-        Notification.create({
-          from: likerId,
-          to: authorId,
-          type: "like",
-          post: postId,
-        });
-      },
-      // update unreadNotifs
-      function (callback) {
-        User.findByIdAndUpdate(authorId, { $inc: { unreadNotifs: 1 } }, callback);
-      },
-      // update postSnippets
-      function (callback) {
-        User.updateOne(
+        User.findOneAndUpdate(
           { _id: authorId, "postSnippets._id": mongoose.Types.ObjectId(postId) },
-          { $inc: { "postSnippets.$.totalLikes": 1 } },
-
-          callback,
+          { $inc: { unreadNotifs: 1, "postSnippets.$.totalLikes": 1 } }, // update postSnippets and unreadNotifs
+          (err, user) => {
+            user.notifications.push({ // push notifications
+              from: likerId,
+              to: authorId,
+              type: "like",
+              post: postId,
+            });
+            user.save((err1) => {
+              if (err1) return res.json({ errorMsg: "Error when handling like." });
+            });
+          },
         );
       },
     ], (err, results) => {
@@ -141,32 +134,29 @@ exports.addComment = (req, res, next) => {
           post.comments.push({ commenter: commenterId, content });
           post.save(callback);
         },
-        // update notifications
-        function (callback) {
-          const notification = new Notification({
-            from: commenterId,
-            to: authorId,
-            type: "comment",
-            post: postId,
-            commentContent: content,
-          });
-          notification.save(callback);
-        },
-        // update unreadNotifs
-        function (callback) {
-          User.findByIdAndUpdate(authorId, { $inc: { unreadNotifs: 1 } }, callback);
-        },
-        // update postSnippets
-        function (callback) {
-          User.updateOne(
+        // multiple updates for user
+        function () {
+          User.findOneAndUpdate(
             { _id: authorId, "postSnippets._id": mongoose.Types.ObjectId(postId) },
-            { $inc: { "postSnippets.$.totalComments": 1 } },
-            callback,
+            { $inc: { unreadNotifs: 1, "postSnippets.$.totalComments": 1 } }, // update postSnippets and unreadNotifs
+            (err, user) => {
+              user.notifications.push({ // push notifications
+                from: commenterId,
+                to: authorId,
+                type: "comment",
+                post: postId,
+                commentContent: content,
+              });
+              user.save((err1) => {
+                if (err1) {
+                  return res.json({ errorMsg: "Error when adding your comment. Please try again." });
+                }
+                return res.json({ successMsg: "Added comment!" });
+              });
+            },
           );
         },
       ], (err1, results) => {
-        console.log("results after handle", results);
-        console.log("err?", err1);
         if (err1) return res.json({ errMsg: "Error when adding your comment. Please try again." });
         return res.json({ successMsg: "Added comment!" });
       });

@@ -13,7 +13,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function Notifications() {
   const {
-    userData, scrollY, setUserData, setVisitedUserData, setBeforeFullPost, setIsFullPostActive, setFullPostInfo,
+    userData, scrollY, setUserDataHelper, setVisitedUserDataHelper, setBeforeFullPost, setIsFullPostActive, setFullPostInfo,
   } = useContext(UserContext);
   const [notificationList, setNotificationList] = useState([]);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
@@ -65,7 +65,7 @@ function Notifications() {
 
       // update current user's following data
       tempCurrentUserData.following.splice(positionInFollowing, 1);
-      setUserData(tempCurrentUserData);
+      setUserDataHelper(tempCurrentUserData);
       updateFollowingData(tempCurrentUserData);
 
       // update target user's followers data
@@ -91,7 +91,7 @@ function Notifications() {
         username: sourceUsername,
         userDisplayName: sourceDisplayname,
       });
-      setUserData(tempCurrentUserData);
+      setUserDataHelper(tempCurrentUserData);
       updateFollowingData(tempCurrentUserData);
 
       // update target user's followers data
@@ -117,7 +117,7 @@ function Notifications() {
       setIsDropdownActive(!isDropdownActive);
       setNotificationList([]);
     }
-    setUserData({ ...userData, totalNotifs: 0 });
+    setUserDataHelper({ ...userData, totalNotifs: 0 });
 
     // update to totalNotifs snippet
     const docRef = doc(db, `users/${userData.uid}`);
@@ -148,7 +148,7 @@ function Notifications() {
 
     if (docSnap.exists()) {
       setIsDropdownActive(false);
-      setVisitedUserData(docSnap.data());
+      setVisitedUserDataHelper(docSnap.data());
       navigate(`/${uid}`);
     }
   }
@@ -163,7 +163,7 @@ function Notifications() {
 
     if (docSnap.exists()) {
       setIsDropdownActive(false);
-      setVisitedUserData(docSnap.data());
+      setVisitedUserDataHelper(docSnap.data());
       navigate(`/${sourceAuthorId}`);
     }
     // cannot reuse handleVisitProfile() because of its async function and invalid 'params.postId' below

@@ -21,7 +21,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function EditProfile() {
-  const { userData, setUserData, setIsEditProfileActive } = useContext(UserContext);
+  const { userData, setUserDataHelper, setIsEditProfileActive } = useContext(UserContext);
 
   const [previewImageURL, setPreviewImageURL] = useState(null);
   const [bio, setBio] = useState(userData.bio);
@@ -56,7 +56,7 @@ function EditProfile() {
     if (publicImageURL) {
       tempUserData.photoURL = publicImageURL;
     }
-    setUserData(tempUserData);
+    setUserDataHelper(tempUserData);
   }
 
   // only update some basic fields but not everywhere (e.g. inside comments or like lists)

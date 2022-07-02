@@ -9,13 +9,13 @@ import { db } from "../../firebase";
 
 function Nav() {
   const {
-    userData, darkMode, isSearchChatActive, scrollY, isFullImageActive, setIsAddPostActive, fetchNewsfeed, setUserData,
+    userData, darkMode, isSearchChatActive, scrollY, isFullImageActive, setIsAddPostActive, setUserDataHelper,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
   async function handleCloseChatNotifications() {
     if (userData.totalChatNotifs > 0) {
-      setUserData({ ...userData, totalChatNotifs: 0 });
+      setUserDataHelper({ ...userData, totalChatNotifs: 0 });
       const docRef = doc(db, `users/${userData.uid}`);
       await updateDoc(docRef, {
         totalChatNotifs: 0,
@@ -24,9 +24,8 @@ function Nav() {
   }
 
   function refresh() {
-    fetchNewsfeed();
-    window.scrollTo(0, 0);
     navigate("/");
+    window.scrollTo(0, 0);
   }
 
   return (

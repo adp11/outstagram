@@ -77,7 +77,6 @@ exports.loginUser = (req, res, next) => {
             Post
               .find({ author: { $in: user.following.concat(user._id) } })
               .populate("author likes comments.commenter", "username displayName photoURL")
-              // .populate("comments.commenter", "username displayName photoURL")
               .lean()
               .sort("-createdAt")
               .exec(callback);
@@ -94,4 +93,62 @@ exports.loginUser = (req, res, next) => {
         });
       });
     });
+};
+
+exports.getUserProfile = (req, res, next) => {
+  User
+    .findById(req.params._id)
+    .populate("followers following", "username displayName photoURL")
+    .select("-password -rooms -unreadChatNotifs -unreadNotifs")
+    .lean()
+    .exec((err, data) => {
+      if (err) return res.json({ errorMsg: "Error when retrieving this user's profile" });
+      if (!data) {
+        return res.json({ errorMsg: "No user found" });
+      }
+      return res.json(data);
+    });
+};
+
+exports.handleFollowToggle = (req, res, next) => {
+  const { type, selfId, otherId } = req.body;
+  if (type === "follow") {
+    async.parallel([
+      // update self's following
+      function (callback) {
+        User.findByIdAndUpdate(selfId, { $push: { following: otherId } }, callback);
+      },
+      // update other's followers and push notifications
+      function () {
+        User.findByIdAndUpdate(otherId, {
+          $push: { followers: selfId }, // other's followers
+          $inc: { unreadNotifs: 1 }, // other's unreadNotifs
+        }, (err, user) => {
+          user.notifications.push({ // push main notification
+            from: selfId,
+            to: otherId,
+            type: "follow",
+          });
+          user.save((err1) => {
+            if (err1) return res.json({ errorMsg: "Error when handling follow toggle." });
+          });
+        });
+      },
+    ], (err, results) => {
+      if (err) return res.json({ errMsg: "Error when handling follow toggle." });
+    });
+  } else if (type === "unfollow") {
+    async.parallel([
+      // update self's following
+      function (callback) {
+        User.findByIdAndUpdate(selfId, { $pull: { following: otherId } }, callback);
+      },
+      // update other's followers
+      function (callback) {
+        User.findByIdAndUpdate(otherId, { $pull: { followers: selfId } }, callback);
+      },
+    ], (err, results) => {
+      if (err) return res.json({ errMsg: "Error when handling follow toggle." });
+    });
+  }
 };

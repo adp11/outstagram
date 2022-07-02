@@ -22,7 +22,7 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 
 // Import controllers
-const { signupUser, loginUser } = require("./controllers/userController");
+const { signupUser, loginUser, getUserProfile, handleFollowToggle } = require("./controllers/userController");
 const { addPost, handleLikePost, addComment } = require("./controllers/postController");
 
 // Import models
@@ -39,9 +39,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.post("/signup", signupUser);
 app.post("/login", loginUser);
-app.post("/addpost", addPost);
-app.post("/handleLikePost", handleLikePost);
-app.post("/addComment", addComment);
+app.get("/users/:_id", getUserProfile);
+app.post("/follow", handleFollowToggle);
+
+app.post("/post", addPost);
+app.post("/like", handleLikePost);
+app.post("/comment", addComment);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -78,7 +81,7 @@ app.set("socketio", io);
 // realtime listening to User collection
 const userChangeStream = User.watch().on("change", (data) => {
   console.log("operationType?", data.operationType);
-  // change in current user
+  // change in existing user
   if (data.operationType === "update") {
     User.findById(data.documentKey._id)
       .populate("followers following", "username displayName photoURL")
@@ -101,8 +104,7 @@ const userChangeStream = User.watch().on("change", (data) => {
 // realtime listening to Post collection
 const postChangeStream = Post.watch().on("change", (data) => {
   Post.findById(data.documentKey._id)
-    .populate("author likes", "username displayName photoURL")
-    .populate("comments.commenter", "username displayName photoURL")
+    .populate("author likes comments.commenter", "username displayName photoURL")
     .lean()
     .exec((err2, populatedData) => {
       if (err2) console.log("cannot retrieve post upon post data change");

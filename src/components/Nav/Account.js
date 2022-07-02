@@ -7,10 +7,17 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
 function Account() {
   const {
-    userData, darkMode, setIsLoggedIn, setIsProfilePageNotFoundActive, setDarkMode,
+    userData, darkMode, setIsLoggedIn, setVisitedUserDataHelper, setIsProfilePageNotFoundActive, setDarkMode,
   } = useContext(UserContext);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const navigate = useNavigate();
+
+  function handleVisitProfile() {
+    setIsProfilePageNotFoundActive(false);
+    setIsDropdownActive(!isDropdownActive);
+    setVisitedUserDataHelper(userData);
+    navigate(`/u/${userData._id}`);
+  }
 
   function toggleTheme() {
     const root = document.documentElement;
@@ -22,7 +29,9 @@ function Account() {
   }
 
   function logOut() {
-    signOut(getAuth());
+    setIsDropdownActive(!isDropdownActive);
+    setIsLoggedIn(false);
+    navigate("/");
   }
 
   return (
@@ -36,8 +45,7 @@ function Account() {
       </div>
       {isDropdownActive && (
       <div className="dropdown">
-         {/* navigate(`/${userData.uid}`); */}
-        <div onClick={() => { setIsProfilePageNotFoundActive(false); setIsDropdownActive(!isDropdownActive);  }}>
+        <div onClick={handleVisitProfile}>
           <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20">
             <circle cx="12.004" cy="12.004" fill="none" r="10.5" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="2" />
             <path d="M18.793 20.014a6.08 6.08 0 00-1.778-2.447 3.991 3.991 0 00-2.386-.791H9.38a3.994 3.994 0 00-2.386.791 6.09 6.09 0 00-1.779 2.447" fill="none" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="2" />
@@ -53,8 +61,7 @@ function Account() {
           {darkMode ? "Light Mode" : "Dark Mode"}
         </div>
 
-        {/* eslint-disable-next-line */}
-        <div onClick={() => { setIsDropdownActive(!isDropdownActive); logOut(); setIsLoggedIn(false); navigate("/")}}>
+        <div onClick={logOut}>
           <svg style={{ width: "20px", height: "20px" }} viewBox="0 0 24 24">
             <path fill="currentColor" d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z" />
           </svg>

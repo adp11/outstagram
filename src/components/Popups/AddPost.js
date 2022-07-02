@@ -11,7 +11,7 @@ import { db, storage } from "../../firebase";
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function AddPost() {
-  const { userData, setIsAddPostActive, setUserData } = useContext(UserContext);
+  const { userData, setIsAddPostActive, setUserDataHelper } = useContext(UserContext);
 
   const [addPostError, setAddPostError] = useState(null);
   const [previewImageURL, setPreviewImageURL] = useState(null);
@@ -52,7 +52,7 @@ function AddPost() {
           }),
         };
 
-        fetch("http://localhost:4000/addpost", options)
+        fetch("http://localhost:4000/post", options)
           .then((response) => response.json())
           .then((data) => {
             if (data.errorMsg) {

@@ -789,6 +789,10 @@ footer > div {
   z-index: 4;
 }
 
+.LikeList .container, .FollowList .container {
+  box-shadow: var(--box-shadow);
+}
+
 .FullImage .container {
   display: flex;
   flex-direction: column;
@@ -901,6 +905,7 @@ footer > div {
 /* Snackbar ---------------------------------- */
 .Snackbar {
   background-color: var(--color-base-text);
+  box-shadow: var(--box-shadow);
 }
 
 .Snackbar * {

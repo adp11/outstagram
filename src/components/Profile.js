@@ -14,14 +14,15 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 function Profile() {
   const {
     userData, beforeFullPost, scrollY,
-    setUserData, visitedUserData, setVisitedUserData, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
+    setUserDataHelper, visitedUserData, setVisitedUserDataHelper, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
-
-  const [isFollowing, setIsFollowing] = useState(null);
 
   const params = useParams();
   const profilePostsRef = useRef(null);
   const navigate = useNavigate();
+
+  // handle follow button undecided when first mounting
+  const [isFollowing, setIsFollowing] = useState(null);
 
   async function handleViewFullPost(postId) {
     let docRef;
@@ -49,85 +50,41 @@ function Profile() {
     }
   }
 
-  async function updateFollowingData(tempUserData) {
-    const docRef = doc(db, `users/${userData.uid}`);
-    await updateDoc(docRef, { following: tempUserData.following });
-  }
-
-  async function updateFollowersData(tempVisitedUserData) {
-    const docRef = doc(db, `users/${params.uid}`);
-    await updateDoc(docRef, { followers: tempVisitedUserData.followers });
-  }
-
-  async function updateNotifications({ uid }, notificationType) {
-    const collectionPath = `users/${uid}/notifications`;
-    if (notificationType === "follow") {
-      // update to Notifications subcollection
-      const notifRef = await addDoc(collection(db, collectionPath), {
-        creationTime: serverTimestamp(),
-      });
-
-      await updateDoc(notifRef, {
-        notifId: uniqid(),
-        sourceDisplayname: userData.displayName,
-        sourceId: userData.uid,
-        sourceUsername: userData.username,
-        sourcePhotoURL: userData.photoURL,
-        type: "follow",
-      });
-
-      // update to totalNotifs snippet
-      const docRef = doc(db, `users/${uid}`);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        await updateDoc(docRef, {
-          totalNotifs: docSnap.data().totalNotifs + 1,
-        });
-      }
-    }
-  }
-
   function handleFollowToggle() {
-    const positionInFollowing = userData.following.findIndex((user) => user.uid === params.uid);
-    const positionInFollowers = visitedUserData.followers.findIndex((user) => user.uid === userData.uid);
-    const tempUserData = { ...userData };
-    const tempVisitedUserData = { ...visitedUserData };
-
-    if (positionInFollowing === -1) { // if following
-      // update current user's following data
-      tempUserData.following.push({
-        uid: params.uid,
-        photoURL: visitedUserData.photoURL,
-        username: visitedUserData && visitedUserData.username,
-        userDisplayName: visitedUserData && visitedUserData.displayName,
-      });
-      setUserData(tempUserData);
-      updateFollowingData(tempUserData);
-
-      // update visited user's followers data
-      tempVisitedUserData.followers.push({
-        uid: userData.uid,
-        photoURL: userData.photoURL,
-        username: userData && userData.username,
-        userDisplayName: userData && userData.displayName,
-      });
-      setVisitedUserData(tempVisitedUserData);
-      updateFollowersData(tempVisitedUserData);
-
-      setIsFollowing(true);
-      updateNotifications(tempVisitedUserData, "follow");
+    if (!isFollowing) { // if following
+      console.log("about to follow");
+      const options = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "follow",
+          selfId: userData._id,
+          otherId: params.uid,
+        }),
+      };
+      fetch("http://localhost:4000/follow", options)
+        .then((response) => response.json())
+        .then((data) => { if (data.errMsg) alert(data.errMsg); });
     } else { // if unfollowing
-      // update current user's following data
-      tempUserData.following.splice(positionInFollowing, 1);
-      setUserData(tempUserData);
-      updateFollowingData(tempUserData);
-
-      // update visited user's followers data
-      tempVisitedUserData.followers.splice(positionInFollowers, 1);
-      setVisitedUserData(tempVisitedUserData);
-      updateFollowersData(tempVisitedUserData);
-
-      setIsFollowing(false);
+      console.log("about to unfollow");
+      const options = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "unfollow",
+          selfId: userData._id,
+          otherId: params.uid,
+        }),
+      };
+      fetch("http://localhost:4000/follow", options)
+        .then((response) => response.json())
+        .then((data) => { if (data.errMsg) alert(data.errMsg); });
     }
   }
 
@@ -154,91 +111,65 @@ function Profile() {
     }
   }
 
-  // Conditional rendering
-  const [componentVars, setComponentVars] = useState({
-    userAvatar: "",
-    username: "",
-    totalPosts: [],
-    totalFollowers: [],
-    totalFollowing: [],
-    userBio: "",
-    userDisplayName: "",
-    whichUser: null,
-  });
-
   useEffect(() => {
-    async function handleVisitVisitedProfile() {
-      if (!visitedUserData) {
-        let tempVisitedUserData;
-        const docRef = doc(db, `users/${params.uid}`);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          navigate(`/${params.uid}`);
-          tempVisitedUserData = docSnap.data();
-          setVisitedUserData(tempVisitedUserData);
-          setComponentVars({
-            userAvatar: tempVisitedUserData.photoURL,
-            username: tempVisitedUserData.username,
-            totalPosts: tempVisitedUserData.posts.length,
-            totalFollowers: tempVisitedUserData.followers.length,
-            totalFollowing: tempVisitedUserData.following.length,
-            userBio: tempVisitedUserData.bio,
-            userDisplayName: tempVisitedUserData.displayName,
-            whichUser: tempVisitedUserData,
-          });
-        } else {
-          navigate(`/${params.uid}`);
-          setIsProfilePageNotFoundActive(true);
-        }
+    console.log("triggered times??")
+    // handle follow button undecided when first mounting (when access by link)
+    if (visitedUserData) {
+      setIsFollowing(userData.following.findIndex((user) => user._id === params.uid) !== -1);
+    }
+
+    // fetch a) if visitedUserData is null (which means there's abrupt access by link/not by navigation) or b) if there is visitedUserData but params.uid isn't matched (which means there is clicking back and forth between profiles (uid change))
+    if (!visitedUserData || visitedUserData._id !== params.uid) {
+      if (params.uid === userData._id) {
+        setVisitedUserDataHelper(userData);
       } else {
-        setComponentVars({
-          userAvatar: visitedUserData.photoURL,
-          username: visitedUserData.username,
-          totalPosts: visitedUserData.posts.length,
-          totalFollowers: visitedUserData.followers.length,
-          totalFollowing: visitedUserData.following.length,
-          userBio: visitedUserData.bio,
-          userDisplayName: visitedUserData.displayName,
-          whichUser: visitedUserData,
-        });
+        const options = {
+          method: "GET",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch(`http://localhost:4000/users/${params.uid}`, options)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.errMsg === "No user found") {
+              setIsProfilePageNotFoundActive(true);
+            } else if (data.errMsg) {
+              alert(data.errMsg);
+            } else {
+              setVisitedUserDataHelper(data);
+            }
+          });
       }
     }
+  }, [visitedUserData, params.uid]);
 
-    if (userData) { // handle abrupt access to /:uid
-      const isCurrentUserFollowing = userData.following.findIndex((user) => user.uid === params.uid) !== -1;
-      setIsFollowing(isCurrentUserFollowing);
-    }
+  // reset states before unmounting (would get one UI rerender bug for newsfeedChange socket otherwise)
+  useEffect(
+    () => () => {
+      setVisitedUserDataHelper(null);
+    },
+    [],
+  );
 
-    if (userData && (params.uid === userData.uid || beforeFullPost.selfProfile)) {
-      setComponentVars({
-        userAvatar: userData.photoURL,
-        username: userData.username,
-        totalPosts: userData.posts.length,
-        totalFollowers: userData.followers.length,
-        totalFollowing: userData.following.length,
-        userBio: userData.bio,
-        userDisplayName: userData.displayName,
-        whichUser: userData,
-      });
-    } else if (userData && (params.uid !== userData.uid || beforeFullPost.visitedProfile)) {
-      handleVisitVisitedProfile(); // handle abrupt link access to visitedUserData
-    }
-  }, [userData, visitedUserData, params.uid]);
+  // // handle abrupt access (visit by link, not by navigation)
+  // if (userData && (params.uid === userData.uid || beforeFullPost.selfProfile)) {
 
-  const {
-    userAvatar, username, totalPosts, totalFollowers, totalFollowing, userBio, userDisplayName, whichUser,
-  } = componentVars;
+  // } else if (userData && (params.uid !== userData.uid || beforeFullPost.visitedProfile)) {
+  //   handleVisitVisitedProfile(); // handle abrupt link access to visitedUserData
+  // }
 
   return (
     <div className="Profile">
       <div className="profile-container">
         <div className="profile-summary">
-          <img src={userAvatar || IMAGE_PLACEHOLDER_URL} alt="" className="user-avatar" />
+          <img src={visitedUserData ? visitedUserData.photoURL : IMAGE_PLACEHOLDER_URL} alt="" className="user-avatar" />
           <div className="user-info">
             <div style={{ display: "flex" }}>
-              <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{username}</span>
+              <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{visitedUserData && visitedUserData.username}</span>
 
-              {(userData && (params.uid === userData.uid || beforeFullPost.selfProfile))
+              {(params.uid === userData._id || beforeFullPost.selfProfile)
                 // eslint-disable-next-line
                 ? <button type="button" onClick={() => { setIsEditProfileActive(true); scrollY.current = window.scrollY; }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
 
@@ -274,26 +205,26 @@ function Profile() {
             </div>
             <div className="user-stats">
               <div className="posts" onClick={() => { profilePostsRef.current.scrollIntoView(); }}>
-                <span>{totalPosts}</span>
+                <span>{visitedUserData && visitedUserData.postSnippets.length}</span>
                 posts
               </div>
-              <div className="followers" onClick={() => { handleViewFollowList(whichUser.followers, "followers"); }}>
-                <span>{totalFollowers}</span>
+              <div className="followers" onClick={() => { handleViewFollowList(visitedUserData.followers, "followers"); }}>
+                <span>{visitedUserData && visitedUserData.followers.length}</span>
                 followers
               </div>
-              <div className="following" onClick={() => { handleViewFollowList(whichUser.following, "following"); }}>
-                <span>{totalFollowing}</span>
+              <div className="following" onClick={() => { handleViewFollowList(visitedUserData.following, "following"); }}>
+                <span>{visitedUserData && visitedUserData.following.length}</span>
                 following
               </div>
             </div>
             <div className="user-bio">
-              <div className="bold">{userDisplayName}</div>
-              <div>{userBio}</div>
+              <div className="bold">{visitedUserData && visitedUserData.displayName}</div>
+              <div>{visitedUserData && visitedUserData.bio}</div>
             </div>
           </div>
         </div>
 
-        {(whichUser && whichUser.postSnippets.length > 0) && (
+        {(visitedUserData && visitedUserData.postSnippets.length > 0) && (
         <div className="profile-nav">
           <svg color="currentColor" fill="currentColor" height="12" role="img" viewBox="0 0 24 24" width="12">
             <rect fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" width="18" x="3" y="3" />
@@ -307,13 +238,15 @@ function Profile() {
         )}
 
         <div className="profile-posts" ref={profilePostsRef}>
-          {whichUser && whichUser.postSnippets.length > 0 ? whichUser.postSnippets.slice(0).reverse().map((post) => (
-            <Link to={`/p/${post.postId}`} onClick={() => { handleViewFullPost(post.postId); }} key={post.postId}>
-              <div className="profile-post" key={post.postId}>
+          {visitedUserData && visitedUserData.postSnippets.length > 0 ? visitedUserData.postSnippets.slice(0).reverse().map((post) => (
+            <Link to={`/p/${post._id}`} onClick={() => { handleViewFullPost(post._id); }} key={post._id}>
+              <div className="profile-post" key={post._id}>
                 <img className="post-picture" src={post.imageURL} alt="user's post" />
                 <div className="profile-post-stats">
                   <span>
-                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20"><path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" /></svg>
+                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20">
+                      <path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" />
+                    </svg>
                   </span>
                   <span>{post.totalLikes}</span>
                   <span>

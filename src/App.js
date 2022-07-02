@@ -25,6 +25,7 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
+  // bool states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
   const [isEditProfileActive, setIsEditProfileActive] = useState(false);
@@ -42,6 +43,7 @@ function App() {
   const [abruptPostView, setAbruptPostView] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
+  // data states (some states need to reset before unmounting/closing to prevent bugs that later involve reference to those states' value)
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
   const [allUserData, setAllUserData] = useState([]);
@@ -59,20 +61,33 @@ function App() {
     following: [],
   });
 
+  // extra states
   const scrollY = useRef(0);
   const unsubscribeFromRealTimeMessages = {};
   const didFetchActiveRooms = false;
 
-  // not able to access state in socket event handlers
+  // 3 refs below as not able to access state in socket event handlers
   const newsfeedRef = useRef(newsfeed);
   function setNewsfeedHelper(data) {
     newsfeedRef.current = data;
     setNewsfeed(data);
   }
 
+  const visitedUserDataRef = useRef(visitedUserData);
+  function setVisitedUserDataHelper(data) {
+    visitedUserDataRef.current = data;
+    setVisitedUserData(data);
+  }
+
+  const userDataRef = useRef(userData);
+  function setUserDataHelper(data) {
+    userDataRef.current = data;
+    setUserData(data);
+  }
+
   const providerValue = useMemo(
     () => ({
-      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setUserData, setVisitedUserData, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
     }),
     [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
   );
@@ -86,11 +101,14 @@ function App() {
         console.log(socket.id);
       });
 
+      // order of if conditions matters here (change in follow list wouldn't rerender UI when on visitedUserData (self profile) if 2nd if condition was first)
       socket.on("userDataChange", (data) => {
-        // self user modified
-        if (data.user && data.user._id === userData._id) {
-          console.log("self user change", data);
-          setUserData(data.user);
+        if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
+          console.log("visited user change");
+          setVisitedUserDataHelper(data.user);
+        } else if (data.user && data.user._id === userDataRef.current._id) { // self user change
+          console.log("self user change");
+          setUserDataHelper(data.user);
         } else if (data.addedUser) { // new user signed up/added
           console.log("new user added");
           setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
@@ -99,8 +117,9 @@ function App() {
 
       socket.on("newsfeedChange", (data) => {
         // only care about post change in db if the author's post is in current user's following list
-        console.log("newsfeed change", data);
-        if (userData._id === data.author._id || userData.following.includes(data.author._id)) {
+        const dataAuthorInFollowing = userDataRef.current.following.findIndex((followee) => followee._id === data.author._id) > -1;
+
+        if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
           const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
           if (dataChangePos > -1) { // modified
             console.log("post modified in newsfeed");
@@ -114,8 +133,8 @@ function App() {
         }
       });
     } else { // reset all states basically
-      setUserData(null);
-      setVisitedUserData(null);
+      setUserDataHelper(null);
+      setVisitedUserDataHelper(null);
       setAllUserData([]);
       setNewsfeedHelper([]);
       setFullPostIndex(null);
@@ -159,8 +178,8 @@ function App() {
               {/* eslint-disable-next-line */}
               <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
               <Route path="/chat" element={<Chat />} />
-              {!isProfilePageNotFoundActive && <Route path="/:uid" element={<Profile />} />}
-              {isProfilePageNotFoundActive && <Route path="/:uid" element={<PageNotFound />} />}
+              {!isProfilePageNotFoundActive && <Route path="/u/:uid" element={<Profile />} />}
+              {isProfilePageNotFoundActive && <Route path="/u/:uid" element={<PageNotFound />} />}
               {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
               {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
               {/* act as a background while fullpost is on */}

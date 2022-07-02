@@ -22,7 +22,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 function Chat() {
   const {
     userData, isFullImageActive, unsubscribeFromRealTimeMessages, isSearchChatActive, darkMode,
-    setIsSearchChatActive, setVisitedUserData, setIsFullImageActive, setIsRoomPageNotFoundActive,
+    setIsSearchChatActive, setVisitedUserDataHelper, setIsFullImageActive, setIsRoomPageNotFoundActive,
   } = useContext(UserContext);
   let { didFetchActiveRooms } = useContext(UserContext); // why? reassign later
 
@@ -149,7 +149,7 @@ function Chat() {
     const docRef = doc(db, `users/${uid}`);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      setVisitedUserData(docSnap.data());
+      setVisitedUserDataHelper(docSnap.data());
       navigate(`/${uid}`);
     }
   }

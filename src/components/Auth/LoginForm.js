@@ -6,7 +6,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function LoginForm() {
   const {
-    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserData, setAllUserData, setNewsfeedHelper,
+    darkMode, setIsLoggedIn, setIsFullPostActive, setAbruptPostView, setUserDataHelper, setAllUserData, setNewsfeedHelper,
   } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
@@ -56,7 +56,7 @@ function LoginForm() {
             passwordError: true,
           });
         } else {
-          setUserData(data.user);
+          setUserDataHelper(data.user);
           setAllUserData(data.users);
           setNewsfeedHelper(data.newsfeed);
           setIsLoggedIn(true);

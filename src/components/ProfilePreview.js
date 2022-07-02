@@ -34,12 +34,12 @@ function ProfilePreview() {
   return (
     <div className="ProfilePreview">
       <div className="user-profile">
-        <Link to={`/${userData._id}`}>
+        <Link to={`/u/${userData._id}`}>
           <div>
             <img src={userData.photoURL} alt="profile" />
           </div>
         </Link>
-        <Link to={`/${userData._id}`}>
+        <Link to={`/u/${userData._id}`}>
           <div>
             <div className="medium bold cut1">{userData.username}</div>
             <div className="medium grey">{userData.displayName}</div>
@@ -51,7 +51,7 @@ function ProfilePreview() {
         </div>
       </div>
       <div className="stats medium">
-        <div className="posts" onClick={() => { navigate(`/${userData._id}`); }}>
+        <div className="posts" onClick={() => { navigate(`/u/${userData._id}`); }}>
           <div className="bold medium">{userData.postSnippets.length}</div>
           <div className="grey medium">Posts</div>
         </div>

@@ -12,7 +12,7 @@ import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserData, allUserData, setAllUserData, setVisitedUserData, setIsLikeListActive, setLikeListInfo,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostIndex, scrollY, userData, setUserDataHelper, allUserData, setAllUserData, setVisitedUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -20,86 +20,6 @@ function Newsfeed() {
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
   const [notImplementedError, setNotImplementedError] = useState(false);
-
-  // async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
-  //   const collectionPath = `users/${authorId}/notifications`;
-  //   // update to Notifications subcollection
-  //   const notifRef = await addDoc(collection(db, collectionPath), {
-  //     creationTime: serverTimestamp(),
-  //   });
-
-  //   if (notificationType === "like") {
-  //     await updateDoc(notifRef, {
-  //       notifId: uniqid(),
-  //       sourceDisplayname: userData.displayName,
-  //       sourceId: userData.uid,
-  //       sourceUsername: userData.username,
-  //       sourcePhotoURL: userData.photoURL,
-  //       type: "like",
-  //       sourceAuthorId: authorId,
-  //       sourcePostId: postId,
-  //       sourcePostPictureURL: imageURL,
-  //     });
-  //   } else {
-  //     await updateDoc(notifRef, {
-  //       notifId: uniqid(),
-  //       sourceDisplayname: userData.displayName,
-  //       sourceId: userData.uid,
-  //       sourceUsername: userData.username,
-  //       sourcePhotoURL: userData.photoURL,
-  //       type: "comment",
-  //       content: commentContent,
-  //       sourceAuthorId: authorId,
-  //       sourcePostId: postId,
-  //       sourcePostPictureURL: imageURL,
-  //     });
-  //   }
-
-  //   // update to totalNotifs snippet
-  //   const docRef = doc(db, `users/${authorId}`);
-  //   const docSnap = await getDoc(docRef);
-  //   if (docSnap.exists()) {
-  //     const tempTotalNotifs = docSnap.data().totalNotifs + 1;
-  //     await updateDoc(docRef, {
-  //       totalNotifs: tempTotalNotifs,
-  //     });
-  //   }
-  // }
-  // async function updatePostSnippets(type, postInfo) {
-  //   const userRef = doc(db, `users/${postInfo.authorId}`);
-  //   const docSnap = await getDoc(userRef);
-  //   const tempAllUserData = [...allUserData];
-  //   let tempData;
-  //   if (docSnap.exists()) {
-  //     tempData = docSnap.data();
-  //     const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
-  //     if (type === "unlike") {
-  //       tempData.postSnippets[snippetPos].totalLikes -= 1;
-  //       await updateDoc(userRef, {
-  //         postSnippets: tempData.postSnippets,
-  //       });
-  //     } else if (type === "like") {
-  //       tempData.postSnippets[snippetPos].totalLikes += 1;
-  //       await updateDoc(userRef, {
-  //         postSnippets: tempData.postSnippets,
-  //       });
-  //     } else if (type === "comment") {
-  //       tempData.postSnippets[snippetPos].totalComments += 1;
-  //       await updateDoc(userRef, {
-  //         postSnippets: tempData.postSnippets,
-  //       });
-  //     }
-  //   }
-
-  //   // UI rerender for postSnippets in userData/allUserData
-  //   if (postInfo.authorId === userData.uid) {
-  //     setUserData(tempData);
-  //   } else {
-  //     const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
-  //     tempAllUserData.splice(userPos, 1, tempData);
-  //     setAllUserData(tempAllUserData);
-  //   }
-  // }
 
   function handleViewFullPost(index) {
     scrollY.current = window.scrollY;
@@ -142,7 +62,7 @@ function Newsfeed() {
         }),
       };
 
-      fetch("http://localhost:4000/addComment", options)
+      fetch("http://localhost:4000/comment", options)
         .then((response) => response.json())
         .then((data) => {
           if (data.errMsg) alert(data.errMsg);
@@ -191,24 +111,38 @@ function Newsfeed() {
         }),
       };
     }
-    fetch("http://localhost:4000/handleLikePost", options)
+    fetch("http://localhost:4000/like", options)
       .then((response) => response.json())
       .then((data) => { if (data.errMsg) alert(data.errMsg); });
   }
 
-  async function handleVisitProfile(uid) {
-    const docRef = doc(db, `users/${uid}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      navigate(`/${uid}`);
-      setVisitedUserData(docSnap.data());
+  async function handleVisitProfile(_id) {
+    if (_id === userData._id) {
+      navigate(`/u/${_id}`);
+      setVisitedUserDataHelper(userData);
+    } else {
+      const options = {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      fetch(`http://localhost:4000/users/${_id}`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errMsg === "No user found") {
+            navigate(`/u/${_id}`);
+            setIsProfilePageNotFoundActive(true);
+          } else if (data.errMsg) {
+            alert(data.errMsg);
+          } else {
+            navigate(`/u/${_id}`);
+            setVisitedUserDataHelper(data);
+          }
+        });
     }
   }
-
-  // useEffect(() => {
-  //   console.log("new newsfeed after like/change");
-  //   console.log(newsfeed);
-  // }, [newsfeed]);
 
   return (
     <div className="Newsfeed">
@@ -222,7 +156,8 @@ function Newsfeed() {
 
             <Link to={`/p/${post._id}`} onClick={() => { handleViewFullPost(index); }}>
               <div className="post-picture">
-                <img src={post.imageURL} alt="" style={{ width: "100%", height: "auto" }} />
+                {/* eslint-disable-next-line */}
+                <img src={post.imageURL} alt="A post image from this user" style={{ width: "100%", height: "auto" }} />
               </div>
             </Link>
 
