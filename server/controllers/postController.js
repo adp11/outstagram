@@ -46,7 +46,7 @@ exports.handleLikePost = (req, res, next) => {
     ], (err, results) => {
       console.log("results after handle", results[1]);
       console.log("err?", err);
-      if (err) return res.json({ errMsg: "Error when handling like." });
+      if (err) return res.json({ errorMsg: "Error when handling like." });
     });
   } else if (type === "like" && isSelfLike) {
     async.parallel([
@@ -67,7 +67,7 @@ exports.handleLikePost = (req, res, next) => {
     ], (err, results) => {
       console.log("results after handle", results[1]);
       console.log("err?", err);
-      if (err) return res.json({ errMsg: "Error when handling like." });
+      if (err) return res.json({ errorMsg: "Error when handling like." });
     });
   } else if (type === "like" && !isSelfLike) {
     async.parallel([
@@ -94,7 +94,7 @@ exports.handleLikePost = (req, res, next) => {
         );
       },
     ], (err, results) => {
-      if (err) return res.json({ errMsg: "Error when handling like." });
+      if (err) return res.json({ errorMsg: "Error when handling like." });
     });
   }
 };
@@ -124,7 +124,7 @@ exports.addComment = (req, res, next) => {
       ], (err1, results) => {
         console.log("results after handle", results);
         console.log("err?", err1);
-        if (err1) return res.json({ errMsg: "Error when adding your comment. Please try again." });
+        if (err1) return res.json({ errorMsg: "Error when adding your comment. Please try again." });
         return res.json({ successMsg: "Added comment!" });
       });
     } else {
@@ -157,7 +157,7 @@ exports.addComment = (req, res, next) => {
           );
         },
       ], (err1, results) => {
-        if (err1) return res.json({ errMsg: "Error when adding your comment. Please try again." });
+        if (err1) return res.json({ errorMsg: "Error when adding your comment. Please try again." });
         return res.json({ successMsg: "Added comment!" });
       });
     }

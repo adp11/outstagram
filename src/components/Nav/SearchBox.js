@@ -26,11 +26,9 @@ function SearchBox() {
     fetch(`http://localhost:4000/users/${_id}`, options)
       .then((response) => response.json())
       .then((data) => {
-        if (data.errMsg === "No user found") {
+        if (data.errorMsg) {
           navigate(`/u/${_id}`);
           setIsSearchActive(false);
-        } else if (data.errMsg) {
-          alert(data.errMsg);
         } else {
           navigate(`/u/${_id}`);
           setIsSearchActive(false);

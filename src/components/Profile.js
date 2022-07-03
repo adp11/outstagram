@@ -67,7 +67,7 @@ function Profile() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else { // if unfollowing
       console.log("about to unfollow");
       const options = {
@@ -84,7 +84,7 @@ function Profile() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
   }
 
@@ -112,7 +112,6 @@ function Profile() {
   }
 
   useEffect(() => {
-    console.log("triggered times??")
     // handle follow button undecided when first mounting (when access by link)
     if (visitedUserData) {
       setIsFollowing(userData.following.findIndex((user) => user._id === params.uid) !== -1);
@@ -133,17 +132,16 @@ function Profile() {
         fetch(`http://localhost:4000/users/${params.uid}`, options)
           .then((response) => response.json())
           .then((data) => {
-            if (data.errMsg === "No user found") {
+            if (data.errorMsg) {
               setIsProfilePageNotFoundActive(true);
-            } else if (data.errMsg) {
-              alert(data.errMsg);
             } else {
               setVisitedUserDataHelper(data);
             }
           });
       }
     }
-  }, [visitedUserData, params.uid]);
+    // why this dependency array? because of following change, visitedProfile change, click back and forth respectively
+  }, [userData, visitedUserData, params.uid]);
 
   // reset states before unmounting (would get one UI rerender bug for newsfeedChange socket otherwise)
   useEffect(
@@ -238,44 +236,45 @@ function Profile() {
         )}
 
         <div className="profile-posts" ref={profilePostsRef}>
-          {visitedUserData && visitedUserData.postSnippets.length > 0 ? visitedUserData.postSnippets.slice(0).reverse().map((post) => (
-            <Link to={`/p/${post._id}`} onClick={() => { handleViewFullPost(post._id); }} key={post._id}>
-              <div className="profile-post" key={post._id}>
-                <img className="post-picture" src={post.imageURL} alt="user's post" />
-                <div className="profile-post-stats">
-                  <span>
-                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20">
-                      <path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" />
-                    </svg>
-                  </span>
-                  <span>{post.totalLikes}</span>
-                  <span>
-                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20">
-                      <path d="M12.003 2.001a9.705 9.705 0 110 19.4 10.876 10.876 0 01-2.895-.384.798.798 0 00-.533.04l-1.984.876a.801.801 0 01-1.123-.708l-.054-1.78a.806.806 0 00-.27-.569 9.49 9.49 0 01-3.14-7.175 9.65 9.65 0 0110-9.7z" fill="currentColor" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1.739" />
-                    </svg>
-                  </span>
-                  <span>{post.totalComments}</span>
+          {visitedUserData && visitedUserData.postSnippets.length > 0
+            ? visitedUserData.postSnippets.slice(0).reverse().map((post) => (
+              <Link to={`/p/${post._id}`} onClick={() => { handleViewFullPost(post._id); }} key={post._id}>
+                <div className="profile-post" key={post._id}>
+                  <img className="post-picture" src={post.imageURL} alt="user's post" />
+                  <div className="profile-post-stats">
+                    <span>
+                      <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20">
+                        <path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" />
+                      </svg>
+                    </span>
+                    <span>{post.totalLikes}</span>
+                    <span>
+                      <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20">
+                        <path d="M12.003 2.001a9.705 9.705 0 110 19.4 10.876 10.876 0 01-2.895-.384.798.798 0 00-.533.04l-1.984.876a.801.801 0 01-1.123-.708l-.054-1.78a.806.806 0 00-.27-.569 9.49 9.49 0 01-3.14-7.175 9.65 9.65 0 0110-9.7z" fill="currentColor" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1.739" />
+                      </svg>
+                    </span>
+                    <span>{post.totalComments}</span>
+                  </div>
+                </div>
+              </Link>
+            )) : (
+              <div style={{ display: "flex", width: "100vw", margin: "50px 0" }}>
+                <div style={{
+                  flex: "1",
+                  maxWidth: "900px",
+                  minWidth: "500px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+                >
+                  <svg style={{ width: "100px", height: "100px" }} viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M21 6H17.8L16 4H10V6H15.1L17 8H21V20H5V11H3V20C3 21.1 3.9 22 5 22H21C22.1 22 23 21.1 23 20V8C23 6.9 22.1 6 21 6M8 14C8 18.45 13.39 20.69 16.54 17.54C19.69 14.39 17.45 9 13 9C10.24 9 8 11.24 8 14M13 11C14.64 11.05 15.95 12.36 16 14C15.95 15.64 14.64 16.95 13 17C11.36 16.95 10.05 15.64 10 14C10.05 12.36 11.36 11.05 13 11M5 6H8V4H5V1H3V4H0V6H3V9H5" />
+                  </svg>
+                  <p className="bold" style={{ fontSize: "20px" }}>No Posts Yet</p>
                 </div>
               </div>
-            </Link>
-          )) : (
-            <div style={{ display: "flex", width: "100vw", margin: "50px 0" }}>
-              <div style={{
-                flex: "1",
-                maxWidth: "900px",
-                minWidth: "500px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-              >
-                <svg style={{ width: "100px", height: "100px" }} viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M21 6H17.8L16 4H10V6H15.1L17 8H21V20H5V11H3V20C3 21.1 3.9 22 5 22H21C22.1 22 23 21.1 23 20V8C23 6.9 22.1 6 21 6M8 14C8 18.45 13.39 20.69 16.54 17.54C19.69 14.39 17.45 9 13 9C10.24 9 8 11.24 8 14M13 11C14.64 11.05 15.95 12.36 16 14C15.95 15.64 14.64 16.95 13 17C11.36 16.95 10.05 15.64 10 14C10.05 12.36 11.36 11.05 13 11M5 6H8V4H5V1H3V4H0V6H3V9H5" />
-                </svg>
-                <p className="bold" style={{ fontSize: "20px" }}>No Posts Yet</p>
-              </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>

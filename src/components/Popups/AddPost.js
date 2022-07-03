@@ -43,7 +43,7 @@ function AddPost() {
           },
           body: JSON.stringify({
             author: userData._id,
-            postCaption: caption,
+            postCaption: caption ? caption.trim() : null,
             imageURL: publicImageURL,
             storageURL: fileSnapshot.metadata.fullPath,
             filePath,

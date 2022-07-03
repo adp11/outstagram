@@ -22,7 +22,9 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 
 // Import controllers
-const { signupUser, loginUser, getUserProfile, handleFollowToggle } = require("./controllers/userController");
+const {
+  signupUser, loginUser, getUserProfile, handleFollowToggle,
+} = require("./controllers/userController");
 const { addPost, handleLikePost, addComment } = require("./controllers/postController");
 
 // Import models
@@ -80,11 +82,11 @@ app.set("socketio", io);
 
 // realtime listening to User collection
 const userChangeStream = User.watch().on("change", (data) => {
-  console.log("operationType?", data.operationType);
   // change in existing user
   if (data.operationType === "update") {
     User.findById(data.documentKey._id)
       .populate("followers following", "username displayName photoURL")
+      .select("-notifications -rooms")
       .lean()
       .exec((err3, populatedData) => {
         if (err3) console.log("cannot retrieve existing user upon user data change");
@@ -102,6 +104,7 @@ const userChangeStream = User.watch().on("change", (data) => {
 });
 
 // realtime listening to Post collection
+// causes: like/comment on existing posts in db, new posts added to db
 const postChangeStream = Post.watch().on("change", (data) => {
   Post.findById(data.documentKey._id)
     .populate("author likes comments.commenter", "username displayName photoURL")

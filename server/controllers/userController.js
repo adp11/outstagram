@@ -9,6 +9,7 @@ exports.signupUser = (req, res, next) => {
   const io = req.app.get("socketio");
 
   User.findOne({ username })
+    .select("-notifications -rooms")
     .lean()
     .exec((err, user) => {
       if (err) return next(err);
@@ -53,6 +54,7 @@ exports.loginUser = (req, res, next) => {
 
   User.findOne({ username })
     .populate("followers following", "username displayName photoURL")
+    .select("-notifications -rooms")
     .lean()
     .exec((err, user) => {
       if (err) return next(err);
@@ -99,43 +101,56 @@ exports.getUserProfile = (req, res, next) => {
   User
     .findById(req.params._id)
     .populate("followers following", "username displayName photoURL")
-    .select("-password -rooms -unreadChatNotifs -unreadNotifs")
+    .select("-password -rooms -unreadChatNotifs -unreadNotifs -notifications")
     .lean()
     .exec((err, data) => {
-      if (err) return res.json({ errorMsg: "Error when retrieving this user's profile" });
-      if (!data) {
-        return res.json({ errorMsg: "No user found" });
-      }
+      if (err) return res.json({ errorMsg: "Error when retrieving this user's profile. No user found" });
       return res.json(data);
     });
 };
 
 exports.handleFollowToggle = (req, res, next) => {
   const { type, selfId, otherId } = req.body;
+  const io = req.app.get("socketio");
+
   if (type === "follow") {
-    async.parallel([
-      // update self's following
-      function (callback) {
-        User.findByIdAndUpdate(selfId, { $push: { following: otherId } }, callback);
-      },
-      // update other's followers and push notifications
-      function () {
-        User.findByIdAndUpdate(otherId, {
-          $push: { followers: selfId }, // other's followers
-          $inc: { unreadNotifs: 1 }, // other's unreadNotifs
-        }, (err, user) => {
-          user.notifications.push({ // push main notification
-            from: selfId,
-            to: otherId,
-            type: "follow",
-          });
-          user.save((err1) => {
-            if (err1) return res.json({ errorMsg: "Error when handling follow toggle." });
-          });
+    // update other's followers and push notifications
+    User.findByIdAndUpdate(otherId, {
+      $push: { followers: selfId }, // other's followers
+      $inc: { unreadNotifs: 1 }, // other's unreadNotifs
+    }, (err, user) => {
+      user.notifications.push({ // push main notification
+        from: selfId,
+        to: otherId,
+        type: "follow",
+      });
+      user.save((err1) => {
+        if (err1) return res.json({ errorMsg: "Error when handling follow toggle." });
+        // if success, do waterfall updates
+        async.waterfall([
+          // update self's following
+          function (callback) {
+            User.findByIdAndUpdate(selfId, { $push: { following: otherId } }, { new: true }, (err, updatedUser) => {
+              if (err) return err;
+              callback(null, updatedUser);
+            });
+          },
+          // update newsfeed in frontend
+          function (updatedUser, callback) {
+            Post
+              .find({ author: { $in: updatedUser.following.concat(updatedUser._id) } })
+              .populate("author likes comments.commenter", "username displayName photoURL")
+              .lean()
+              .sort("-createdAt")
+              .exec((err, newsfeed) => {
+                callback(null, newsfeed);
+              });
+          },
+        ], (err2, newsfeed) => {
+          if (err2) return res.json({ errorMsg: "Error when handling follow toggle/querying newsfeed upon change in following list." });
+          io.emit("newsfeedChange", { refreshedNewsfeed: newsfeed, for: selfId });
         });
-      },
-    ], (err, results) => {
-      if (err) return res.json({ errMsg: "Error when handling follow toggle." });
+      });
     });
   } else if (type === "unfollow") {
     async.parallel([
@@ -147,8 +162,9 @@ exports.handleFollowToggle = (req, res, next) => {
       function (callback) {
         User.findByIdAndUpdate(otherId, { $pull: { followers: selfId } }, callback);
       },
-    ], (err, results) => {
-      if (err) return res.json({ errMsg: "Error when handling follow toggle." });
+    ], (err) => {
+      if (err) return res.json({ errorMsg: "Error when handling follow toggle." });
+      io.emit("newsfeedChange", { removedPostsOf: otherId, for: selfId });
     });
   }
 };

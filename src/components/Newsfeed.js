@@ -65,7 +65,7 @@ function Newsfeed() {
       fetch("http://localhost:4000/comment", options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.errMsg) alert(data.errMsg);
+          if (data.errorMsg) alert(data.errorMsg);
           else {
             setPostComments({ ...postComments, [postInfo._id]: "" });
           }
@@ -113,7 +113,7 @@ function Newsfeed() {
     }
     fetch("http://localhost:4000/like", options)
       .then((response) => response.json())
-      .then((data) => { if (data.errMsg) alert(data.errMsg); });
+      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }
 
   async function handleVisitProfile(_id) {
@@ -131,11 +131,9 @@ function Newsfeed() {
       fetch(`http://localhost:4000/users/${_id}`, options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.errMsg === "No user found") {
+          if (data.errorMsg) {
             navigate(`/u/${_id}`);
             setIsProfilePageNotFoundActive(true);
-          } else if (data.errMsg) {
-            alert(data.errMsg);
           } else {
             navigate(`/u/${_id}`);
             setVisitedUserDataHelper(data);

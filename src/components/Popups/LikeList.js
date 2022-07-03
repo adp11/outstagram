@@ -30,7 +30,7 @@ function LikeList() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else {
       const options = {
         method: "POST",
@@ -46,7 +46,7 @@ function LikeList() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
   }
 
@@ -87,11 +87,9 @@ function LikeList() {
       fetch(`http://localhost:4000/users/${_id}`, options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.errMsg === "No user found") {
+          if (data.errorMsg) {
             navigate(`/u/${_id}`);
             setIsProfilePageNotFoundActive(true);
-          } else if (data.errMsg) {
-            alert(data.errMsg);
           } else {
             setIsLikeListActive(false);
             setLikeListInfo({});

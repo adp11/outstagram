@@ -41,9 +41,9 @@ function App() {
   const [isSearchChatActive, setIsSearchChatActive] = useState(false);
   const [isFullImageActive, setIsFullImageActive] = useState(false);
   const [abruptPostView, setAbruptPostView] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
-  // data states (some states need to reset before unmounting/closing to prevent bugs that later involve reference to those states' value)
+  // data states (some states need to reset before unmounting/closing to prevent subtle bugs that later involve reference to those states' value)
   const [userData, setUserData] = useState(null);
   const [visitedUserData, setVisitedUserData] = useState(null);
   const [allUserData, setAllUserData] = useState([]);
@@ -101,34 +101,52 @@ function App() {
         console.log(socket.id);
       });
 
-      // order of if conditions matters here (change in follow list wouldn't rerender UI when on visitedUserData (self profile) if 2nd if condition was first)
+      // logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
       socket.on("userDataChange", (data) => {
-        if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
-          console.log("visited user change");
-          setVisitedUserDataHelper(data.user);
-        } else if (data.user && data.user._id === userDataRef.current._id) { // self user change
-          console.log("self user change");
+        if (data.user && data.user._id === userDataRef.current._id) {
+          console.log("self user change", data);
           setUserDataHelper(data.user);
+        }
+
+        // could be current user visiting someone else' profile OR self profile
+        if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
+          console.log("visited user change", data);
+          setVisitedUserDataHelper(data.user);
         } else if (data.addedUser) { // new user signed up/added
           console.log("new user added");
           setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
         }
       });
 
+      /* Only the first half OR the second half triggered newsfeedChange
+        - If current user just followed an Id, that user (data.for) gets a new newsfeed (data.refreshedNewsfeed)
+        - If just unfollowed, that user (data.for) removes that followee Id (data.removedPostsOf) from current newsfeed
+        - If like/comment on existing posts in db, set() by replacing if those's authors are in current user's following list (last "else if")
+        - If new posts added to db, set() by adding if those's authors ... (last "else if")
+      */
       socket.on("newsfeedChange", (data) => {
-        // only care about post change in db if the author's post is in current user's following list
-        const dataAuthorInFollowing = userDataRef.current.following.findIndex((followee) => followee._id === data.author._id) > -1;
+        if (data.for === userDataRef.current._id) { // first half
+          if (data.refreshedNewsfeed) {
+            console.log("newsfeed refreshed all");
+            setNewsfeedHelper(data.refreshedNewsfeed);
+          } else {
+            console.log("newsfeed got some removed");
+            setNewsfeedHelper(newsfeedRef.current.filter((post) => post.author._id !== data.removedPostsOf));
+          }
+        } else if (data.for === undefined) { // second half
+          const dataAuthorInFollowing = userDataRef.current.following.findIndex((followee) => followee._id === data.author._id) > -1;
 
-        if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
-          const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
-          if (dataChangePos > -1) { // modified
-            console.log("post modified in newsfeed");
-            const tempNewsfeed = [...newsfeedRef.current];
-            tempNewsfeed.splice(dataChangePos, 1, data);
-            setNewsfeedHelper(tempNewsfeed);
-          } else { // added
-            console.log("post added in newsfeed");
-            setNewsfeedHelper([data].concat(newsfeedRef.current));
+          if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
+            const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
+            if (dataChangePos > -1) {
+              console.log("post modified in newsfeed");
+              const tempNewsfeed = [...newsfeedRef.current];
+              tempNewsfeed.splice(dataChangePos, 1, data);
+              setNewsfeedHelper(tempNewsfeed);
+            } else {
+              console.log("post added in newsfeed");
+              setNewsfeedHelper([data].concat(newsfeedRef.current));
+            }
           }
         }
       });

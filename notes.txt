@@ -31,7 +31,6 @@ npx tailwindcss init
     
 
                                         BUG FIXES - FIRST BATCH
-
 view visitedProfile -> view full post --> selfProfile background bug - FIXED
 operations on fullpost from visitedProfile bug - FIXED
 
@@ -66,7 +65,6 @@ add clipboard - ADDED
 handleImageSize when full post - ADDED
 
                                         BUG FIXES - SECOND BATCH (new branch - chat feature)
-
 visit profile in full chat header and back bug - FIXED
 routing bug (/chat FIXED, /chat/:roomId FIXED)
 editprofile -> update rooms - ADDED
@@ -93,10 +91,17 @@ make UI clean - DONE
 project presentation on Github for resume (folder structure, readme)
 hosting service (netlify)
 
+after backend:
+add more realtime listening, less dependent on client data/frontend update logic - DONE
+1st quick real app flow test
+select what to public/hide
+rigorous manual testing again
+remove unused npm pkgs to be lightweight
+
                                         TRIVIAL/IGNORED/NOT IMPLEMENTED:
 add post small image container resize 
 nav popups auto closed 
-shortcut icon bug - /p/:postId route not found
+shortcut icon bug - /p/:postId route not found (UNSEEN IN PRODUCTION)
 fullpost on --> previewprofile + nav lost bug 
 follow/unfollow button next to authorUsername in FullPost
 delete chat
@@ -107,9 +112,15 @@ forward link post to a friend in chat (third button on post)
                                         NOTES ABOUT THIS APP:
 stimulate real app flow with more users (5+)
 could've reused functions across components and states (notice parent-children passing and the hiearchy)
-could've added more realtime listening for remote db (e.g. userData, allUserData, and some more), depended less on client data 
-could've added limit, orderBy but please notice a) detachments/memory leaks and b) potential realtime listening bug (e.g. when adding) (because only a set number of items inside the collection is being listened, but not the entire collection)
+could've added more realtime listening for remote db (e.g. userData, allUserData, and some more), depended less on client data (FIXED)
+could've added limit, orderBy in Firebase but please notice a) detachments/memory leaks and b) potential realtime listening bug (e.g. when adding) (because only a set number of items inside the collection is being listened, but not the entire collection)
 could've made styling rules more organized and systematic
+
+--backend
+could've used async/await more and avoided callback hell
+could've handled errors more properly
+could've simplified 2 handles of realtime data (use socket rooms)
+could've chosen what fields to load and leave when fetching (only load data that are needed/clicked)
 
 code clean while building (don't EVER save for later)
 avoid long breaks (10+ days) at all costs 

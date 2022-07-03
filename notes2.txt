@@ -6,13 +6,6 @@ request to server app.post('/signup', (req, res) => {
 })
 
 
-frontend handle response(user data) [Token was saved in cookie already] {
-  NO fetchUserData() and fetchAllUserData() in useEffect() in App.js
-  NO fetchNewsfeed() in another useEffect()
-  1. setUserData(userdata)
-  2. setAllUserData(allUserData)
-  3. setNewsfeed() (realtime in server)
-}
 
 // await createUserWithEmailAndPassword(auth, userAuthInfo.email, userAuthInfo.password);
 // if (/^\/p\//.test(window.location.pathname)) {
@@ -20,19 +13,6 @@ frontend handle response(user data) [Token was saved in cookie already] {
 //   setAbruptPostView(`uid_${getAuth().currentUser.uid}`);
 // }
 
-// await setDoc(doc(db, `users/uid_${getAuth().currentUser.uid}`), {
-//   uid: `uid_${getAuth().currentUser.uid}`,
-//   username: userAuthInfo.username,
-//   displayName: userAuthInfo.fullname,
-//   photoURL: DUMMY_AVATAR_URL,
-//   bio: "",
-//   totalPosts: 0,
-//   totalNotifs: 0,
-//   totalChatNotifs: 0,
-//   postSnippets: [],
-//   followers: [],
-//   following: [],
-// });
 
 
 // async function logInProvider() {

@@ -35,7 +35,7 @@ function FollowList() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else {
       const options = {
         method: "POST",
@@ -51,7 +51,7 @@ function FollowList() {
       };
       fetch("http://localhost:4000/follow", options)
         .then((response) => response.json())
-        .then((data) => { if (data.errMsg) alert(data.errMsg); });
+        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
   }
 
@@ -75,11 +75,9 @@ function FollowList() {
       fetch(`http://localhost:4000/users/${_id}`, options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.errMsg === "No user found") {
+          if (data.errorMsg) {
             navigate(`/u/${_id}`);
             setIsProfilePageNotFoundActive(true);
-          } else if (data.errMsg) {
-            alert(data.errMsg);
           } else {
             setIsFollowListActive({
               followers: false,
@@ -111,12 +109,12 @@ function FollowList() {
   }, []);
 
   useEffect(() => {
-    if (isFollowListActive.following) {
+    if (visitedUserData && isFollowListActive.following) {
       setWhichFollow(visitedUserData.following);
-    } else if (isFollowListActive.followers) {
-      setWhichFollow(visitedUserData.followers);
+    } else if (userData && isFollowListActive.following) {
+      setWhichFollow(userData.following);
     }
-  }, [visitedUserData]);
+  }, [visitedUserData, userData]);
 
   return (
     <div className="FollowList">
