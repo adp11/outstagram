@@ -23,9 +23,11 @@ const logger = require("morgan");
 
 // Import controllers
 const {
-  signupUser, loginUser, getUserProfile, handleFollowToggle,
+  signupUser, loginUser, getUserProfile, handleFollowToggle, getUserNotifications, updateUserNotifications,
 } = require("./controllers/userController");
-const { addPost, handleLikePost, addComment } = require("./controllers/postController");
+const {
+  addPost, handleLikePost, addComment, getPostInfo, deletePost,
+} = require("./controllers/postController");
 
 // Import models
 const User = require("./models/user");
@@ -42,11 +44,15 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/signup", signupUser);
 app.post("/login", loginUser);
 app.get("/users/:_id", getUserProfile);
-app.post("/follow", handleFollowToggle);
+app.put("/follow", handleFollowToggle);
+app.get("/users/:_id/notifications", getUserNotifications);
+app.put("/users/:_id/notifications", updateUserNotifications);
 
 app.post("/post", addPost);
-app.post("/like", handleLikePost);
-app.post("/comment", addComment);
+app.put("/like", handleLikePost);
+app.put("/comment", addComment);
+app.get("/posts/:_id", getPostInfo);
+app.delete("/posts/:_id", deletePost);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -104,15 +110,18 @@ const userChangeStream = User.watch().on("change", (data) => {
 });
 
 // realtime listening to Post collection
-// causes: like/comment on existing posts in db, new posts added to db
 const postChangeStream = Post.watch().on("change", (data) => {
-  Post.findById(data.documentKey._id)
-    .populate("author likes comments.commenter", "username displayName photoURL")
-    .lean()
-    .exec((err2, populatedData) => {
-      if (err2) console.log("cannot retrieve post upon post data change");
-      else io.emit("newsfeedChange", populatedData);
-    });
+  if (data.operationType === "delete") {
+    io.emit("newsfeedChange", { removedPostId: data.documentKey._id });
+  } else {
+    Post.findById(data.documentKey._id)
+      .populate("author likes comments.commenter", "username displayName photoURL")
+      .lean()
+      .exec((err2, populatedData) => {
+        if (err2) console.log("cannot retrieve post upon post data change");
+        else io.emit("newsfeedChange", populatedData);
+      });
+  }
 });
 
 // listen for TERM signal .e.g. kill

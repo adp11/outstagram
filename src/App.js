@@ -40,8 +40,8 @@ function App() {
   const [isRoomPageNotFoundActive, setIsRoomPageNotFoundActive] = useState(false);
   const [isSearchChatActive, setIsSearchChatActive] = useState(false);
   const [isFullImageActive, setIsFullImageActive] = useState(false);
-  const [abruptPostView, setAbruptPostView] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [isFullPostByLink, setIsFullPostByLink] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
 
   // data states (some states need to reset before unmounting/closing to prevent subtle bugs that later involve reference to those states' value)
   const [userData, setUserData] = useState(null);
@@ -49,8 +49,7 @@ function App() {
   const [allUserData, setAllUserData] = useState([]);
   const [newsfeed, setNewsfeed] = useState([]);
   const [beforeFullPost, setBeforeFullPost] = useState({
-    selfProfile: false,
-    visitedProfile: false,
+    profile: false,
     newsfeed: false,
   });
   const [fullPostIndex, setFullPostIndex] = useState(null);
@@ -61,12 +60,12 @@ function App() {
     following: [],
   });
 
-  // extra states
+  // extra chat states
   const scrollY = useRef(0);
   const unsubscribeFromRealTimeMessages = {};
   const didFetchActiveRooms = false;
 
-  // 3 refs below as not able to access state in socket event handlers
+  // 4 refs below as not able to access state in socket event handlers
   const newsfeedRef = useRef(newsfeed);
   function setNewsfeedHelper(data) {
     newsfeedRef.current = data;
@@ -85,82 +84,100 @@ function App() {
     setUserData(data);
   }
 
+  const fullPostInfoRef = useRef(fullPostInfo);
+  function setFullPostInfoRef(data) {
+    fullPostInfoRef.current = data;
+    setFullPostInfo(data);
+  }
+
   const providerValue = useMemo(
     () => ({
-      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setAbruptPostView, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
     }),
-    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, abruptPostView, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
+    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
   );
+
+  const socketRef = useRef(null);
 
   useEffect(() => {
     if (isLoggedIn) {
-      const socket = io("http://localhost:4000", { transports: ["websocket"] });
+      socketRef.current = io("http://localhost:4000", { transports: ["websocket"] });
 
       // client-side
-      socket.on("connect", () => {
-        console.log(socket.id);
-      });
-
-      // logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
-      socket.on("userDataChange", (data) => {
-        if (data.user && data.user._id === userDataRef.current._id) {
-          console.log("self user change", data);
-          setUserDataHelper(data.user);
-        }
-
-        // could be current user visiting someone else' profile OR self profile
-        if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
-          console.log("visited user change", data);
-          setVisitedUserDataHelper(data.user);
-        } else if (data.addedUser) { // new user signed up/added
-          console.log("new user added");
-          setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
-        }
-      });
-
-      /* Only the first half OR the second half triggered newsfeedChange
-        - If current user just followed an Id, that user (data.for) gets a new newsfeed (data.refreshedNewsfeed)
-        - If just unfollowed, that user (data.for) removes that followee Id (data.removedPostsOf) from current newsfeed
-        - If like/comment on existing posts in db, set() by replacing if those's authors are in current user's following list (last "else if")
-        - If new posts added to db, set() by adding if those's authors ... (last "else if")
-      */
-      socket.on("newsfeedChange", (data) => {
-        if (data.for === userDataRef.current._id) { // first half
-          if (data.refreshedNewsfeed) {
-            console.log("newsfeed refreshed all");
-            setNewsfeedHelper(data.refreshedNewsfeed);
-          } else {
-            console.log("newsfeed got some removed");
-            setNewsfeedHelper(newsfeedRef.current.filter((post) => post.author._id !== data.removedPostsOf));
+      socketRef.current.on("connect", () => {
+        console.log("socket connected when logged in and realtime is on", socketRef.current.id);
+        /* Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
+        */
+        socketRef.current.on("userDataChange", (data) => {
+          if (data.user && data.user._id === userDataRef.current._id) {
+            console.log("self user change");
+            setUserDataHelper(data.user);
           }
-        } else if (data.for === undefined) { // second half
-          const dataAuthorInFollowing = userDataRef.current.following.findIndex((followee) => followee._id === data.author._id) > -1;
 
-          if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
-            const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
-            if (dataChangePos > -1) {
-              console.log("post modified in newsfeed");
-              const tempNewsfeed = [...newsfeedRef.current];
-              tempNewsfeed.splice(dataChangePos, 1, data);
-              setNewsfeedHelper(tempNewsfeed);
+          // could be current user visiting someone else' profile OR self profile
+          if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
+            console.log("visited user change");
+            setVisitedUserDataHelper(data.user);
+          } else if (data.addedUser) { // new user signed up/added
+            console.log("new user added");
+            setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
+          }
+        });
+
+        /* Notices for the first half and second half that triggered newsfeedChange
+        1. If current user just followed an Id, that user (data.for) gets a new newsfeed (data.refreshedNewsfeed)
+        2. If just unfollowed, that user (data.for) removes that followee Id (data.removedPostsOf) from current newsfeed
+        3. If like/comment on existing posts in db, set() by replacing if those's authors are in current user's following list (last "else if")
+        4. If new posts added to db, set() by adding if those's authors ... (last "else if")
+      */
+        socketRef.current.on("newsfeedChange", (data) => {
+          if (data.removedPostId) {
+            setNewsfeedHelper(newsfeedRef.current.filter((post) => post._id !== data.removedPostId));
+          } else if (data.for === userDataRef.current._id) { // first half
+            if (data.refreshedNewsfeed) {
+              console.log("newsfeed refreshed all");
+              setNewsfeedHelper(data.refreshedNewsfeed);
             } else {
-              console.log("post added in newsfeed");
-              setNewsfeedHelper([data].concat(newsfeedRef.current));
+              console.log("newsfeed got some removed");
+              setNewsfeedHelper(newsfeedRef.current.filter((post) => post.author._id !== data.removedPostsOf));
+            }
+          } else if (data.for === undefined) { // second half
+            const dataAuthorInFollowing = userDataRef.current.following.findIndex((followee) => followee._id === data.author._id) > -1;
+
+            if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
+              const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
+              if (dataChangePos > -1) {
+                console.log("post modified in newsfeed");
+                const tempNewsfeed = [...newsfeedRef.current];
+                tempNewsfeed.splice(dataChangePos, 1, data);
+                setNewsfeedHelper(tempNewsfeed);
+              } else {
+                console.log("post added in newsfeed");
+                setNewsfeedHelper([data].concat(newsfeedRef.current));
+              }
+            }
+
+            if (fullPostInfoRef.current && (fullPostInfoRef.current._id === data._id)) {
+              setFullPostInfoRef(data);
             }
           }
-        }
+        });
       });
     } else { // reset all states basically
+      if (socketRef.current) {
+        console.log("closing socket from client", socketRef.current.id);
+        socketRef.current.disconnect();
+      }
       setUserDataHelper(null);
       setVisitedUserDataHelper(null);
       setAllUserData([]);
       setNewsfeedHelper([]);
       setFullPostIndex(null);
-      setFullPostInfo(null);
+      setFullPostInfoRef(null);
       setIsProfilePageNotFoundActive(false);
       setIsPostPageNotFoundActive(false);
       setIsRoomPageNotFoundActive(false);
-      setAbruptPostView(false);
+      setIsFullPostByLink(false);
       scrollY.current = 0;
       // add code for detach listening from socket and realtime mongo
     }
@@ -201,7 +218,7 @@ function App() {
               {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
               {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
               {/* act as a background while fullpost is on */}
-              {(beforeFullPost.newsfeed && !abruptPostView) && (
+              {(beforeFullPost.newsfeed && !isFullPostByLink) && (
               <Route
                 path="/p/:postId"
                 element={(
@@ -213,7 +230,7 @@ function App() {
               />
               )}
               {/* act as a background while fullpost is on */}
-              {((beforeFullPost.selfProfile || beforeFullPost.visitedProfile) && !abruptPostView) && <Route path="/p/:postId" element={<Profile />} />}
+              {((beforeFullPost.profile) && !isFullPostByLink) && <Route path="/p/:postId" element={<Profile />} />}
               {isPostPageNotFoundActive && <Route path="/p/:postId" element={<PageNotFound />} />}
             </Routes>
             )}

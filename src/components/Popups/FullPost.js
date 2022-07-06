@@ -6,7 +6,7 @@ import { deleteObject, ref } from "firebase/storage";
 import React, {
   useEffect, useContext, useState, useRef,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import uniqid from "uniqid";
 import { db, storage } from "../../firebase";
 import { computeHowLongAgo } from "../../utils";
@@ -18,80 +18,21 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 // FullPost can come from 4 sources: abrupt access, visited profile, self profile, and newsfeed
 function FullPost() {
   const {
-    userData, allUserData, visitedUserData, newsfeed, scrollY, fullPostIndex, beforeFullPost, fullPostInfo, isLikeListActive, abruptPostView,
-    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfo, setVisitedUserDataHelper, setAllUserData, setUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setAbruptPostView,
+    userData, allUserData, visitedUserData, newsfeed, scrollY, fullPostIndex, beforeFullPost, fullPostInfo, isLikeListActive, isFullPostByLink,
+    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfoRef, setVisitedUserDataHelper, setAllUserData, setUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
 
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [clipboardMessage, setClipboardMessage] = useState(null);
   const [notImplementedError, setNotImplementedError] = useState(false);
   const [toResize, setToResize] = useState(false);
+  const params = useParams();
   // Prevent user from writing comments on multiple posts on their newsfeed
   const [postComments, setPostComments] = useState({});
   const [submitCommentError, setSubmitCommentError] = useState(null);
 
   const navigate = useNavigate();
   const textareaRef = useRef();
-
-  // Conditional rendering
-  const [componentVars, setComponentVars] = useState({
-    authorId: "",
-    authorUsername: "",
-    authorPhotoURL: "",
-    postPictureURL: "",
-    filePath: "",
-    postCaption: "",
-    postCreationTime: "",
-    postCmts: [],
-    postLikes: [],
-    postId: "",
-    fromWhich: null,
-  });
-
-  async function updateNotifications({ authorId, postId, imageURL }, notificationType, commentContent = null) {
-    const collectionPath = `users/${authorId}/notifications`;
-    // update to Notifications subcollection
-    const notifRef = await addDoc(collection(db, collectionPath), {
-      creationTime: serverTimestamp(),
-    });
-
-    if (notificationType === "like") {
-      await updateDoc(notifRef, {
-        notifId: uniqid(),
-        sourceDisplayname: userData.displayName,
-        sourceId: userData.uid,
-        sourceUsername: userData.username,
-        sourcePhotoURL: userData.photoURL,
-        type: "like",
-        sourceAuthorId: authorId,
-        sourcePostId: postId,
-        sourcePostPictureURL: imageURL,
-      });
-    } else {
-      await updateDoc(notifRef, {
-        notifId: uniqid(),
-        sourceDisplayname: userData.displayName,
-        sourceId: userData.uid,
-        sourceUsername: userData.username,
-        sourcePhotoURL: userData.photoURL,
-        type: "comment",
-        content: commentContent,
-        sourceAuthorId: authorId,
-        sourcePostId: postId,
-        sourcePostPictureURL: imageURL,
-      });
-    }
-
-    // update to totalNotifs snippet
-    const docRef = doc(db, `users/${authorId}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const tempTotalNotifs = docSnap.data().totalNotifs + 1;
-      await updateDoc(docRef, {
-        totalNotifs: tempTotalNotifs,
-      });
-    }
-  }
 
   function handleViewLikeList(postLikes) {
     scrollY.current = window.scrollY;
@@ -103,181 +44,145 @@ function FullPost() {
   }
 
   function handleCloseFullPost(redirect = true) {
-    setAbruptPostView(false);
     setIsFullPostActive(false);
-    if (beforeFullPost.selfProfile && redirect) {
-      navigate(`/${userData.uid}`);
-      setFullPostInfo(null);
-    } else if (beforeFullPost.visitedProfile && redirect) {
-      navigate(`/${visitedUserData.uid}`);
-      setFullPostInfo(null);
-    } else if ((beforeFullPost.newsfeed && redirect) || abruptPostView) { // closing abrupt full post redirects to newsfeed
+    if (beforeFullPost.profile && redirect) {
+      navigate(`/u/${visitedUserData._id}`);
+    } else if ((beforeFullPost.newsfeed && redirect) || isFullPostByLink) { // fullPostByLink will redirect to newsfeed upon closing
       navigate("/");
-      setFullPostIndex(null);
-      setFullPostInfo(null);
     }
 
+    setFullPostInfoRef(null);
+    setIsFullPostByLink(false);
     setBeforeFullPost({
-      selfProfile: false,
-      visitedProfile: false,
       newsfeed: false,
+      profile: false,
     });
   }
 
-  async function handleDeletePost(authorId, postId, filePath) {
-    // delete in Firestore db
+  function handleDeletePost(authorId, postId, filePath) {
     setIsDropdownActive(false);
     handleCloseFullPost();
-    await deleteDoc(doc(db, `users/${authorId}/posts/${postId}`));
-
-    // delete in Storage
-    const imageRef = ref(storage, filePath);
-    deleteObject(imageRef).then(() => {
-      // File deleted successfully (could've set a snackbar for visual feedback)
-    }).catch((error) => {
-      // Uh-oh, an error occurred!
-    });
-
-    // update post snippets
-    const tempUserData = { ...userData };
-    tempUserData.totalPosts -= 1;
-    tempUserData.postSnippets = tempUserData.postSnippets.filter((postSnippet) => postSnippet.postId !== postId);
-    setUserDataHelper(tempUserData);
-    const docRef = doc(db, `users/${authorId}`);
-    await setDoc(docRef, tempUserData);
-  }
-
-  async function updatePostSnippets(type, postInfo) {
-    const userRef = doc(db, `users/${postInfo.authorId}`);
-    const docSnap = await getDoc(userRef);
-    let tempData;
-    if (docSnap.exists()) {
-      tempData = docSnap.data();
-      const snippetPos = tempData.postSnippets.findIndex((snippet) => snippet.postId === postInfo.postId);
-      if (type === "unlike") {
-        tempData.postSnippets[snippetPos].totalLikes -= 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      } else if (type === "like") {
-        tempData.postSnippets[snippetPos].totalLikes += 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      } else if (type === "comment") {
-        tempData.postSnippets[snippetPos].totalComments += 1;
-        await updateDoc(userRef, {
-          postSnippets: tempData.postSnippets,
-        });
-      }
-    }
-
-    // UI rerender for postSnippets in userData/allUserData
-    if (beforeFullPost.selfProfile || (beforeFullPost.newsfeed && postInfo.authorId === userData.uid)) {
-      setUserDataHelper(tempData);
-    } else if (beforeFullPost.visitedProfile) {
-      setVisitedUserDataHelper(tempData);
-    } else if (beforeFullPost.newsfeed && postInfo.authorId !== userData.uid) {
-      const tempAllUserData = [...allUserData];
-      const userPos = allUserData.findIndex((user) => user.uid === postInfo.authorId);
-      tempAllUserData.splice(userPos, 1, tempData);
-      setAllUserData(tempAllUserData);
-    }
-  }
-
-  // Quick workaround with [cmtId] since array elements are not supported with serverTimestamp()
-  async function handleSubmitPostComment(e) {
-    e.preventDefault();
-    let postInfo;
-    let newComments;
-
-    if (beforeFullPost.newsfeed) {
-      postInfo = newsfeed[fullPostIndex];
-    } else {
-      postInfo = fullPostInfo;
-    }
-
-    if (postComments[postInfo.postId] && postComments[postInfo.postId].trim()) {
-      const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-      const cmtId = uniqid();
-      const commentContent = postComments[postInfo.postId];
-      newComments = postInfo.comments.concat({
-        sourceId: userData.uid,
-        sourcePhotoURL: userData.photoURL,
-        sourceUsername: userData.username,
-        sourceComment: commentContent,
-        sourceCommentTime: cmtId,
-      });
-      await updateDoc(postRef, {
-        [cmtId]: serverTimestamp(),
-        comments: newComments,
-      });
-      setPostComments({ ...postComments, [postInfo.postId]: "" });
-      updatePostSnippets("comment", postInfo);
-
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) { // getDoc again because of needing to retrieve serverTimestamp() value
-        const docSnap = await getDoc(postRef);
-        if (docSnap.exists()) {
-          setFullPostInfo(docSnap.data());
+    const options = {
+      method: "DELETE",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        authorId,
+      }),
+    };
+    fetch(`http://localhost:4000/posts/${postId}`, options)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errorMsg) alert(data.errorMsg);
+        else {
+          // delete in Storage
+          const imageRef = ref(storage, filePath);
+          deleteObject(imageRef).then(() => {
+            // File deleted successfully (could've set a snackbar for visual feedback)
+          }).catch((error) => {
+            alert(error);
+          });
         }
-      }
-      if (postInfo.authorId !== userData.uid) {
-        updateNotifications(postInfo, "comment", commentContent);
-      }
+      });
+  }
+
+  function handleSubmitPostComment(e) {
+    e.preventDefault();
+
+    if (postComments[fullPostInfo._id] && postComments[fullPostInfo._id].trim()) {
+      const options = {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "comment",
+          commenterId: userData._id, // for notif
+          postId: fullPostInfo._id, // for post itself
+          authorId: fullPostInfo.author._id, // for postSnippets of that author
+          isSelfComment: fullPostInfo.author._id === userData._id,
+          content: postComments[fullPostInfo._id],
+        }),
+      };
+
+      fetch("http://localhost:4000/comment", options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errorMsg) alert(data.errorMsg);
+          else {
+            setPostComments({ ...postComments, [fullPostInfo._id]: "" });
+          }
+        });
     } else {
       setSubmitCommentError("Posting empty comments error");
     }
   }
 
-  async function handleLikePost() { // toggle
-    let postInfo;
-    let newLikes;
-    // if FullPost comes from Newsfeed, then postInfo is based on index of that post in Newsfeed
-    // if FullPost comes from Profile, then postInfo is based on postId (then fullPostInfo)
-    if (beforeFullPost.newsfeed) {
-      postInfo = newsfeed[fullPostIndex];
+  function handleLikePost() {
+    let options;
+    const targetIndex = fullPostInfo.likes.findIndex((like) => like._id === userData._id);
+    if (targetIndex > -1) {
+      options = {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "unlike",
+          likerId: userData._id, // id of the person who liked
+          postId: fullPostInfo._id, // id of post
+          authorId: fullPostInfo.author._id, // owner of post
+        }),
+      };
     } else {
-      postInfo = fullPostInfo;
+      options = {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "like",
+          isSelfLike: fullPostInfo.author._id === userData._id,
+          likerId: userData._id,
+          postId: fullPostInfo._id,
+          authorId: fullPostInfo.author._id,
+        }),
+      };
     }
-    const postRef = doc(db, `users/${postInfo.authorId}/posts/${postInfo.postId}`);
-    const targetIndex = postInfo.likes.findIndex((like) => like.sourceId === userData.uid);
-    if (targetIndex !== -1) { // unlike
-      newLikes = postInfo.likes.filter((like, idx) => idx !== targetIndex);
-      await updateDoc(postRef, {
-        likes: newLikes,
-      });
-      updatePostSnippets("unlike", postInfo);
-      // FullPost coming from Profile doesn't get realtime update (newsfeed[fullPostIndex] is auto-updated) --> manual update by setFullPostInfo()
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) {
-        setFullPostInfo({ ...fullPostInfo, likes: newLikes });
-      }
-    } else { // like
-      newLikes = postInfo.likes.concat({
-        sourceId: userData.uid,
-        sourcePhotoURL: userData.photoURL,
-        sourceUsername: userData.username,
-        sourceDisplayname: userData.displayName,
-      });
-      await updateDoc(postRef, {
-        likes: newLikes,
-      });
-      updatePostSnippets("like", postInfo);
-      if (beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) {
-        setFullPostInfo({ ...fullPostInfo, likes: newLikes });
-      }
-      if (postInfo.authorId !== userData.uid) {
-        updateNotifications(postInfo, "like");
-      }
-    }
+    fetch("http://localhost:4000/like", options)
+      .then((response) => response.json())
+      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }
 
-  async function handleVisitProfile(uid) {
+  function handleVisitProfile(_id) {
     handleCloseFullPost(false); // prevent nagivate() 2 times
-    const docRef = doc(db, `users/${uid}`);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      navigate(`/${uid}`);
-      setVisitedUserDataHelper(docSnap.data());
+    if (_id === userData._id) {
+      setVisitedUserDataHelper(userData);
+      navigate(`/u/${_id}`);
+    } else {
+      const options = {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      fetch(`http://localhost:4000/users/${_id}`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errorMsg) {
+            setIsProfilePageNotFoundActive(true);
+            navigate(`/u/${_id}`);
+          } else {
+            setVisitedUserDataHelper(data);
+            navigate(`/u/${_id}`);
+          }
+        });
     }
   }
 
@@ -300,124 +205,97 @@ function FullPost() {
   }, []);
 
   useEffect(() => {
-    async function helper(document) {
-      const paramsPostId = window.location.pathname.substring(3); // window.href.pathname = "/p/:postId"
-      const documentData = document.data();
-      const q = query(collection(db, `users/${documentData.uid}/posts`), where("postId", "==", paramsPostId));
-      const qSnapshot = await getDocs(q);
-      if (qSnapshot.size === 0) {
-        return false;
-      }
-      qSnapshot.forEach(async (document2) => {
-        setFullPostInfo(document2.data());
-      });
-      return true;
+    if (!fullPostInfo) {
+      const options = {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      fetch(`http://localhost:4000/posts/${params.postId}`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errorMsg) {
+            setIsFullPostActive(false);
+            setIsPostPageNotFoundActive(true);
+          } else {
+            setBeforeFullPost({
+              newsfeed: true,
+              profile: false,
+            });
+            setIsFullPostActive(true);
+            setFullPostInfoRef(data);
+          }
+        });
     }
-
-    // logic: find a way/workaround with async code to setFullPostInfo() if finding postId and redirect to PageNotFound otherwise
-    // caveats: could've improved by returning right away upon true (not loop over all)
-    async function handleVisitFullPost() {
-      let postIdFound = false;
-      let count = 0;
-      const querySnapshot = await getDocs(collection(db, "users"));
-      querySnapshot.forEach(async (document) => {
-        const result = await helper(document);
-        count += 1;
-        if (result) {
-          postIdFound = true;
-        } else if (!result && count === querySnapshot.size && !postIdFound) {
-          setIsFullPostActive(false);
-          navigate(window.location.pathname);
-          setIsPostPageNotFoundActive(true);
-        }
-      });
-    }
-
-    if (beforeFullPost.newsfeed && fullPostIndex !== null) {
-      setComponentVars({
-        authorId: newsfeed[fullPostIndex].authorId,
-        authorUsername: newsfeed[fullPostIndex].authorUsername,
-        authorPhotoURL: newsfeed[fullPostIndex].authorPhotoURL,
-        postPictureURL: newsfeed[fullPostIndex].imageURL,
-        filePath: newsfeed[fullPostIndex].filePath,
-        postCaption: newsfeed[fullPostIndex].postCaption,
-        postCreationTime: computeHowLongAgo(newsfeed[fullPostIndex].creationTime.seconds),
-        postCmts: newsfeed[fullPostIndex].comments,
-        postLikes: newsfeed[fullPostIndex].likes,
-        postId: newsfeed[fullPostIndex].postId,
-        fromWhich: newsfeed[fullPostIndex],
-      });
-    } else if (((beforeFullPost.selfProfile || beforeFullPost.visitedProfile || abruptPostView) && fullPostInfo !== null)) {
-      setComponentVars({
-        authorId: fullPostInfo.authorId,
-        authorUsername: fullPostInfo.authorUsername,
-        authorPhotoURL: fullPostInfo.authorPhotoURL,
-        postPictureURL: fullPostInfo.imageURL,
-        filePath: fullPostInfo.filePath,
-        postCaption: fullPostInfo.postCaption,
-        postCreationTime: computeHowLongAgo(fullPostInfo.creationTime.seconds),
-        postCmts: fullPostInfo.comments,
-        postLikes: fullPostInfo.likes,
-        postId: fullPostInfo.postId,
-        fromWhich: fullPostInfo,
-      });
-    } else if (abruptPostView) {
-      handleVisitFullPost(); // handle abrupt view of full post
-    }
-  }, [fullPostInfo, newsfeed[fullPostIndex]]);
-
-  const {
-    authorId, authorUsername, authorPhotoURL, postPictureURL, filePath, postCaption, postCreationTime, postCmts, postLikes, postId, fromWhich,
-  } = componentVars;
+  }, [fullPostInfo]);
 
   return (
     <div className={`FullPost ${(isLikeListActive) ? "blur" : ""}`}>
-      {/* eslint-disable-next-line */}
-      <svg aria-label="Close" color="#262626" fill="#262626" height="18" role="img" viewBox="0 0 24 24" width="18" onClick={handleCloseFullPost} style={{ position: "fixed", right: "10px", top: "10px", fontSize: "30px", width: "30px", height: "30px" }}>
+      <svg
+        aria-label="Close"
+        color="#262626"
+        fill="#262626"
+        height="18"
+        role="img"
+        viewBox="0 0 24 24"
+        width="18"
+        onClick={handleCloseFullPost}
+        style={{
+          position: "fixed", right: "10px", top: "10px", fontSize: "30px", width: "30px", height: "30px",
+        }}
+      >
         <polyline fill="none" points="20.643 3.357 12 12 3.353 20.647" stroke="#262626" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
         <line fill="none" stroke="#262626" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" x1="20.649" x2="3.354" y1="20.649" y2="3.354" />
       </svg>
       <div className="fullpost-container">
         <div>
-          <img onLoad={handleImageSize} className="post-picture" src={postPictureURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ objectFit: ((!postPictureURL) || (postPictureURL && toResize)) ? "cover" : "contain" }} />
+          <img onLoad={handleImageSize} className="post-picture" src={fullPostInfo ? fullPostInfo.imageURL : IMAGE_PLACEHOLDER_URL} alt="" style={{ objectFit: ((!fullPostInfo) || (fullPostInfo.imageURL && toResize)) ? "cover" : "contain" }} />
         </div>
 
         <div className="post-info">
           <div className="user-profile">
-            <img className="user-avatar" src={authorPhotoURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
-            <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
+            {/* eslint-disable-next-line */}
+            <img className="user-avatar" src={fullPostInfo ? fullPostInfo.author.photoURL : IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(fullPostInfo.author._id); }} />
+            {/* eslint-disable-next-line */}
+            <span className="username bold medium" onClick={() => { handleVisitProfile(fullPostInfo.author._id); }}>{fullPostInfo && fullPostInfo.author.username}</span>
           </div>
           <div className="comment-section">
-            {postCaption && (
+            {fullPostInfo && fullPostInfo.postCaption && (
               <div className="post-caption">
-                <img className="user-avatar" src={authorPhotoURL || IMAGE_PLACEHOLDER_URL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(authorId); }} />
+                {/* eslint-disable-next-line */}
+                <img className="user-avatar" src={fullPostInfo.author.photoURL} alt="" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(fullPostInfo.author._id); }} />
                 <div>
-                  <span className="username bold medium" onClick={() => { handleVisitProfile(authorId); }}>{authorUsername}</span>
+                  {/* eslint-disable-next-line */}
+                  <span className="username bold medium" onClick={() => { handleVisitProfile(fullPostInfo.author._id); }}>{fullPostInfo.author.username}</span>
                   {" "}
-                  <span className="medium">{postCaption}</span>
-                  <small style={{ display: "block", marginTop: "10px" }} className="grey small">{postCreationTime}</small>
+                  <span className="medium">{fullPostInfo.postCaption}</span>
+                  <small style={{ display: "block", marginTop: "10px" }} className="grey small">{computeHowLongAgo(fullPostInfo.createdAt)}</small>
                 </div>
               </div>
             )}
 
-            {postCmts.map((comment) => (
-              <div className="post-comment" key={comment.sourceCommentTime}>
-                <img src={comment.sourcePhotoURL} alt="" className="user-avatar" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(comment.sourceId); }} />
+            {fullPostInfo && fullPostInfo.comments.map((comment) => (
+              <div className="post-comment" key={comment._id}>
+                {/* eslint-disable-next-line */}
+                <img src={comment.commenter.photoURL} alt="" className="user-avatar" style={{ marginRight: "15px" }} onClick={() => { handleVisitProfile(comment.commenter._id); }} />
                 <div>
-                  <span className="username bold medium" onClick={() => { handleVisitProfile(comment.sourceId); }}>
-                    {comment.sourceUsername}
+                  {/* eslint-disable-next-line */}
+                  <span className="username bold medium" onClick={() => { handleVisitProfile(comment.commenter._id); }}>
+                    {comment.commenter.username}
                   </span>
                   {" "}
-                  <span className="user-comment medium">{comment.sourceComment}</span>
+                  <span className="user-comment medium">{comment.content}</span>
                   {" "}
-                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{(fromWhich && fromWhich[comment.sourceCommentTime]) && computeHowLongAgo(fromWhich[comment.sourceCommentTime].seconds)}</small>
+                  <small className="grey" style={{ display: "block", marginTop: "10px" }}>{computeHowLongAgo(comment.createdAt)}</small>
                 </div>
               </div>
             ))}
           </div>
 
           <div style={{ padding: "10px 0", display: "flex", gap: "20px" }} className="post-btns">
-            {(postLikes.findIndex((like) => `${like.sourceId}` === userData.uid) === -1) ? (
+            {(fullPostInfo && fullPostInfo.likes.findIndex((like) => `${like._id}` === userData._id) === -1) ? (
               <svg onClick={handleLikePost} color="currentColor" fill="currentColor" height="24" width="24">
                 <path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 013.679-1.938m0-2a6.04 6.04 0 00-4.797 2.127 6.052 6.052 0 00-4.787-2.127A6.985 6.985 0 00.5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 003.518 3.018 2 2 0 002.174 0 45.263 45.263 0 003.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 00-6.708-7.218z" />
               </svg>
@@ -436,9 +314,9 @@ function FullPost() {
               <svg height="24" width="24" fill="currentColor" color="currentColor" viewBox="0 0 24 24" aria-hidden="true" onClick={() => { setIsDropdownActive(!isDropdownActive); }}>
                 <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
               </svg>
-              {(isDropdownActive && authorId === userData.uid) ? (
+              {(isDropdownActive && fullPostInfo.author._id === userData._id) ? (
                 <div className="dropdown" style={{ width: "150px", top: "-100px", right: "-50px" }}>
-                  <div onClick={() => { handleDeletePost(authorId, postId, filePath); }}>
+                  <div onClick={() => { handleDeletePost(fullPostInfo.author._id, fullPostInfo._id, fullPostInfo.filePath); }}>
                     <i className="fa-solid fa-trash-can" />
                     {" "}
                     Delete
@@ -449,7 +327,7 @@ function FullPost() {
                     Copy link
                   </div>
                 </div>
-              ) : (isDropdownActive && authorId !== userData.uid) ? (
+              ) : (isDropdownActive && fullPostInfo.author._id !== userData._id) ? (
                 <div className="dropdown" style={{ width: "150px", top: "-50px", right: "-50px" }}>
                   <div onClick={() => { navigator.clipboard.writeText(window.location.href); setIsDropdownActive(false); setClipboardMessage("Saved to clipboard!"); }}>
                     <i className="fa-solid fa-link" />
@@ -461,31 +339,31 @@ function FullPost() {
             </div>
           </div>
 
-          {postLikes.length > 10 ? (
-            <div className="post-likes medium" onClick={() => { handleViewLikeList(postLikes); }}>
+          {fullPostInfo && (fullPostInfo.likes.length > 10 ? (
+            <div className="post-likes medium" onClick={() => { handleViewLikeList(fullPostInfo.likes); }}>
               Liked by
               {" "}
-              <span className="username medium bold">{postLikes[postLikes.length - 1].sourceUsername}</span>
+              <span className="username medium bold">{fullPostInfo.likes[fullPostInfo.likes.length - 1].username}</span>
               {" "}
               and
               {" "}
               <span className="medium bold">
-                {postLikes.length - 1}
+                {fullPostInfo.likes.length - 1}
                 {" "}
                 others
               </span>
             </div>
           )
             : (
-              <div className="post-likes medium bold" onClick={() => { handleViewLikeList(postLikes); }}>
-                {postLikes.length}
+              <div className="post-likes medium bold" onClick={() => { handleViewLikeList(fullPostInfo.likes); }}>
+                {fullPostInfo.likes.length}
                 {" "}
                 likes
               </div>
-            )}
+            ))}
 
           <form onSubmit={handleSubmitPostComment} className="post-comment-box">
-            <textarea ref={textareaRef} onChange={(e) => { setPostComments({ ...postComments, [postId]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e); }} type="text" placeholder="Add a comment..." value={(postComments[postId]) || ""} />
+            <textarea ref={textareaRef} onChange={(e) => { setPostComments({ ...postComments, [fullPostInfo._id]: e.target.value }); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmitPostComment(e); }} type="text" placeholder="Add a comment..." value={(fullPostInfo && postComments[fullPostInfo._id]) || ""} />
             <span onClick={handleSubmitPostComment} className="submit-btn" type="submit">Post</span>
           </form>
         </div>

@@ -9,15 +9,16 @@ import UserContext from "../Contexts/UserContext";
 
 function LikeList() {
   const {
-    userData, likeListInfo, beforeFullPost, isLikeListActive, visitedUserData, setIsLikeListActive, setVisitedUserDataHelper, setLikeListInfo, setUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setFullPostIndex, setIsProfilePageNotFoundActive,
+    userData, likeListInfo, beforeFullPost, isLikeListActive, visitedUserData, setIsLikeListActive, setVisitedUserDataHelper, setLikeListInfo, setUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setFullPostIndex, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
 
   const navigate = useNavigate();
 
-  async function handleFollowToggle(followId, type) {
+  function handleFollowToggle(followId, type) {
+    let options;
     if (type === "unfollow") {
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -28,12 +29,9 @@ function LikeList() {
           otherId: followId,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else {
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -44,38 +42,37 @@ function LikeList() {
           otherId: followId,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
+    fetch("http://localhost:4000/follow", options)
+      .then((response) => response.json())
+      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }
 
   function handleCloseFullPost() {
     setIsFullPostActive(false);
     if (beforeFullPost.selfProfile) {
-      setFullPostInfo(null);
+      setFullPostInfoRef(null);
     } else if (beforeFullPost.visitedProfile) {
-      setFullPostInfo(null);
+      setFullPostInfoRef(null);
     } else {
       setFullPostIndex(null);
     }
 
     setBeforeFullPost({
-      selfProfile: false,
-      visitedProfile: false,
       newsfeed: false,
+      profile: false,
     });
   }
 
-  async function handleVisitProfile(_id) {
+  function handleVisitProfile(_id) {
     if (likeListInfo.fromFullPost) {
       handleCloseFullPost();
     }
     if (_id === userData._id) {
       setIsLikeListActive(false);
       setLikeListInfo({});
-      navigate(`/u/${_id}`);
       setVisitedUserDataHelper(userData);
+      navigate(`/u/${_id}`);
     } else {
       const options = {
         method: "GET",
@@ -88,13 +85,13 @@ function LikeList() {
         .then((response) => response.json())
         .then((data) => {
           if (data.errorMsg) {
-            navigate(`/u/${_id}`);
             setIsProfilePageNotFoundActive(true);
+            navigate(`/u/${_id}`);
           } else {
             setIsLikeListActive(false);
             setLikeListInfo({});
-            navigate(`/u/${_id}`);
             setVisitedUserDataHelper(data);
+            navigate(`/u/${_id}`);
           }
         });
     }

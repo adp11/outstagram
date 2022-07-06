@@ -14,7 +14,7 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 function Profile() {
   const {
     userData, beforeFullPost, scrollY,
-    setUserDataHelper, visitedUserData, setVisitedUserDataHelper, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfo, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive,
+    setUserDataHelper, visitedUserData, setVisitedUserDataHelper, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive,
   } = useContext(UserContext);
 
   const params = useParams();
@@ -24,37 +24,40 @@ function Profile() {
   // handle follow button undecided when first mounting
   const [isFollowing, setIsFollowing] = useState(null);
 
-  async function handleViewFullPost(postId) {
-    let docRef;
+  function handleViewFullPost(postId) {
     scrollY.current = window.scrollY;
-    setIsFullPostActive(true);
-    if (params.uid === userData.uid || params.postId) { // handle view posts from a) profile and b) abrupt access
-      setBeforeFullPost({
-        newsfeed: false,
-        selfProfile: true,
-        visitedProfile: false,
-      });
-      docRef = doc(db, `users/${userData.uid}/posts/${postId}`);
-    } else {
-      setBeforeFullPost({
-        newsfeed: false,
-        selfProfile: false,
-        visitedProfile: true,
-      });
-      docRef = doc(db, `users/${visitedUserData.uid}/posts/${postId}`);
-    }
 
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      setFullPostInfo(docSnap.data());
-    }
+    const options = {
+      method: "GET",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    fetch(`http://localhost:4000/posts/${postId}`, options)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errorMsg) {
+          setIsPostPageNotFoundActive(true);
+          navigate(`/p/${postId}`);
+        } else {
+          setBeforeFullPost({
+            newsfeed: false,
+            profile: true,
+          });
+          setIsFullPostActive(true);
+          setFullPostInfoRef(data);
+          navigate(`/p/${postId}`);
+        }
+      });
   }
 
   function handleFollowToggle() {
+    let options;
     if (!isFollowing) { // if following
-      console.log("about to follow");
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -65,13 +68,9 @@ function Profile() {
           otherId: params.uid,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else { // if unfollowing
-      console.log("about to unfollow");
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -82,10 +81,10 @@ function Profile() {
           otherId: params.uid,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
+    fetch("http://localhost:4000/follow", options)
+      .then((response) => response.json())
+      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }
 
   function handleViewFollowList(followListInfo, type) {
@@ -117,8 +116,13 @@ function Profile() {
       setIsFollowing(userData.following.findIndex((user) => user._id === params.uid) !== -1);
     }
 
-    // fetch a) if visitedUserData is null (which means there's abrupt access by link/not by navigation) or b) if there is visitedUserData but params.uid isn't matched (which means there is clicking back and forth between profiles (uid change))
-    if (!visitedUserData || visitedUserData._id !== params.uid) {
+    /* Notices about the logic of rendering Profile
+      Case 1 (by navigation): no useEffect needed (vDataId=paramId)
+      Case 2 (by link): useEffect needed/!visitedUserData (vDataId << paramId)
+      Case 3 (back and forth): useEffect needed/vId !== paramId (vDataId!=paramId)
+      Case 4 (as bg): prevent re-render/!beforeFullPost (vDataId-paramId << keep current UI state )
+    */
+    if (!beforeFullPost.profile && (!visitedUserData || visitedUserData._id !== params.uid)) {
       if (params.uid === userData._id) {
         setVisitedUserDataHelper(userData);
       } else {
@@ -151,13 +155,6 @@ function Profile() {
     [],
   );
 
-  // // handle abrupt access (visit by link, not by navigation)
-  // if (userData && (params.uid === userData.uid || beforeFullPost.selfProfile)) {
-
-  // } else if (userData && (params.uid !== userData.uid || beforeFullPost.visitedProfile)) {
-  //   handleVisitVisitedProfile(); // handle abrupt link access to visitedUserData
-  // }
-
   return (
     <div className="Profile">
       <div className="profile-container">
@@ -167,7 +164,7 @@ function Profile() {
             <div style={{ display: "flex" }}>
               <span className="cut2" style={{ fontSize: "25px", lineHeight: "32px", marginRight: "30px" }}>{visitedUserData && visitedUserData.username}</span>
 
-              {(params.uid === userData._id || beforeFullPost.selfProfile)
+              {(params.uid ? params.uid === userData._id : visitedUserData._id === userData._id)
                 // eslint-disable-next-line
                 ? <button type="button" onClick={() => { setIsEditProfileActive(true); scrollY.current = window.scrollY; }} style={{ padding: "5px 10px", backgroundColor: "transparent", border: "1px #dbdbdb solid", borderRadius: "3px", fontWeight: "500" }}>Edit Profile</button>
 
@@ -238,25 +235,23 @@ function Profile() {
         <div className="profile-posts" ref={profilePostsRef}>
           {visitedUserData && visitedUserData.postSnippets.length > 0
             ? visitedUserData.postSnippets.slice(0).reverse().map((post) => (
-              <Link to={`/p/${post._id}`} onClick={() => { handleViewFullPost(post._id); }} key={post._id}>
-                <div className="profile-post" key={post._id}>
-                  <img className="post-picture" src={post.imageURL} alt="user's post" />
-                  <div className="profile-post-stats">
-                    <span>
-                      <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20">
-                        <path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" />
-                      </svg>
-                    </span>
-                    <span>{post.totalLikes}</span>
-                    <span>
-                      <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20">
-                        <path d="M12.003 2.001a9.705 9.705 0 110 19.4 10.876 10.876 0 01-2.895-.384.798.798 0 00-.533.04l-1.984.876a.801.801 0 01-1.123-.708l-.054-1.78a.806.806 0 00-.27-.569 9.49 9.49 0 01-3.14-7.175 9.65 9.65 0 0110-9.7z" fill="currentColor" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1.739" />
-                      </svg>
-                    </span>
-                    <span>{post.totalComments}</span>
-                  </div>
+              <div className="profile-post" onClick={() => { handleViewFullPost(post._id); }} key={post._id}>
+                <img className="post-picture" src={post.imageURL} alt="user's post" />
+                <div className="profile-post-stats">
+                  <span>
+                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 48 48" width="20">
+                      <path d="M34.6 3.1c-4.5 0-7.9 1.8-10.6 5.6-2.7-3.7-6.1-5.5-10.6-5.5C6 3.1 0 9.6 0 17.6c0 7.3 5.4 12 10.6 16.5.6.5 1.3 1.1 1.9 1.7l2.3 2c4.4 3.9 6.6 5.9 7.6 6.5.5.3 1.1.5 1.6.5s1.1-.2 1.6-.5c1-.6 2.8-2.2 7.8-6.8l2-1.8c.7-.6 1.3-1.2 2-1.7C42.7 29.6 48 25 48 17.6c0-8-6-14.5-13.4-14.5z" />
+                    </svg>
+                  </span>
+                  <span>{post.totalLikes}</span>
+                  <span>
+                    <svg color="currentColor" fill="currentColor" height="20" role="img" viewBox="0 0 24 24" width="20">
+                      <path d="M12.003 2.001a9.705 9.705 0 110 19.4 10.876 10.876 0 01-2.895-.384.798.798 0 00-.533.04l-1.984.876a.801.801 0 01-1.123-.708l-.054-1.78a.806.806 0 00-.27-.569 9.49 9.49 0 01-3.14-7.175 9.65 9.65 0 0110-9.7z" fill="currentColor" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1.739" />
+                    </svg>
+                  </span>
+                  <span>{post.totalComments}</span>
                 </div>
-              </Link>
+              </div>
             )) : (
               <div style={{ display: "flex", width: "100vw", margin: "50px 0" }}>
                 <div style={{

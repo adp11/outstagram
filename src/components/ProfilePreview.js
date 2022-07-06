@@ -4,7 +4,7 @@ import UserContext from "./Contexts/UserContext";
 
 function ProfilePreview() {
   const {
-    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo,
+    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo, setVisitedUserDataHelper,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -51,7 +51,7 @@ function ProfilePreview() {
         </div>
       </div>
       <div className="stats medium">
-        <div className="posts" onClick={() => { navigate(`/u/${userData._id}`); }}>
+        <div className="posts" onClick={() => { setVisitedUserDataHelper(userData); navigate(`/u/${userData._id}`); }}>
           <div className="bold medium">{userData.postSnippets.length}</div>
           <div className="grey medium">Posts</div>
         </div>

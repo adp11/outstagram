@@ -19,10 +19,11 @@ function FollowList() {
 
   const navigate = useNavigate();
 
-  async function handleFollowToggle(followId, type) {
+  function handleFollowToggle(followId, type) {
+    let options;
     if (type === "unfollow") {
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -33,12 +34,9 @@ function FollowList() {
           otherId: followId,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     } else {
-      const options = {
-        method: "POST",
+      options = {
+        method: "PUT",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
@@ -49,21 +47,21 @@ function FollowList() {
           otherId: followId,
         }),
       };
-      fetch("http://localhost:4000/follow", options)
-        .then((response) => response.json())
-        .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
     }
+    fetch("http://localhost:4000/follow", options)
+      .then((response) => response.json())
+      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }
 
-  async function handleVisitProfile(_id) {
+  function handleVisitProfile(_id) {
     if (_id === userData._id) {
       setIsFollowListActive({
         followers: false,
         following: false,
       });
       setFollowListInfo({ followers: [], following: [] });
-      navigate(`/u/${_id}`);
       setVisitedUserDataHelper(userData);
+      navigate(`/u/${_id}`);
     } else {
       const options = {
         method: "GET",
@@ -76,16 +74,16 @@ function FollowList() {
         .then((response) => response.json())
         .then((data) => {
           if (data.errorMsg) {
-            navigate(`/u/${_id}`);
             setIsProfilePageNotFoundActive(true);
+            navigate(`/u/${_id}`);
           } else {
             setIsFollowListActive({
               followers: false,
               following: false,
             });
             setFollowListInfo({ followers: [], following: [] });
-            navigate(`/u/${_id}`);
             setVisitedUserDataHelper(data);
+            navigate(`/u/${_id}`);
           }
         });
     }

@@ -66,7 +66,7 @@ exports.loginUser = (req, res, next) => {
         io.on("connection", (socket) => {
           console.log("new connection between 1 client and 1 socketId", socket.id);
           socket.on("disconnect", () => {
-            console.log("close connection", socket.id);
+            console.log("close connection forced from client side", socket.id);
           });
         });
 
@@ -167,4 +167,23 @@ exports.handleFollowToggle = (req, res, next) => {
       io.emit("newsfeedChange", { removedPostsOf: otherId, for: selfId });
     });
   }
+};
+
+exports.getUserNotifications = (req, res, next) => {
+  User
+    .findById(req.params._id)
+    .populate("notifications.from notifications.to notifications.post", "username displayName photoURL imageURL createdAt")
+    .select("notifications")
+    .lean()
+    .exec((err, data) => {
+      if (err) return res.json({ errorMsg: "Error when retrieving this user's notifications." });
+      return res.json(data.notifications);
+    });
+};
+
+exports.updateUserNotifications = (req, res, next) => {
+  User
+    .findByIdAndUpdate(req.params._id, { unreadNotifs: 0 }, (err) => {
+      if (err) return res.json({ errorMsg: "Error when updating notifications." });
+    });
 };

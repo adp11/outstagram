@@ -43,9 +43,7 @@ exports.handleLikePost = (req, res, next) => {
           callback,
         );
       },
-    ], (err, results) => {
-      console.log("results after handle", results[1]);
-      console.log("err?", err);
+    ], (err) => {
       if (err) return res.json({ errorMsg: "Error when handling like." });
     });
   } else if (type === "like" && isSelfLike) {
@@ -56,8 +54,6 @@ exports.handleLikePost = (req, res, next) => {
       },
       // update postSnippets
       function (callback) {
-        console.log(authorId, "update postSnippets triggered?", postId);
-        console.log();
         User.updateOne(
           { _id: authorId, "postSnippets._id": mongoose.Types.ObjectId(postId) },
           { $inc: { "postSnippets.$.totalLikes": 1 } },
@@ -65,8 +61,6 @@ exports.handleLikePost = (req, res, next) => {
         );
       },
     ], (err, results) => {
-      console.log("results after handle", results[1]);
-      console.log("err?", err);
       if (err) return res.json({ errorMsg: "Error when handling like." });
     });
   } else if (type === "like" && !isSelfLike) {
@@ -121,9 +115,7 @@ exports.addComment = (req, res, next) => {
             callback,
           );
         },
-      ], (err1, results) => {
-        console.log("results after handle", results);
-        console.log("err?", err1);
+      ], (err1) => {
         if (err1) return res.json({ errorMsg: "Error when adding your comment. Please try again." });
         return res.json({ successMsg: "Added comment!" });
       });
@@ -161,5 +153,37 @@ exports.addComment = (req, res, next) => {
         return res.json({ successMsg: "Added comment!" });
       });
     }
+  });
+};
+
+exports.getPostInfo = (req, res, next) => {
+  Post
+    .findById(req.params._id)
+    .populate("author likes comments.commenter", "username displayName photoURL")
+    .lean()
+    .exec((err, data) => {
+      if (err) return res.json({ errorMsg: "Error when retrieving this post. No post found" });
+      return res.json(data);
+    });
+};
+
+exports.deletePost = (req, res, next) => {
+  async.parallel([
+    // update post itself
+    function (callback) {
+      Post
+        .findByIdAndRemove(req.params._id, callback);
+    },
+    // update postSnippets
+    function (callback) {
+      User.updateOne(
+        { _id: req.body.authorId },
+        { $pull: { postSnippets: { _id: mongoose.Types.ObjectId(req.params._id) } } },
+        callback,
+      );
+    },
+  ], (err) => {
+    if (err) return res.json({ errorMsg: "Error when deleting post" });
+    return res.json({ successMsg: "Deleted!" });
   });
 };

@@ -22,7 +22,6 @@ function AddPost() {
   async function handleAddPostSubmission(e) {
     e.preventDefault();
     if (file) { // prevent submitting form before uploading file
-      // let newImageRef;
       try {
         setIsLoading(true);
 

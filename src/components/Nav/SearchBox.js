@@ -15,7 +15,7 @@ function SearchBox() {
   const searchBoxRef = useRef(null);
   const navigate = useNavigate();
 
-  async function handleVisitProfile(_id) {
+  function handleVisitProfile(_id) {
     const options = {
       method: "GET",
       mode: "cors",
@@ -27,12 +27,12 @@ function SearchBox() {
       .then((response) => response.json())
       .then((data) => {
         if (data.errorMsg) {
-          navigate(`/u/${_id}`);
           setIsSearchActive(false);
-        } else {
           navigate(`/u/${_id}`);
+        } else {
           setIsSearchActive(false);
           setVisitedUserDataHelper(data);
+          navigate(`/u/${_id}`);
         }
       });
   }

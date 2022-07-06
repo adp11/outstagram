@@ -119,7 +119,7 @@ could've made styling rules more organized and systematic
 --backend
 could've used async/await more and avoided callback hell
 could've handled errors more properly
-could've simplified 2 handles of realtime data (use socket rooms)
+could've been more conditional/specific when emitting realtime data from backend (both for userDataChange and newsfeedChange). could've not used mongodb change stream at all; io.emit after operations in controllers
 could've chosen what fields to load and leave when fetching (only load data that are needed/clicked)
 
 code clean while building (don't EVER save for later)
