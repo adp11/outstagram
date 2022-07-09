@@ -121,6 +121,7 @@ could've used async/await more and avoided callback hell
 could've handled errors more properly
 could've been more conditional/specific when emitting realtime data from backend (both for userDataChange and newsfeedChange). could've not used mongodb change stream at all; io.emit after operations in controllers
 could've chosen what fields to load and leave when fetching (only load data that are needed/clicked)
+could've been more thoughtful for querying
 
 code clean while building (don't EVER save for later)
 avoid long breaks (10+ days) at all costs 

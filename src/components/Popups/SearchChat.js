@@ -2,6 +2,7 @@ import {
   collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where,
 } from "firebase/firestore";
 import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UserContext from "../Contexts/UserContext";
 import { db } from "../../firebase";
 import ChatContext from "../Contexts/ChatContext";
@@ -10,9 +11,13 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function SearchChat() {
   const { userData, allUserData, setIsSearchChatActive } = useContext(UserContext);
-  const { activeRoomList, setActiveRoomList, handleViewFullRoom } = useContext(ChatContext);
+  const {
+    activeRoomList, setActiveRoomListHelper, handleViewFullRoom, setMessages, setWhichRoomActiveHelper,
+  } = useContext(ChatContext);
 
-  const modifedAllUserData = allUserData.filter((data) => (data.uid !== userData.uid)); // exclude self
+  const navigate = useNavigate();
+
+  const modifedAllUserData = allUserData.filter((data) => (data._id !== userData._id)); // exclude self
 
   const [searchResults, setSearchResults] = useState(modifedAllUserData);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,96 +31,82 @@ function SearchChat() {
     }
   }
 
-  async function createChatRoom(otherUid) {
-    const tempActiveRoomList = [...activeRoomList];
+  /*
+    1. Update activeRoomList and messages for self/sender by setState(frontend data)
+    2. Update activeRoomList and messages for other/receiver by setState(realtime data) in socket Chat.js
+    3. Return value "data" in fetch(): room document + justCreated
+  */
+  async function createRoom(otherInfo) {
     setIsLoading(true);
-    const roomsRef = collection(db, `users/${userData.uid}/rooms`);
-    const q = query(roomsRef, where("members", "array-contains", otherUid));
 
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.size > 0) { // if room already existed, then open all messages from that chat room
-      querySnapshot.forEach((document) => {
-        const { roomId } = document.data();
-        // push that active chat on top of the list
-        const toBeRemoved = tempActiveRoomList.findIndex((chat) => chat.roomId === roomId);
-        tempActiveRoomList.splice(toBeRemoved, 1);
-        tempActiveRoomList.unshift(document.data());
+    const options = {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        selfId: userData._id,
+        otherId: otherInfo._id,
+      }),
+    };
+    fetch("http://localhost:4000/rooms", options)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.errorMsg) {
+          alert(data.errorMsg);
+          setIsLoading(false);
+          setIsSearchChatActive(false);
+        } else if (data.justCreated) {
+          // update activeRoomList by pushing
+          const tempActiveRoomList = [...activeRoomList];
+          tempActiveRoomList.unshift({
+            _id: data._id,
+            members: {
+              self: userData._id,
+              other: otherInfo, // (_id, photoURL, displayName, username)
+            },
+            lastMessageSent: null,
+          });
+          setActiveRoomListHelper(tempActiveRoomList);
 
-        setActiveRoomList(tempActiveRoomList);
+          // turn on whichRoomActive and update messages
+          setIsSearchChatActive(false);
+          setMessages(data.messages);
+          setWhichRoomActiveHelper({
+            roomId: data._id,
+            otherId: otherInfo._id,
+            otherDisplayname: otherInfo.displayName,
+            otherPhotoURL: otherInfo.photoURL,
+          });
 
-        setIsLoading(false);
-        setIsSearchChatActive(false);
-        handleViewFullRoom(document.data());
+          setIsLoading(false);
+          navigate(`/r/${data._id}`);
+        } else if (!data.justCreated) {
+          // update activeRoomList by replacing
+          const tempActiveRoomList = [...activeRoomList];
+          const toBeRemoved = tempActiveRoomList.findIndex((room) => room._id === data._id);
+          const theRoom = tempActiveRoomList[toBeRemoved];
+          if (toBeRemoved > 0) {
+            tempActiveRoomList.splice(toBeRemoved, 1);
+            tempActiveRoomList.unshift(theRoom);
+            setActiveRoomListHelper(tempActiveRoomList);
+          }
+
+          // turn on whichRoomActive and update messages
+          setIsSearchChatActive(false);
+          setMessages(data.messages);
+          setWhichRoomActiveHelper({
+            roomId: data._id,
+            otherId: otherInfo._id,
+            otherDisplayname: otherInfo.displayName,
+            otherPhotoURL: otherInfo.photoURL,
+          });
+
+          setIsLoading(false);
+          navigate(`/r/${data._id}`);
+        }
       });
-    } else { // otherwise, initialize a new room in `users/uid/rooms/roomId`
-      const roomRef = doc(collection(db, `users/${userData.uid}/rooms`));
-      let roomInfo;
-      let otherInfo;
-
-      // retrieve the other user's info
-      const docRef1 = doc(db, `users/${otherUid}`);
-      const docSnap1 = await getDoc(docRef1);
-
-      if (docSnap1.exists()) {
-        otherInfo = docSnap1.data();
-        // create room for self
-        roomInfo = {
-          roomId: `r_${roomRef.id}`,
-          members: [userData.uid, otherUid],
-          membersInfo: {
-            self: {
-              photoURL: userData.photoURL,
-              username: userData.username,
-              displayName: userData.displayName,
-            },
-            other: {
-              photoURL: otherInfo.photoURL,
-              username: otherInfo.username,
-              displayName: otherInfo.displayName,
-            },
-          },
-          lastMessageSent: "",
-          lastMessageSentTime: null,
-        };
-        await setDoc(doc(db, `users/${userData.uid}/rooms/r_${roomRef.id}`), {
-          ...roomInfo,
-          creationTime: serverTimestamp(),
-        });
-      }
-
-      // retrieve creationTime to create room for the other too (since serverTimestamp() cannot be assigned to a variable)
-      const docRef2 = doc(db, `users/${userData.uid}/rooms/r_${roomRef.id}`);
-      const docSnap2 = await getDoc(docRef2);
-
-      if (docSnap2.exists()) {
-        roomInfo.creationTime = docSnap2.data().creationTime;
-
-        await setDoc(doc(db, `users/${otherUid}/rooms/r_${roomRef.id}`), {
-          roomId: `r_${roomRef.id}`,
-          members: [otherUid, userData.uid],
-          membersInfo: {
-            self: {
-              photoURL: otherInfo.photoURL,
-              username: otherInfo.username,
-              displayName: otherInfo.displayName,
-            },
-            other: {
-              photoURL: userData.photoURL,
-              username: userData.username,
-              displayName: userData.displayName,
-            },
-          },
-          creationTime: roomInfo.creationTime,
-          lastMessageSent: "",
-          lastMessageSentTime: null,
-        });
-      }
-      tempActiveRoomList.unshift(roomInfo);
-      setActiveRoomList(tempActiveRoomList);
-      setIsLoading(false);
-      setIsSearchChatActive(false);
-      handleViewFullRoom(roomInfo);
-    }
   }
 
   return (
@@ -149,7 +140,7 @@ function SearchChat() {
         ) : (
           <div className="dropdown" style={{ overflow: "auto", width: "100%" }}>
             {searchResults.map((result) => (
-              <div onClick={() => { createChatRoom(result.uid); }} className="search-result" key={result.uid}>
+              <div onClick={() => { createRoom(result); }} className="search-result" key={result._id}>
                 <img src={result.photoURL} alt="user pic in search" className="user-avatar-in-search" />
                 <div>
                   <div className="bold medium cut1">{result.username}</div>

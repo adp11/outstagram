@@ -2,20 +2,21 @@ const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
 
-const RoomSchema = new Schema(
+const MessageSchema = new Schema(
   {
-    members: {
-      self: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      other: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    },
-    lastMessageSent: { type: String, required: true },
+    from: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    message: { type: String, required: true },
+    imageURL: { type: String },
+    storageURL: { type: String },
   },
-  { timeStamps: true },
+  { timestamps: true },
 );
 
-RoomSchema
-  .virtual("url")
-  .get(function () { `/chat/${this._id}/`; });
+const RoomSchema = new Schema(
+  {
+    messages: [MessageSchema],
+  },
+);
 
 // Export model
 module.exports = mongoose.model("Room", RoomSchema);

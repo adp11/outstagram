@@ -43,3 +43,74 @@ request to server app.post('/signup', (req, res) => {
   //   }
   //   setIsLoggedIn(true);
   // }
+
+
+  // useEffect(() => {
+  //   if (activeRoomListMounted) {
+  //     activeRoomListMounted = undefined;
+  //   } else {
+  //     setActiveRoomList(quickSort(userData.rooms));
+  //   }
+  // }, [userData.rooms]);
+
+  // useEffect(() => {
+  //   const tempActiveRoomList = [];
+  //   async function fetchAllActiveRooms() {
+  //     const q = query(collection(db, `users/${userData.uid}/rooms`)); // could've added limit to active chats list and load more upon scroll
+  //     unsubscribeFromRealTimeActiveRooms = onSnapshot(q, (snapshot) => {
+  //       snapshot.docChanges().forEach((change) => {
+  //         if (change.type === "added" && change.doc.data().lastMessageSentTime) {
+  //           insert(tempActiveRoomList, change.doc.data(), "lastMessageSentTime");
+  //         } else if (change.type === "added" && !change.doc.data().lastMessageSentTime) {
+  //           tempActiveRoomList.unshift(change.doc.data());
+  //         } else if (change.type === "modified") {
+  //           // push to the top of the active chats list
+  //           const toBeRemoved = tempActiveRoomList.findIndex((chat) => chat.roomId === change.doc.data().roomId);
+  //           tempActiveRoomList.splice(toBeRemoved, 1);
+  //           tempActiveRoomList.unshift(change.doc.data());
+  //         } else if (change.type === "removed") {
+  //           const toBeRemoved = tempActiveRoomList.findIndex((chat) => chat.roomId === change.doc.data().roomId);
+  //           tempActiveRoomList.splice(toBeRemoved, 1);
+  //         }
+  //       });
+  //       setActiveRoomList([...tempActiveRoomList]);
+  //     });
+  //   }
+
+  //   async function fetchFullRoom() {
+  //     const docRef = doc(db, `users/${userData.uid}/rooms/${params.roomId}`);
+  //     const docSnap = await getDoc(docRef);
+  //     if (docSnap.exists()) {
+  //       handleViewFullRoom(docSnap.data());
+  //     } else {
+  //       setIsRoomPageNotFoundActive(true);
+  //       navigate(window.location.pathname);
+  //     }
+  //   }
+
+  //   // handle abrupt access to /chat
+  //   if (userData && !didFetchActiveRooms) {
+  //     fetchAllActiveRooms();
+  //     didFetchActiveRooms = true;
+  //     setIsRoomPageNotFoundActive(false);
+
+  //     if (params.roomId && !whichRoomActive) {
+  //       fetchFullRoom();
+  //     }
+
+  //     return () => {
+  //       tempActiveRoomList.forEach(async (room) => { // delete chat rooms that user created but didn't message before outing
+  //         if (room.lastMessageSentTime === null) {
+  //           await deleteDoc(doc(db, `users/${room.members[0]}/rooms/${room.roomId}`));
+  //           await deleteDoc(doc(db, `users/${room.members[1]}/rooms/${room.roomId}`));
+  //         }
+  //       });
+  //       unsubscribeFromRealTimeActiveRooms();
+  //       const roomIds = Object.keys(unsubscribeFromRealTimeMessages);
+  //       roomIds.forEach((roomId) => {
+  //         const unsubscribe = unsubscribeFromRealTimeMessages[roomId];
+  //         unsubscribe();
+  //       });
+  //     };
+  //   }
+  // }, [userData]);

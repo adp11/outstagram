@@ -9,7 +9,8 @@ exports.signupUser = (req, res, next) => {
   const io = req.app.get("socketio");
 
   User.findOne({ username })
-    .select("-notifications -rooms")
+    .populate("followers following rooms.members.other", "username displayName photoURL")
+    .select("-notifications")
     .lean()
     .exec((err, user) => {
       if (err) return next(err);
@@ -30,9 +31,11 @@ exports.signupUser = (req, res, next) => {
           if (err2) return res.json({ errorMsg: "Error when creating your account. Please try again." });
 
           io.on("connection", (socket) => {
-            console.log("new connection between 1 client and 1 socketId", socket.id);
+            console.log("new connection between 1 client and 1 socketId (only join, not receive)", socket.id);
+            console.log(user._id.toString());
+            socket.join(user._id.toString());
             socket.on("disconnect", () => {
-              console.log("close connection", socket.id);
+              console.log("close connection forced from client side", socket.id);
             });
           });
 
@@ -53,8 +56,8 @@ exports.loginUser = (req, res, next) => {
   const { username, password } = req.body;
 
   User.findOne({ username })
-    .populate("followers following", "username displayName photoURL")
-    .select("-notifications -rooms")
+    .populate("followers following rooms.members.other", "username displayName photoURL")
+    .select("-notifications")
     .lean()
     .exec((err, user) => {
       if (err) return next(err);
@@ -64,7 +67,7 @@ exports.loginUser = (req, res, next) => {
         if (!response) return res.json({ errorMsg: "Sorry, your password was incorrect. Please double-check your password." });
 
         io.on("connection", (socket) => {
-          console.log("new connection between 1 client and 1 socketId", socket.id);
+          console.log("new connection between 1 client and 1 socketId (only join, not receive)", socket.id);
           socket.on("disconnect", () => {
             console.log("close connection forced from client side", socket.id);
           });
@@ -182,8 +185,23 @@ exports.getUserNotifications = (req, res, next) => {
 };
 
 exports.updateUserNotifications = (req, res, next) => {
-  User
-    .findByIdAndUpdate(req.params._id, { unreadNotifs: 0 }, (err) => {
-      if (err) return res.json({ errorMsg: "Error when updating notifications." });
-    });
+  console.log("req.body", req.body);
+  console.log("req.params._id", req.params._id);
+  if (req.body.type === "chat") {
+    User
+      .findByIdAndUpdate(req.params._id, { unreadChatNotifs: 0 }, (err, results) => {
+        // console.log(err, ".....", results);
+        if (err) return res.json({ errorMsg: "Error when updating chat notifications." });
+        console.log("returning success for type CHAT");
+        return res.json({ successMsg: "reset notifs!" });
+      });
+  } else {
+    User
+      .findByIdAndUpdate(req.params._id, { unreadNotifs: 0 }, (err, results) => {
+        // console.log(err, ".....", results);
+        if (err) return res.json({ errorMsg: "Error when updating notifications." });
+        console.log("returning success for type NONE");
+        return res.json({ successMsg: "reset notifs!" });
+      });
+  }
 };

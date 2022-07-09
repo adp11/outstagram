@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 
+// Import dependencies
 const debug = require("debug")("server:server");
 const http = require("http");
 const { Server } = require("socket.io");
 const createError = require("http-errors");
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
+const mongoose = require("mongoose");
 
 const app = express();
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
 
 // Set up mongoose connection
 const mongoDB = "mongodb+srv://adp11:locpp2001@cluster0.yv9iv.mongodb.net/outstagram?retryWrites=true&w=majority";
-
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
-const path = require("path");
-const cookieParser = require("cookie-parser");
-const logger = require("morgan");
+// Import models
+const User = require("./models/user");
+const Post = require("./models/post");
 
 // Import controllers
 const {
@@ -28,12 +31,11 @@ const {
 const {
   addPost, handleLikePost, addComment, getPostInfo, deletePost,
 } = require("./controllers/postController");
+const {
+  createRoom, getRoom, deleteRoom, addMessage,
+} = require("./controllers/roomController");
 
-// Import models
-const User = require("./models/user");
-const Post = require("./models/post");
-
-// set up standard middleware
+// Middleware functions
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(logger("dev"));
 app.use(express.json());
@@ -41,6 +43,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Routes
 app.post("/signup", signupUser);
 app.post("/login", loginUser);
 app.get("/users/:_id", getUserProfile);
@@ -54,12 +57,16 @@ app.put("/comment", addComment);
 app.get("/posts/:_id", getPostInfo);
 app.delete("/posts/:_id", deletePost);
 
-// catch 404 and forward to error handler
+app.post("/rooms", createRoom);
+app.get("/rooms/:_id", getRoom);
+app.delete("/rooms/:_id", deleteRoom);
+app.post("/rooms/:_id", addMessage);
+
+// Catch 404 and handle error below
 app.use((req, res, next) => {
   next(createError(404));
 });
 
-// error handler
 app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
@@ -70,34 +77,44 @@ app.use((err, req, res, next) => {
   res.send("<h1>ERROR 404</h1>");
 });
 
-// Get port from environment and store in Express.
+// Port and server setup
 const port = normalizePort(process.env.PORT || "4000");
 app.set("port", port);
 
-// Create HTTP server.
-const server = http.createServer(app);
+const server = http.createServer(app); // Create HTTP server.
 
 // Listen on provided port, on all network interfaces.
 server.listen(port);
 server.on("error", onError);
 server.on("listening", onListening);
 
-// Set socket
-const io = new Server(server);
+// Socket setup
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
+
 app.set("socketio", io);
 
-// realtime listening to User collection
+// Realtime listening to User collection
 const userChangeStream = User.watch().on("change", (data) => {
+  console.log("data", data);
   // change in existing user
   if (data.operationType === "update") {
-    User.findById(data.documentKey._id)
-      .populate("followers following", "username displayName photoURL")
-      .select("-notifications -rooms")
-      .lean()
-      .exec((err3, populatedData) => {
-        if (err3) console.log("cannot retrieve existing user upon user data change");
-        else io.emit("userDataChange", { user: populatedData });
-      });
+    const keys = Object.keys(data.updateDescription.updatedFields);
+    // emit only if new null room created OR "to" Id received messages OR there's nothing related to "rooms" at all
+    if (data.updateDescription.updatedFields.rooms || (keys.findIndex((key) => key.includes("rooms")) > -1 && data.updateDescription.updatedFields.unreadChatNotifs) || keys.findIndex((key) => key.includes("rooms")) === -1) {
+      console.log("passed check");
+      User.findById(data.documentKey._id)
+        .populate("followers following rooms.members.other", "username displayName photoURL")
+        .select("-notifications")
+        .lean()
+        .exec((err3, populatedData) => {
+          if (err3) console.log("cannot retrieve existing user upon user data change");
+          else io.emit("userDataChange", { user: populatedData });
+        });
+    }
   } else if (data.operationType === "insert") { // change because there's new user
     User.findById(data.documentKey._id)
       .select("username displayName photoURL")
@@ -124,6 +141,7 @@ const postChangeStream = Post.watch().on("change", (data) => {
   }
 });
 
+// stop realtime listening under 3 conditions
 // listen for TERM signal .e.g. kill
 process.on("SIGTERM", async () => {
   console.log("closing realtime mongo");

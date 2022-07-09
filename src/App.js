@@ -25,6 +25,7 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
+  console.log("in App.js");
   // bool states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
@@ -63,7 +64,6 @@ function App() {
   // extra chat states
   const scrollY = useRef(0);
   const unsubscribeFromRealTimeMessages = {};
-  const didFetchActiveRooms = false;
 
   // 4 refs below as not able to access state in socket event handlers
   const newsfeedRef = useRef(newsfeed);
@@ -90,24 +90,27 @@ function App() {
     setFullPostInfo(data);
   }
 
+  const socketRef = useRef(null);
+
   const providerValue = useMemo(
     () => ({
-      userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, didFetchActiveRooms, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      socketRef, userDataRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
     }),
-    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, didFetchActiveRooms, isRoomPageNotFoundActive, darkMode],
+    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, darkMode],
   );
-
-  const socketRef = useRef(null);
 
   useEffect(() => {
     if (isLoggedIn) {
-      socketRef.current = io("http://localhost:4000", { transports: ["websocket"] });
+      socketRef.current = io("http://localhost:4000");
 
       // client-side
       socketRef.current.on("connect", () => {
         console.log("socket connected when logged in and realtime is on", socketRef.current.id);
         /* Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
         */
+        socketRef.current.on("disconnect", () => {
+          console.log("socket disconnected from client");
+        });
         socketRef.current.on("userDataChange", (data) => {
           if (data.user && data.user._id === userDataRef.current._id) {
             console.log("self user change");
@@ -164,6 +167,7 @@ function App() {
         });
       });
     } else { // reset all states basically
+      console.log("reset ALL STATES???");
       if (socketRef.current) {
         console.log("closing socket from client", socketRef.current.id);
         socketRef.current.disconnect();
@@ -212,11 +216,11 @@ function App() {
             <Routes>
               {/* eslint-disable-next-line */}
               <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />
-              <Route path="/chat" element={<Chat />} />
+              <Route path="/rooms" element={<Chat />} />
               {!isProfilePageNotFoundActive && <Route path="/u/:uid" element={<Profile />} />}
               {isProfilePageNotFoundActive && <Route path="/u/:uid" element={<PageNotFound />} />}
-              {!isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<Chat />} />}
-              {isRoomPageNotFoundActive && <Route path="/chat/:roomId" element={<PageNotFound />} />}
+              {!isRoomPageNotFoundActive && <Route path="/r/:roomId" element={<Chat />} />}
+              {isRoomPageNotFoundActive && <Route path="/r/:roomId" element={<PageNotFound />} />}
               {/* act as a background while fullpost is on */}
               {(beforeFullPost.newsfeed && !isFullPostByLink) && (
               <Route

@@ -15,6 +15,17 @@ const NotificationSchema = new Schema(
   { timestamps: true },
 );
 
+const RoomInfoSchema = new Schema(
+  {
+    members: {
+      self: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      other: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    },
+    lastMessageSent: { type: String },
+  },
+  { timestamps: true },
+);
+
 const UserSchema = new Schema(
   {
     username: { type: String, required: true },
@@ -23,7 +34,7 @@ const UserSchema = new Schema(
 
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    rooms: [{ type: Schema.Types.ObjectId, ref: "Room" }],
+    rooms: [RoomInfoSchema],
     notifications: [NotificationSchema],
 
     postSnippets: { type: Array, default: [] },

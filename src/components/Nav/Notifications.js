@@ -63,10 +63,17 @@ function Notifications() {
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        type: "standard",
+      }),
     };
     fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
       .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((data) => {
+        if (data.errorMsg) { alert(data.errorMsg); } else {
+          console.log("unreadNotifs now 0");
+        }
+      });
   }
 
   function handleViewNotifications() {
