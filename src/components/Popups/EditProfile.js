@@ -31,123 +31,49 @@ function EditProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [editProfileError, setEditProfileError] = useState(false);
 
-  async function updateUserData(publicImageURL) {
-    const tempUserData = { ...userData };
-    const docRef = doc(db, `users/${userData.uid}`);
-
-    if (publicImageURL) { // handle the case where there's no new image uploaded
-      await updateDoc(docRef, {
-        bio,
-        displayName,
-        username,
-        photoURL: publicImageURL,
-      });
-    } else {
-      await updateDoc(docRef, {
-        bio,
-        displayName,
-        username,
-      });
-    }
-
-    tempUserData.username = username;
-    tempUserData.bio = bio;
-    tempUserData.displayName = displayName;
-    if (publicImageURL) {
-      tempUserData.photoURL = publicImageURL;
-    }
-    setUserDataHelper(tempUserData);
-  }
-
-  // only update some basic fields but not everywhere (e.g. inside comments or like lists)
-  async function updateAcrossPosts(publicImageURL) {
-    const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/posts`));
-    querySnapshot.forEach(async (document) => {
-      const postRef = doc(db, `users/${userData.uid}/posts/${document.id}`);
-      if (publicImageURL) {
-        await updateDoc(postRef, {
-          authorUsername: username,
-          authorPhotoURL: publicImageURL,
-        });
-      } else {
-        await updateDoc(postRef, {
-          authorUsername: username,
-        });
-      }
-    });
-  }
-
-  async function updateAcrossRooms(publicImageURL) {
-    const querySnapshot = await getDocs(collection(db, `users/${userData.uid}/rooms`));
-    querySnapshot.forEach(async (document) => {
-      const documentData = document.data();
-      const roomRef = doc(db, `users/${userData.uid}/rooms/${documentData.roomId}`);
-      if (publicImageURL) {
-        await updateDoc(roomRef, {
-          "membersInfo.self": {
-            username,
-            displayName,
-            photoURL: publicImageURL,
-          },
-        });
-
-        const docSnap = await getDoc(roomRef);
-        if (docSnap.exists()) {
-          await updateDoc(doc(db, `users/${docSnap.data().members[1]}/rooms/${documentData.roomId}`), {
-            "membersInfo.other": {
-              username,
-              displayName,
-              photoURL: publicImageURL,
-            },
-          });
-        }
-      } else {
-        await updateDoc(roomRef, {
-          "membersInfo.self": {
-            username,
-            photoURL: userData.photoURL,
-            displayName,
-          },
-        });
-        const docSnap = await getDoc(roomRef);
-        if (docSnap.exists()) {
-          await updateDoc(doc(db, `users/${docSnap.data().members[1]}/rooms/${documentData.roomId}`), {
-            "membersInfo.other": {
-              username,
-              photoURL: docSnap.data().photoURL,
-              displayName,
-            },
-          });
-        }
-      }
-    });
-  }
-
   async function handleEditProfileSubmission(e) {
     e.preventDefault();
-    let newImageRef;
     try {
       setIsLoading(true);
       let publicImageURL;
       if (file) {
-        // 1 - Upload the image to Cloud Storage, using that postRef.
-        const filePath = `${userData.uid}/userPhotos/${file.name}`;
-        newImageRef = ref(storage, filePath);
+        // 1 - Upload the image to Cloud Storage
+        const filePath = `${userData._id}/userPhotos/${file.name}`;
+        const newImageRef = ref(storage, filePath);
         await uploadBytesResumable(newImageRef, file);
 
-        publicImageURL = await getDownloadURL(newImageRef); // 2 - Generate a public URL for the file.
-        await updateProfile(getAuth().currentUser, { // 3 - Update photoURL field to uid Doc
-          photoURL: publicImageURL,
-        });
+        // 2 - Generate a public URL for the file.
+        publicImageURL = await getDownloadURL(newImageRef);
       }
+      console.log("finished firebase part", {
+        photoURL: publicImageURL || userData.photoURL,
+        username: username.trim() || userData.username,
+        bio: bio.trim() || userData.bio,
+        displayName: displayName.trim() || userData.displayName,
+      });
+      // 3 - Add to db
+      const options = {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          photoURL: publicImageURL || userData.photoURL,
+          username: username.trim() || userData.username,
+          bio: bio.trim() || userData.bio,
+          displayName: displayName.trim() || userData.displayName,
+        }),
+      };
 
-      updateUserData(publicImageURL);
-      updateAcrossPosts(publicImageURL);
-      updateAcrossRooms(publicImageURL);
-      setIsEditProfileActive(false);
+      fetch(`http://localhost:4000/users/${userData._id}`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.errorMsg) setEditProfileError(data.errorMsg);
+          else setIsEditProfileActive(false);
+        });
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);
-      await deleteObject(newImageRef); // undo code executed inside try block
     }
   }
 
@@ -205,7 +131,7 @@ function EditProfile() {
               />
               )}
               {!previewImageURL && (
-              <svg stroke="white" fill="black" strokeWidth="0" viewBox="0 0 512 512" className="settings_profileIcon__3Vztt" xmlns="http://www.w3.org/2000/svg">
+              <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" className="settings_profileIcon__3Vztt" xmlns="http://www.w3.org/2000/svg">
                 <path d="M416 64H96a64.07 64.07 0 00-64 64v256a64.07 64.07 0 0064 64h320a64.07 64.07 0 0064-64V128a64.07 64.07 0 00-64-64zm-80 64a48 48 0 11-48 48 48.05 48.05 0 0148-48zM96 416a32 32 0 01-32-32v-67.63l94.84-84.3a48.06 48.06 0 0165.8 1.9l64.95 64.81L172.37 416zm352-32a32 32 0 01-32 32H217.63l121.42-121.42a47.72 47.72 0 0161.64-.16L448 333.84z" />
               </svg>
               )}

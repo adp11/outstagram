@@ -25,7 +25,6 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 
 function App() {
-  console.log("in App.js");
   // bool states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAddPostActive, setIsAddPostActive] = useState(false);
@@ -38,7 +37,6 @@ function App() {
   });
   const [isProfilePageNotFoundActive, setIsProfilePageNotFoundActive] = useState(false);
   const [isPostPageNotFoundActive, setIsPostPageNotFoundActive] = useState(false);
-  const [isRoomPageNotFoundActive, setIsRoomPageNotFoundActive] = useState(false);
   const [isSearchChatActive, setIsSearchChatActive] = useState(false);
   const [isFullImageActive, setIsFullImageActive] = useState(false);
   const [isFullPostByLink, setIsFullPostByLink] = useState(false);
@@ -94,9 +92,9 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      socketRef, userDataRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, unsubscribeFromRealTimeMessages, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setIsRoomPageNotFoundActive, setDarkMode,
+      socketRef, userDataRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, unsubscribeFromRealTimeMessages, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode,
     }),
-    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, isRoomPageNotFoundActive, darkMode],
+    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode],
   );
 
   useEffect(() => {
@@ -105,13 +103,11 @@ function App() {
 
       // client-side
       socketRef.current.on("connect", () => {
-        console.log("socket connected when logged in and realtime is on", socketRef.current.id);
+        console.log("socket connected when logged in and realtime is on from App.js", socketRef.current.id);
         /* Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
         */
-        socketRef.current.on("disconnect", () => {
-          console.log("socket disconnected from client");
-        });
         socketRef.current.on("userDataChange", (data) => {
+          // console.log("data.rooms in frontend", data.user.rooms);
           if (data.user && data.user._id === userDataRef.current._id) {
             console.log("self user change");
             setUserDataHelper(data.user);
@@ -167,7 +163,6 @@ function App() {
         });
       });
     } else { // reset all states basically
-      console.log("reset ALL STATES???");
       if (socketRef.current) {
         console.log("closing socket from client", socketRef.current.id);
         socketRef.current.disconnect();
@@ -180,7 +175,6 @@ function App() {
       setFullPostInfoRef(null);
       setIsProfilePageNotFoundActive(false);
       setIsPostPageNotFoundActive(false);
-      setIsRoomPageNotFoundActive(false);
       setIsFullPostByLink(false);
       scrollY.current = 0;
       // add code for detach listening from socket and realtime mongo
@@ -219,8 +213,7 @@ function App() {
               <Route path="/rooms" element={<Chat />} />
               {!isProfilePageNotFoundActive && <Route path="/u/:uid" element={<Profile />} />}
               {isProfilePageNotFoundActive && <Route path="/u/:uid" element={<PageNotFound />} />}
-              {!isRoomPageNotFoundActive && <Route path="/r/:roomId" element={<Chat />} />}
-              {isRoomPageNotFoundActive && <Route path="/r/:roomId" element={<PageNotFound />} />}
+              <Route path="/r/:roomId" element={<Chat />} />
               {/* act as a background while fullpost is on */}
               {(beforeFullPost.newsfeed && !isFullPostByLink) && (
               <Route

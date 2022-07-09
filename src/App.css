@@ -869,7 +869,7 @@ footer > div {
   margin-left: 35%;
   width: 30%;
   aspect-ratio: 1 / 1;
-  border: 1px black solid;
+  border: var(--border);
   background-size: cover;
   border-radius: 50%;
   position: relative;

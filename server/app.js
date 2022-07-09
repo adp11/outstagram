@@ -26,7 +26,7 @@ const Post = require("./models/post");
 
 // Import controllers
 const {
-  signupUser, loginUser, getUserProfile, handleFollowToggle, getUserNotifications, updateUserNotifications,
+  signupUser, loginUser, getUserProfile, updateUserProfile, handleFollowToggle, getUserNotifications, updateUserNotifications,
 } = require("./controllers/userController");
 const {
   addPost, handleLikePost, addComment, getPostInfo, deletePost,
@@ -47,6 +47,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/signup", signupUser);
 app.post("/login", loginUser);
 app.get("/users/:_id", getUserProfile);
+app.put("/users/:_id", updateUserProfile);
 app.put("/follow", handleFollowToggle);
 app.get("/users/:_id/notifications", getUserNotifications);
 app.put("/users/:_id/notifications", updateUserNotifications);
@@ -99,22 +100,24 @@ app.set("socketio", io);
 
 // Realtime listening to User collection
 const userChangeStream = User.watch().on("change", (data) => {
-  console.log("data", data);
   // change in existing user
   if (data.operationType === "update") {
-    const keys = Object.keys(data.updateDescription.updatedFields);
+    // console.log("data/rooms change in backend", data);
+    // const keys = Object.keys(data.updateDescription.updatedFields);
     // emit only if new null room created OR "to" Id received messages OR there's nothing related to "rooms" at all
-    if (data.updateDescription.updatedFields.rooms || (keys.findIndex((key) => key.includes("rooms")) > -1 && data.updateDescription.updatedFields.unreadChatNotifs) || keys.findIndex((key) => key.includes("rooms")) === -1) {
-      console.log("passed check");
-      User.findById(data.documentKey._id)
-        .populate("followers following rooms.members.other", "username displayName photoURL")
-        .select("-notifications")
-        .lean()
-        .exec((err3, populatedData) => {
-          if (err3) console.log("cannot retrieve existing user upon user data change");
-          else io.emit("userDataChange", { user: populatedData });
-        });
-    }
+    // if (data.updateDescription.updatedFields.rooms || (keys.findIndex((key) => key.includes("rooms")) > -1 && data.updateDescription.updatedFields.unreadChatNotifs) || keys.findIndex((key) => key.includes("rooms")) === -1)
+    // if (keys.findIndex((key) => key.includes("rooms")) === -1) {
+    // console.log("passed check");
+    User.findById(data.documentKey._id)
+      .populate("followers following rooms.members.other", "username displayName photoURL")
+      .select("-notifications")
+      .lean()
+      .exec((err3, populatedData) => {
+        if (err3) console.log("cannot retrieve existing user upon user data change");
+        // else if (keys.findIndex((key) => key.includes("rooms")) > -1) io.emit("userDataChange", { user: populatedData, updatedRooms: true });
+        else io.emit("userDataChange", { user: populatedData });
+      });
+    // }
   } else if (data.operationType === "insert") { // change because there's new user
     User.findById(data.documentKey._id)
       .select("username displayName photoURL")

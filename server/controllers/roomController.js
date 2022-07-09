@@ -23,7 +23,7 @@ exports.createRoom = (req, res, next) => {
   ], (err, users) => {
     const selfUser = users[0];
     const otherUser = users[1];
-    const pos = selfUser.rooms.findIndex((room) => room.members.other === otherId);
+    const pos = selfUser.rooms.findIndex((room) => room.members.other.toString() === otherId);
 
     if (pos === -1) { // if room does not exist
       const roomId = mongoose.Types.ObjectId();
@@ -101,7 +101,6 @@ exports.getRoom = (req, res, next) => {
     .populate("messages.from", "username displayName photoURL")
     .lean()
     .exec((err, data) => {
-      console.log("just got all details of full room");
       if (err) return res.json({ errorMsg: "Error when retrieving this room's messages." });
       return res.json({ ...data, justCreated: (req.query.justCreated === "true") });
     });
@@ -156,6 +155,7 @@ exports.addMessage = (req, res, next) => {
       if (err1) return res.json({ errorMsg: "Error when adding message" });
       updatedRoom.populate("messages.from", "username displayName photoURL", (err2, populatedRoom) => {
         if (err2) return res.json({ errorMsg: "Error when adding message" });
+        console.log("emit many times?");
         io.emit("messaging", { populatedRoom, to });
         return res.json({ successMsg: "Sent message successfully" });
       });

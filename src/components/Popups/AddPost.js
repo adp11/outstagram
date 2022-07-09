@@ -25,7 +25,7 @@ function AddPost() {
       try {
         setIsLoading(true);
 
-        // 1 - Upload the image to Cloud Storage, using that postRef.
+        // 1 - Upload the image to Cloud Storage
         const filePath = `${userData._id}/posts/${file.name}`;
         const newImageRef = ref(storage, filePath);
         const fileSnapshot = await uploadBytesResumable(newImageRef, file);

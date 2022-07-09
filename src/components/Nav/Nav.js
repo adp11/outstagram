@@ -14,27 +14,27 @@ function Nav() {
   const navigate = useNavigate();
 
   function updateUnreadChatNotifs() {
-    console.log("done reset unreadChatNotifs");
-    // const options = {
-    //   method: "PUT",
-    //   mode: "cors",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     type: "chat",
-    //   }),
-    // };
-    // fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log("data got from backend", data);
-    //     if (data.successMsg) {
-    //       console.log("done reset unreadChatNotifs");
-    //     } else {
-    //       alert(data.successMsg);
-    //     }
-    //   });
+    if (userData.unreadChatNotifs > 0) {
+      const options = {
+        method: "PUT",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "chat",
+        }),
+      };
+      fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.successMsg) {
+            console.log("done reset unreadChatNotifs");
+          } else {
+            alert(data.successMsg);
+          }
+        });
+    }
   }
 
   function refresh() {

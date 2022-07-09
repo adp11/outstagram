@@ -31,11 +31,9 @@ exports.signupUser = (req, res, next) => {
           if (err2) return res.json({ errorMsg: "Error when creating your account. Please try again." });
 
           io.on("connection", (socket) => {
-            console.log("new connection between 1 client and 1 socketId (only join, not receive)", socket.id);
-            console.log(user._id.toString());
-            socket.join(user._id.toString());
+            console.log("new connection between 1 client and 1 socketId", socket.id);
             socket.on("disconnect", () => {
-              console.log("close connection forced from client side", socket.id);
+              console.log("close connection (client did)", socket.id);
             });
           });
 
@@ -67,9 +65,9 @@ exports.loginUser = (req, res, next) => {
         if (!response) return res.json({ errorMsg: "Sorry, your password was incorrect. Please double-check your password." });
 
         io.on("connection", (socket) => {
-          console.log("new connection between 1 client and 1 socketId (only join, not receive)", socket.id);
+          console.log("new connection between 1 client and 1 socketId", socket.id);
           socket.on("disconnect", () => {
-            console.log("close connection forced from client side", socket.id);
+            console.log("close connection (client did)", socket.id);
           });
         });
 
@@ -110,6 +108,20 @@ exports.getUserProfile = (req, res, next) => {
       if (err) return res.json({ errorMsg: "Error when retrieving this user's profile. No user found" });
       return res.json(data);
     });
+};
+
+exports.updateUserProfile = (req, res, next) => {
+  const {
+    photoURL, username, displayName, bio,
+  } = req.body;
+  User.findByIdAndUpdate(req.params._id, {
+    $set: {
+      username, photoURL, displayName, bio,
+    },
+  }, (err) => {
+    if (err) return res.json({ errorMsg: "Error when editing profile. Please try again later!" });
+    return res.json({ successMsg: "Edited profile!" });
+  });
 };
 
 exports.handleFollowToggle = (req, res, next) => {

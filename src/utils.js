@@ -61,46 +61,33 @@ function insert(arr, element, field) {
   }
 }
 
-// Quick sort
-function swap(items, leftIndex, rightIndex) {
-  const temp = items[leftIndex];
-  items[leftIndex] = items[rightIndex];
-  items[rightIndex] = temp;
-}
-
-function partition(items, left, right) {
-  const mongoTime = items[Math.floor((right + left) / 2)].updatedAt;
-  const pivot = Math.floor(new Date(mongoTime).getTime() / 1000); // middle element
-  let i = left; // left pointer
-  let j = right; // right pointer
-  while (i <= j) {
-    // const unixTime = Math.floor(new Date(mongoTime).getTime() / 1000);
-    while (Math.floor(new Date(items[i].updatedAt).getTime() / 1000) > pivot) {
-      i++;
-    }
-    while (Math.floor(new Date(items[j].updatedAt).getTime() / 1000) < pivot) {
-      j--;
-    }
-    if (i < j) {
-      swap(items, i, j); // swapping two elements
-      i++;
-      j--;
+function partition(array, left, right) {
+  const mongoTime = array[(left + right) >>> 1].updatedAt;
+  const pivot = Math.floor(new Date(mongoTime).getTime() / 1000);
+  while (left <= right) {
+    while (Math.floor(new Date(array[left].updatedAt).getTime() / 1000) > pivot) { left++; }
+    while (Math.floor(new Date(array[right].updatedAt).getTime() / 1000) < pivot) { right--; }
+    if (left <= right) {
+      const temp = array[left];
+      array[left++] = array[right];
+      array[right--] = temp;
     }
   }
-  return i;
+  return left;
 }
 
-function quickSort(items, left, right) {
-  let index;
-  if (items.length > 1) {
-    index = partition(items, left, right); // index returned from partition
-    if (left < index - 1) { // more elements on the left side of the pivot
-      quickSort(items, left, index - 1);
-    }
-    if (index < right) { // more elements on the right side of the pivot
-      quickSort(items, index, right);
-    }
+function quickSortHelper(array, left, right) {
+  const mid = partition(array, left, right);
+  if (left < mid - 1) {
+    quickSortHelper(array, left, mid - 1);
   }
+  if (right > mid) {
+    quickSortHelper(array, mid, right);
+  }
+}
+
+function quickSort(items) {
+  quickSortHelper(items, 0, items.length - 1);
   return items;
 }
 

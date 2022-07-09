@@ -38,7 +38,7 @@ function SearchChat() {
   */
   async function createRoom(otherInfo) {
     setIsLoading(true);
-
+    console.log("info for creating room", otherInfo);
     const options = {
       method: "POST",
       mode: "cors",
@@ -58,6 +58,7 @@ function SearchChat() {
           setIsLoading(false);
           setIsSearchChatActive(false);
         } else if (data.justCreated) {
+          console.log("room just created");
           // update activeRoomList by pushing
           const tempActiveRoomList = [...activeRoomList];
           tempActiveRoomList.unshift({
@@ -83,6 +84,7 @@ function SearchChat() {
           setIsLoading(false);
           navigate(`/r/${data._id}`);
         } else if (!data.justCreated) {
+          console.log("room retrieved");
           // update activeRoomList by replacing
           const tempActiveRoomList = [...activeRoomList];
           const toBeRemoved = tempActiveRoomList.findIndex((room) => room._id === data._id);
