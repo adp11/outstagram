@@ -6,12 +6,12 @@ import {
 } from "firebase/storage";
 import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
-import { db, storage } from "../../firebase";
+import { storage } from "../../firebase";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function AddPost() {
-  const { userData, setIsAddPostActive, setUserDataHelper } = useContext(UserContext);
+  const { userData, setIsAddPostActive } = useContext(UserContext);
 
   const [addPostError, setAddPostError] = useState(null);
   const [previewImageURL, setPreviewImageURL] = useState(null);

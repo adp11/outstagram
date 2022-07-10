@@ -1,14 +1,9 @@
-import {
-  addDoc,
-  collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where,
-} from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import React, {
   useEffect, useContext, useState, useRef,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import uniqid from "uniqid";
-import { db, storage } from "../../firebase";
+import { storage } from "../../firebase";
 import { computeHowLongAgo } from "../../utils";
 import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
@@ -18,8 +13,8 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 // FullPost can come from 4 sources: abrupt access, visited profile, self profile, and newsfeed
 function FullPost() {
   const {
-    userData, allUserData, visitedUserData, newsfeed, scrollY, fullPostIndex, beforeFullPost, fullPostInfo, isLikeListActive, isFullPostByLink,
-    setIsFullPostActive, setFullPostIndex, setBeforeFullPost, setFullPostInfoRef, setVisitedUserDataHelper, setAllUserData, setUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsProfilePageNotFoundActive,
+    userData, visitedUserData, scrollY, beforeFullPost, fullPostInfo, isLikeListActive, isFullPostByLink,
+    setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setVisitedUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
 
   const [isDropdownActive, setIsDropdownActive] = useState(false);
@@ -77,7 +72,6 @@ function FullPost() {
       .then((data) => {
         if (data.errorMsg) alert(data.errorMsg);
         else {
-          // delete in Storage
           const imageRef = ref(storage, filePath);
           deleteObject(imageRef).then(() => {
             // File deleted successfully (could've set a snackbar for visual feedback)
@@ -100,9 +94,9 @@ function FullPost() {
         },
         body: JSON.stringify({
           type: "comment",
-          commenterId: userData._id, // for notif
-          postId: fullPostInfo._id, // for post itself
-          authorId: fullPostInfo.author._id, // for postSnippets of that author
+          commenterId: userData._id,
+          postId: fullPostInfo._id,
+          authorId: fullPostInfo.author._id,
           isSelfComment: fullPostInfo.author._id === userData._id,
           content: postComments[fullPostInfo._id],
         }),
@@ -133,9 +127,9 @@ function FullPost() {
         },
         body: JSON.stringify({
           type: "unlike",
-          likerId: userData._id, // id of the person who liked
-          postId: fullPostInfo._id, // id of post
-          authorId: fullPostInfo.author._id, // owner of post
+          likerId: userData._id,
+          postId: fullPostInfo._id,
+          authorId: fullPostInfo.author._id,
         }),
       };
     } else {
@@ -205,6 +199,7 @@ function FullPost() {
   }, []);
 
   useEffect(() => {
+    // handle access full post by link (not navigation)
     if (!fullPostInfo) {
       const options = {
         method: "GET",

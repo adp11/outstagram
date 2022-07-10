@@ -1,27 +1,18 @@
-import { getAuth, updateProfile } from "firebase/auth";
 import React, { useContext, useEffect, useState } from "react";
-import {
-  updateDoc,
-  doc,
-  collection,
-  getDocs,
-  getDoc,
-} from "firebase/firestore";
 import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-  deleteObject,
 } from "firebase/storage";
 import UserContext from "../Contexts/UserContext";
-import { db, storage } from "../../firebase";
+import { storage } from "../../firebase";
 import Snackbar from "./Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
 
 function EditProfile() {
-  const { userData, setUserDataHelper, setIsEditProfileActive } = useContext(UserContext);
+  const { userData, setIsEditProfileActive } = useContext(UserContext);
 
   const [previewImageURL, setPreviewImageURL] = useState(null);
   const [bio, setBio] = useState(userData.bio);
@@ -45,12 +36,6 @@ function EditProfile() {
         // 2 - Generate a public URL for the file.
         publicImageURL = await getDownloadURL(newImageRef);
       }
-      console.log("finished firebase part", {
-        photoURL: publicImageURL || userData.photoURL,
-        username: username.trim() || userData.username,
-        bio: bio.trim() || userData.bio,
-        displayName: displayName.trim() || userData.displayName,
-      });
       // 3 - Add to db
       const options = {
         method: "PUT",

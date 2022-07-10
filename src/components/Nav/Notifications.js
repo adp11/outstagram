@@ -1,11 +1,5 @@
-import {
-  addDoc,
-  collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc,
-} from "firebase/firestore";
 import React, { useContext, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import uniqid from "uniqid";
-import { db } from "../../firebase";
+import { useNavigate } from "react-router-dom";
 import { computeHowLongAgo } from "../../utils";
 import UserContext from "../Contexts/UserContext";
 
@@ -13,18 +7,17 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function Notifications() {
   const {
-    userData, scrollY, setUserDataHelper, setVisitedUserDataHelper, setBeforeFullPost, setIsFullPostActive, setFullPostInfoRef, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive,
+    userData, scrollY, setVisitedUserDataHelper, setBeforeFullPost, setIsFullPostActive, setFullPostInfoRef, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive,
   } = useContext(UserContext);
   const [notificationList, setNotificationList] = useState([]);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const params = useParams();
   const navigate = useNavigate();
 
   function handleFollowToggle(fromId, type) {
     let options;
-    if (type === "follow") { // if following
+    if (type === "follow") {
       options = {
         method: "PUT",
         mode: "cors",
@@ -37,7 +30,7 @@ function Notifications() {
           otherId: fromId,
         }),
       };
-    } else { // if unfollowing
+    } else {
       options = {
         method: "PUT",
         mode: "cors",
@@ -57,7 +50,7 @@ function Notifications() {
   }
 
   function updateUnreadNotifs() {
-    if (userData.unreadNotifs > 0) {
+    if (userData.unreadNotifs > 0) { // only update fetch if there's 0 notifs
       const options = {
         method: "PUT",
         mode: "cors",
@@ -71,9 +64,8 @@ function Notifications() {
       fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.errorMsg) { alert(data.errorMsg); } else {
-            console.log("unreadNotifs now 0");
-          }
+          if (data.errorMsg) alert(data.errorMsg);
+          else console.log("reset unreadChatNotifs to 0");
         });
     }
   }
@@ -212,8 +204,9 @@ function Notifications() {
                   //  eslint-disable-next-line
                   <button type="button" style={{ padding: "5px 10px", backgroundColor: "#0095f6", border: "none", color: "white", fontWeight: "600", fontSize: "14px", borderRadius: "5px", flex: "0", width: "90px", marginLeft: "auto" }} onClick={() => {handleFollowToggle(notification.from._id, "follow");}}>Follow</button>
               )) : (
-                  //  eslint-disable-next-line
-                  <img src={notification.post.imageURL} alt="src-pic" className="src-action-on" onClick={() => { setIsDropdownActive(!isDropdownActive); setNotificationList([]); handleViewFullPost(notification.post._id); }} />
+              // handle post Ref 404 because deleted
+                // eslint-disable-next-line
+                <img src={notification.post && notification.post.imageURL} alt="src-pic" className="src-action-on" onClick={() => { setIsDropdownActive(!isDropdownActive); setNotificationList([]); handleViewFullPost(notification.post ? notification.post._id : "randomPostIdBecausePostRefGotDeleted"); }} />
               )}
             </div>
           )) : (

@@ -1,10 +1,6 @@
-import {
-  collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where,
-} from "firebase/firestore";
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserContext from "../Contexts/UserContext";
-import { db } from "../../firebase";
 import ChatContext from "../Contexts/ChatContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
@@ -12,7 +8,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 function SearchChat() {
   const { userData, allUserData, setIsSearchChatActive } = useContext(UserContext);
   const {
-    activeRoomList, setActiveRoomListHelper, handleViewFullRoom, setMessages, setWhichRoomActiveHelper,
+    activeRoomList, setActiveRoomListHelper, setMessages, setWhichRoomActiveHelper,
   } = useContext(ChatContext);
 
   const navigate = useNavigate();
@@ -32,13 +28,12 @@ function SearchChat() {
   }
 
   /*
-    1. Update activeRoomList and messages for self/sender by setState(frontend data)
-    2. Update activeRoomList and messages for other/receiver by setState(realtime data) in socket Chat.js
+    1. Update messages for self/sender by setState(frontend data)
+    2. Update activeRoomList for both and messages for other/receiver by setState(realtime data) in socket Chat.js
     3. Return value "data" in fetch(): room document + justCreated
   */
-  async function createRoom(otherInfo) {
+  function createRoom(otherInfo) {
     setIsLoading(true);
-    console.log("info for creating room", otherInfo);
     const options = {
       method: "POST",
       mode: "cors",
@@ -58,14 +53,13 @@ function SearchChat() {
           setIsLoading(false);
           setIsSearchChatActive(false);
         } else if (data.justCreated) {
-          console.log("room just created");
           // update activeRoomList by pushing
           const tempActiveRoomList = [...activeRoomList];
           tempActiveRoomList.unshift({
             _id: data._id,
             members: {
               self: userData._id,
-              other: otherInfo, // (_id, photoURL, displayName, username)
+              other: otherInfo,
             },
             lastMessageSent: null,
           });
@@ -84,7 +78,6 @@ function SearchChat() {
           setIsLoading(false);
           navigate(`/r/${data._id}`);
         } else if (!data.justCreated) {
-          console.log("room retrieved");
           // update activeRoomList by replacing
           const tempActiveRoomList = [...activeRoomList];
           const toBeRemoved = tempActiveRoomList.findIndex((room) => room._id === data._id);

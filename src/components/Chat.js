@@ -1,19 +1,15 @@
-import {
-  collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc,
-} from "firebase/firestore";
 import React, {
   useContext, useEffect, useMemo, useRef, useState,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import uniqid from "uniqid";
 import {
-  deleteObject, getDownloadURL, ref, uploadBytesResumable,
+  getDownloadURL, ref, uploadBytesResumable,
 } from "firebase/storage";
 import { v4 as uuid } from "uuid";
-import { db, storage } from "../firebase";
+import { storage } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Popups/Snackbar";
-import { computeHowLongAgo, insert, quickSort } from "../utils";
+import { computeHowLongAgo, quickSort } from "../utils";
 import ChatContext from "./Contexts/ChatContext";
 import SearchChat from "./Popups/SearchChat";
 import FullImage from "./Popups/FullImage";
@@ -22,8 +18,8 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function Chat() {
   const {
-    userData, isFullImageActive, unsubscribeFromRealTimeMessages, isSearchChatActive, darkMode,
-    setIsSearchChatActive, setVisitedUserDataHelper, setIsFullImageActive, setIsProfilePageNotFoundActive, socketRef, userDataRef,
+    userData, isFullImageActive, isSearchChatActive, darkMode,
+    setIsSearchChatActive, setVisitedUserDataHelper, setIsFullImageActive, setIsProfilePageNotFoundActive, socketRef,
   } = useContext(UserContext);
 
   const [activeRoomList, setActiveRoomList] = useState(quickSort(userData.rooms));
@@ -67,7 +63,6 @@ function Chat() {
 
       // 2 - Generate a public URL for the file.
       const publicImageURL = await getDownloadURL(newImageRef);
-      console.log("finsihed firebase part");
 
       // 3 - Add to db
       const options = {
@@ -89,7 +84,6 @@ function Chat() {
       fetch(`http://localhost:4000/rooms/${whichRoomActive.roomId}`, options)
         .then((response) => response.json())
         .then((data) => {
-          console.log("response from server in send image", data);
           if (data.errorMsg) { alert(data.errorMsg); } else if (data.successMsg) {
             // set new messages (use frontend data)
             setMessages(messages.concat({
@@ -149,26 +143,7 @@ function Chat() {
         if (data.errorMsg) alert(data.errorMsg);
         else if (data.successMsg) {
           setTexts({ ...texts, [whichRoomActive.roomId]: "" });
-
-          // // set new activeRoomList (use frontend data)
-          // const tempActiveRoomList = [...activeRoomList];
-          // const toBeRemoved = tempActiveRoomList.findIndex((room) => room._id === whichRoomActive.roomId);
-
-          // tempActiveRoomList.splice(toBeRemoved, 1);
-          // tempActiveRoomList.unshift({
-          //   _id: whichRoomActive.roomId,
-          //   members: {
-          //     self: userData._id,
-          //     other: {
-          //       displayName: whichRoomActive.otherDisplayname,
-          //       _id: whichRoomActive.otherId,
-          //       photoURL: whichRoomActive.otherPhotoURL,
-          //     },
-          //   },
-          //   lastMessageSent,
-          //   updatedAt: new Date(),
-          // });
-          // setActiveRoomListHelper(tempActiveRoomList);
+          // if set new activeRoomList (use frontend data), it would be here
 
           // set new messages (use frontend data)
           setMessages(messages.concat({
@@ -243,8 +218,6 @@ function Chat() {
     if (didDisplayRoomList) {
       setDidDisplayRoomList(undefined);
     } else {
-      console.log("userData.rooms change triggered");
-      console.log("newActiveRoomList: ", userData.rooms);
       setActiveRoomListHelper(quickSort(userData.rooms));
     }
   }, [userData.rooms]);
@@ -255,8 +228,7 @@ function Chat() {
       navigate("/");
     } else {
       socketRef.current.on("messaging", (data) => {
-        if (whichRoomActiveRef.current && data.populatedRoom._id === whichRoomActiveRef.current.roomId && data.to === userDataRef.current._id) {
-          console.log("incoming message and setMessages()", data);
+        if (whichRoomActiveRef.current && data.populatedRoom._id === whichRoomActiveRef.current.roomId && data.to === userData._id) {
           setMessages(data.populatedRoom.messages);
         }
       });
@@ -297,11 +269,8 @@ function Chat() {
       fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
         .then((response) => response.json())
         .then((data) => {
-          if (data.successMsg) {
-            console.log("done reset unreadChatNotifs");
-          } else {
-            alert(data.successMsg);
-          }
+          if (data.errorMsg) alert(data.errorMsg);
+          else console.log("reset unreadChatNotifs to 0");
         });
     };
   }, []);

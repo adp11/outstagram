@@ -1,15 +1,10 @@
-import {
-  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
-} from "firebase/firestore";
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import uniqid from "uniqid";
-import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 function LikeList() {
   const {
-    userData, likeListInfo, beforeFullPost, isLikeListActive, visitedUserData, setIsLikeListActive, setVisitedUserDataHelper, setLikeListInfo, setUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setFullPostIndex, setIsProfilePageNotFoundActive,
+    userData, likeListInfo, beforeFullPost, setIsLikeListActive, setVisitedUserDataHelper, setLikeListInfo, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setFullPostIndex, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
 
   const navigate = useNavigate();

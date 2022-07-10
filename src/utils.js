@@ -61,6 +61,7 @@ function insert(arr, element, field) {
   }
 }
 
+// quick sort
 function partition(array, left, right) {
   const mongoTime = array[(left + right) >>> 1].updatedAt;
   const pivot = Math.floor(new Date(mongoTime).getTime() / 1000);
@@ -87,10 +88,13 @@ function quickSortHelper(array, left, right) {
 }
 
 function quickSort(items) {
+  if (items.length === 0 || items.length === 1) {
+    return items;
+  }
   quickSortHelper(items, 0, items.length - 1);
   return items;
 }
 
 export {
-  capitalizeFirebaseAuthError, insert, computeHowLongAgo, quickSort,
+  capitalizeFirebaseAuthError, computeHowLongAgo, quickSort,
 };

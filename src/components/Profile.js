@@ -1,20 +1,14 @@
-import {
-  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
-} from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
-import uniqid from "uniqid";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { db } from "../firebase";
+import { useNavigate, useParams } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
 function Profile() {
   const {
-    userData, beforeFullPost, scrollY,
-    setUserDataHelper, visitedUserData, setVisitedUserDataHelper, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive,
+    userData, beforeFullPost, scrollY, visitedUserData, setVisitedUserDataHelper, setIsEditProfileActive, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setIsFollowListActive, setFollowListInfo, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive,
   } = useContext(UserContext);
 
   const params = useParams();
@@ -55,7 +49,7 @@ function Profile() {
 
   function handleFollowToggle() {
     let options;
-    if (!isFollowing) { // if following
+    if (!isFollowing) { // then follow
       options = {
         method: "PUT",
         mode: "cors",
@@ -68,7 +62,7 @@ function Profile() {
           otherId: params.uid,
         }),
       };
-    } else { // if unfollowing
+    } else { // then unfollow
       options = {
         method: "PUT",
         mode: "cors",
@@ -111,7 +105,7 @@ function Profile() {
   }
 
   useEffect(() => {
-    // handle follow button undecided when first mounting (when access by link)
+    // handle follow button undecided when first mounting (when access by link) (trivial render bug as not matching with all 4 cases below)
     if (visitedUserData) {
       setIsFollowing(userData.following.findIndex((user) => user._id === params.uid) !== -1);
     }

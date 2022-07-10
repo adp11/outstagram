@@ -1,18 +1,12 @@
-import {
-  addDoc,
-  arrayUnion, collection, doc, getDoc, serverTimestamp, updateDoc,
-} from "firebase/firestore";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import uniqid from "uniqid";
-import { db } from "../firebase";
 import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Popups/Snackbar";
 import { computeHowLongAgo } from "../utils";
 
 function Newsfeed() {
   const {
-    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, scrollY, userData, setUserDataHelper, allUserData, setAllUserData, setVisitedUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsProfilePageNotFoundActive,
+    newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, scrollY, userData, setVisitedUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
   const [submitCommentError, setSubmitCommentError] = useState(null);
   const navigate = useNavigate();
@@ -52,9 +46,9 @@ function Newsfeed() {
         },
         body: JSON.stringify({
           type: "comment",
-          commenterId: userData._id, // for notif
-          postId: postInfo._id, // for post itself
-          authorId: postInfo.author._id, // for postSnippets of that author
+          commenterId: userData._id,
+          postId: postInfo._id,
+          authorId: postInfo.author._id,
           isSelfComment: postInfo.author._id === userData._id,
           content: postComments[postInfo._id],
         }),
@@ -73,7 +67,7 @@ function Newsfeed() {
     }
   }
 
-  function handleLikePost(postInfo) { // toggle
+  function handleLikePost(postInfo) {
     let options;
     const targetIndex = postInfo.likes.findIndex((like) => like._id === userData._id);
     if (targetIndex > -1) {
@@ -85,9 +79,9 @@ function Newsfeed() {
         },
         body: JSON.stringify({
           type: "unlike",
-          likerId: userData._id, // id of the person who liked
-          postId: postInfo._id, // id of post
-          authorId: postInfo.author._id, // owner of post
+          likerId: userData._id,
+          postId: postInfo._id,
+          authorId: postInfo.author._id,
         }),
       };
     } else {

@@ -4,7 +4,7 @@ import UserContext from "./Contexts/UserContext";
 
 function ProfilePreview() {
   const {
-    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo, setVisitedUserDataHelper,
+    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo, setVisitedUserDataHelper, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -31,27 +31,28 @@ function ProfilePreview() {
     }
   }
 
+  function handleVisitProfile() {
+    setIsProfilePageNotFoundActive(false); // always reset before doing the rest to prevent bugs
+    setVisitedUserDataHelper(userData);
+    navigate(`/u/${userData._id}`);
+  }
+
   return (
     <div className="ProfilePreview">
       <div className="user-profile">
-        <Link to={`/u/${userData._id}`}>
-          <div>
-            <img src={userData.photoURL} alt="profile" />
-          </div>
-        </Link>
-        <Link to={`/u/${userData._id}`}>
-          <div>
-            <div className="medium bold cut1">{userData.username}</div>
-            <div className="medium grey">{userData.displayName}</div>
-          </div>
-        </Link>
-
+        <div onClick={handleVisitProfile}>
+          <img src={userData.photoURL} alt="profile" />
+        </div>
+        <div onClick={handleVisitProfile}>
+          <div className="medium bold cut1">{userData.username}</div>
+          <div className="medium grey">{userData.displayName}</div>
+        </div>
         <div className="logout-shortcut" onClick={() => { setIsLoggedIn(false); }}>
           Log out
         </div>
       </div>
       <div className="stats medium">
-        <div className="posts" onClick={() => { setVisitedUserDataHelper(userData); navigate(`/u/${userData._id}`); }}>
+        <div className="posts" onClick={handleVisitProfile}>
           <div className="bold medium">{userData.postSnippets.length}</div>
           <div className="grey medium">Posts</div>
         </div>

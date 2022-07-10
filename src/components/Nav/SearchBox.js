@@ -1,9 +1,7 @@
-import { doc, getDoc } from "firebase/firestore";
 import React, {
   useContext, useEffect, useRef, useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 function SearchBox() {

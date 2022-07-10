@@ -1,18 +1,13 @@
-import {
-  addDoc, collection, doc, getDoc, serverTimestamp, updateDoc,
-} from "firebase/firestore";
 import React, {
   useContext, useEffect, useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import uniqid from "uniqid";
-import { db } from "../../firebase";
 import UserContext from "../Contexts/UserContext";
 
 // Notice: many CSS inline rules in LikeList/FollowList
 function FollowList() {
   const {
-    userData, followListInfo, isFollowListActive, setFollowListInfo, setIsFollowListActive, visitedUserData, setVisitedUserDataHelper, setUserDataHelper, setIsProfilePageNotFoundActive,
+    userData, followListInfo, isFollowListActive, setFollowListInfo, setIsFollowListActive, visitedUserData, setVisitedUserDataHelper, setIsProfilePageNotFoundActive,
   } = useContext(UserContext);
 
   const [whichFollow, setWhichFollow] = useState(isFollowListActive.followers ? followListInfo.followers : followListInfo.following);
@@ -21,6 +16,7 @@ function FollowList() {
 
   function handleFollowToggle(followId, type) {
     let options;
+    console.log("in handlefollowtoggle, is doing", type);
     if (type === "unfollow") {
       options = {
         method: "PUT",

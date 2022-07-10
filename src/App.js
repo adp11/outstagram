@@ -3,13 +3,7 @@ import React, {
   useEffect, useState, useMemo, useRef,
 } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { getAuth } from "firebase/auth";
-import {
-  collection, doc, getDoc, getDocs, onSnapshot, query,
-} from "firebase/firestore";
 import io from "socket.io-client";
-import { insert } from "./utils";
-import { db } from "./firebase";
 import Nav from "./components/Nav/Nav";
 import Newsfeed from "./components/Newsfeed";
 import ProfilePreview from "./components/ProfilePreview";
@@ -51,7 +45,6 @@ function App() {
     profile: false,
     newsfeed: false,
   });
-  const [fullPostIndex, setFullPostIndex] = useState(null);
   const [fullPostInfo, setFullPostInfo] = useState(null);
   const [likeListInfo, setLikeListInfo] = useState({});
   const [followListInfo, setFollowListInfo] = useState({
@@ -61,7 +54,6 @@ function App() {
 
   // extra chat states
   const scrollY = useRef(0);
-  const unsubscribeFromRealTimeMessages = {};
 
   // 4 refs below as not able to access state in socket event handlers
   const newsfeedRef = useRef(newsfeed);
@@ -92,22 +84,20 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      socketRef, userDataRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, unsubscribeFromRealTimeMessages, darkMode, setNewsfeedHelper, setUserDataHelper, setFullPostIndex, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode,
+      socketRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode, setNewsfeedHelper, setUserDataHelper, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode,
     }),
-    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostIndex, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode],
+    [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode],
   );
 
   useEffect(() => {
     if (isLoggedIn) {
+      // client side socket connect
       socketRef.current = io("http://localhost:4000");
 
-      // client-side
       socketRef.current.on("connect", () => {
         console.log("socket connected when logged in and realtime is on from App.js", socketRef.current.id);
-        /* Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
-        */
+        // Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
         socketRef.current.on("userDataChange", (data) => {
-          // console.log("data.rooms in frontend", data.user.rooms);
           if (data.user && data.user._id === userDataRef.current._id) {
             console.log("self user change");
             setUserDataHelper(data.user);
@@ -130,6 +120,7 @@ function App() {
         4. If new posts added to db, set() by adding if those's authors ... (last "else if")
       */
         socketRef.current.on("newsfeedChange", (data) => {
+          console.log("newsfeedChange", data);
           if (data.removedPostId) {
             setNewsfeedHelper(newsfeedRef.current.filter((post) => post._id !== data.removedPostId));
           } else if (data.for === userDataRef.current._id) { // first half
@@ -162,7 +153,7 @@ function App() {
           }
         });
       });
-    } else { // reset all states basically
+    } else {
       if (socketRef.current) {
         console.log("closing socket from client", socketRef.current.id);
         socketRef.current.disconnect();
@@ -171,13 +162,11 @@ function App() {
       setVisitedUserDataHelper(null);
       setAllUserData([]);
       setNewsfeedHelper([]);
-      setFullPostIndex(null);
       setFullPostInfoRef(null);
       setIsProfilePageNotFoundActive(false);
       setIsPostPageNotFoundActive(false);
       setIsFullPostByLink(false);
       scrollY.current = 0;
-      // add code for detach listening from socket and realtime mongo
     }
 
     // window.scrollTo(0, 0); // optional: prevent browser remember scroll position and auto scroll upon user refreshes the page.

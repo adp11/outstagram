@@ -1,4 +1,3 @@
-import { getAuth, signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import React, { useContext, useState } from "react";
 import UserContext from "../Contexts/UserContext";
@@ -13,7 +12,7 @@ function Account() {
   const navigate = useNavigate();
 
   function handleVisitProfile() {
-    setIsProfilePageNotFoundActive(false);
+    setIsProfilePageNotFoundActive(false); // always reset before doing the rest to prevent bugs
     setIsDropdownActive(!isDropdownActive);
     setVisitedUserDataHelper(userData);
     navigate(`/u/${userData._id}`);
