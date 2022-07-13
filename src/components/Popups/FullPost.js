@@ -95,14 +95,13 @@ function FullPost() {
         body: JSON.stringify({
           type: "comment",
           commenterId: userData._id,
-          postId: fullPostInfo._id,
           authorId: fullPostInfo.author._id,
           isSelfComment: fullPostInfo.author._id === userData._id,
           content: postComments[fullPostInfo._id],
         }),
       };
 
-      fetch("http://localhost:4000/comment", options)
+      fetch(`http://localhost:4000/posts/${fullPostInfo._id}/comments`, options)
         .then((response) => response.json())
         .then((data) => {
           if (data.errorMsg) alert(data.errorMsg);
@@ -128,7 +127,6 @@ function FullPost() {
         body: JSON.stringify({
           type: "unlike",
           likerId: userData._id,
-          postId: fullPostInfo._id,
           authorId: fullPostInfo.author._id,
         }),
       };
@@ -143,12 +141,11 @@ function FullPost() {
           type: "like",
           isSelfLike: fullPostInfo.author._id === userData._id,
           likerId: userData._id,
-          postId: fullPostInfo._id,
           authorId: fullPostInfo.author._id,
         }),
       };
     }
-    fetch("http://localhost:4000/like", options)
+    fetch(`http://localhost:4000/posts/${fullPostInfo._id}/likes`, options)
       .then((response) => response.json())
       .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }

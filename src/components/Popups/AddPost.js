@@ -51,7 +51,7 @@ function AddPost() {
           }),
         };
 
-        fetch("http://localhost:4000/post", options)
+        fetch("http://localhost:4000/posts", options)
           .then((response) => response.json())
           .then((data) => {
             if (data.errorMsg) {

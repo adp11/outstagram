@@ -17,7 +17,7 @@ exports.loginWithGoogle = (req, res, next) => {
 };
 
 exports.getHomeData = (req, res, next) => {
-  console.log("in getHomeData");
+  // console.log("in getHomeData");
   jwt.verify(req.jwtToken, "secretkey", (tokenErr, authData) => {
     if (tokenErr) return next(HttpError.forbidden("JWT verification failed."));
 
@@ -45,7 +45,7 @@ exports.getHomeData = (req, res, next) => {
           },
         }, (queryErr1, results) => {
           if (queryErr1) return next(HttpError.internal("Database query error."));
-          res.status(200).json({
+          return res.status(200).json({
             user, users: results.users, newsfeed: results.newsfeed,
           });
         });
@@ -83,7 +83,7 @@ exports.signupUser = (req, res, next) => {
               if (err) return next(HttpError.internal("Error when signing JWT."));
               res.cookie("jwtToken", token, { httpOnly: true });
               // console.log("token generated", token);
-              res.status(200).json({
+              return res.status(200).json({
                 user, users, newsfeed: [],
               });
             });
@@ -128,7 +128,7 @@ exports.loginUser = (req, res, next) => {
             if (err) return next(HttpError.internal("Error when signing JWT."));
             res.cookie("jwtToken", token, { httpOnly: true });
             // console.log("token generated", token);
-            res.status(200).json({
+            return res.status(200).json({
               user, users: results.users, newsfeed: results.newsfeed,
             });
           });
@@ -163,7 +163,7 @@ exports.updateUserProfile = (req, res, next) => {
   });
 };
 
-exports.handleUserFollow = (req, res, next) => {
+exports.updateUserFollows = (req, res, next) => {
   const { type, otherId } = req.body;
   const selfId = req.params._id;
   const io = req.app.get("socketio");

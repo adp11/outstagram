@@ -47,14 +47,13 @@ function Newsfeed() {
         body: JSON.stringify({
           type: "comment",
           commenterId: userData._id,
-          postId: postInfo._id,
           authorId: postInfo.author._id,
           isSelfComment: postInfo.author._id === userData._id,
           content: postComments[postInfo._id],
         }),
       };
 
-      fetch("http://localhost:4000/comment", options)
+      fetch(`http://localhost:4000/posts/${postInfo._id}/comments`, options)
         .then((response) => response.json())
         .then((data) => {
           if (data.errorMsg) alert(data.errorMsg);
@@ -80,7 +79,6 @@ function Newsfeed() {
         body: JSON.stringify({
           type: "unlike",
           likerId: userData._id,
-          postId: postInfo._id,
           authorId: postInfo.author._id,
         }),
       };
@@ -95,12 +93,11 @@ function Newsfeed() {
           type: "like",
           isSelfLike: postInfo.author._id === userData._id,
           likerId: userData._id,
-          postId: postInfo._id,
           authorId: postInfo.author._id,
         }),
       };
     }
-    fetch("http://localhost:4000/like", options)
+    fetch(`http://localhost:4000/posts/${postInfo._id}/likes`, options)
       .then((response) => response.json())
       .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }

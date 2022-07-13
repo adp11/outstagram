@@ -29,10 +29,10 @@ const Post = require("./models/post");
 
 // Import controllers
 const {
-  getHomeData, signupUser, loginUser, loginWithGoogle, getUserProfile, updateUserProfile, handleUserFollow, getUserNotifications, updateUserNotifications,
+  getHomeData, signupUser, loginUser, loginWithGoogle, getUserProfile, updateUserProfile, updateUserFollows, getUserNotifications, updateUserNotifications,
 } = require("./controllers/userController");
 const {
-  addPost, handlePostLike, addPostComment, getPostInfo, deletePost,
+  addPost, updatePostLikes, updatePostComments, getPost, deletePost,
 } = require("./controllers/postController");
 const {
   createRoom, getRoom, deleteRoom, addMessage,
@@ -59,16 +59,16 @@ app.post("/signup", signupUser);
 app.post("/login", loginUser);
 app.get("/users/:_id", getUserProfile);
 app.put("/users/:_id", updateUserProfile);
-app.put("/users/:_id/follows", handleUserFollow);
+app.put("/users/:_id/follows", updateUserFollows);
 app.get("/users/:_id/notifications", getUserNotifications);
 app.put("/users/:_id/notifications", updateUserNotifications);
 
 // Post controllers
 app.post("/posts", addPost);
-app.get("/posts/:_id", getPostInfo);
+app.get("/posts/:_id", getPost);
 app.delete("/posts/:_id", deletePost);
-// app.put("/posts/:_id/likes", handlePostLike);
-// app.put("/posts/:_id/comments", addPostComment);
+app.put("/posts/:_id/likes", updatePostLikes);
+app.put("/posts/:_id/comments", updatePostComments);
 
 // Room controllers
 app.post("/rooms", createRoom);
@@ -78,7 +78,7 @@ app.delete("/rooms/:_id", deleteRoom);
 
 // Helper token function
 function extractToken(req, res, next) {
-  console.log("req.headers", req.headers);
+  // console.log("req.headers", req.headers);
   let jwtToken;
   req.headers.cookie.split(" ").some((cookie) => {
     const equalPosition = cookie.indexOf("=");

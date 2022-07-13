@@ -1,15 +1,14 @@
 const async = require("async");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Post = require("../models/post");
+const HttpError = require("../HttpError");
 
 // Skip validation and sanitization
 exports.addPost = (req, res, next) => {
   const post = new Post(req.body);
   post.save((err) => {
-    if (err) return res.json({ errorMsg: "Error when adding your post. Please try again." });
+    if (err) return next(HttpError.internal("Error when adding your post."));
 
     const postSnippet = {
       _id: post._id,
@@ -18,17 +17,49 @@ exports.addPost = (req, res, next) => {
       totalComments: 0,
     };
 
-    User.findByIdAndUpdate(req.body.author, { $push: { postSnippets: postSnippet } }, (err1, user) => {
-      if (err1) return res.json({ errorMsg: "Error when adding your post. Please try again." });
-      return res.json({ successMsg: "Added post!" });
+    User.findByIdAndUpdate(req.body.author, { $push: { postSnippets: postSnippet } }, (queryErr) => {
+      if (queryErr) return next(HttpError.internal("Database query error."));
+      return res.sendStatus(200);
     });
   });
 };
 
-exports.handleLikePost = (req, res, next) => {
+exports.getPost = (req, res, next) => {
+  Post
+    .findById(req.params._id)
+    .populate("author likes comments.commenter", "username displayName photoURL")
+    .lean()
+    .exec((err, data) => {
+      if (err) return next(HttpError.notFound("Error when retrieving this post. No post found."));
+      return res.status(200).json(data);
+    });
+};
+
+exports.deletePost = (req, res, next) => {
+  async.parallel([
+    // update post itself
+    function (callback) {
+      Post.findByIdAndRemove(req.params._id, callback);
+    },
+    // update postSnippets
+    function (callback) {
+      User.updateOne(
+        { _id: req.body.authorId },
+        { $pull: { postSnippets: { _id: mongoose.Types.ObjectId(req.params._id) } } },
+        callback,
+      );
+    },
+  ], (err) => {
+    if (err) return next(HttpError.internal("Error when deleting post."));
+    return res.sendStatus(200);
+  });
+};
+
+exports.updatePostLikes = (req, res, next) => {
   const {
-    type, likerId, postId, authorId, isSelfLike,
+    type, likerId, authorId, isSelfLike,
   } = req.body;
+  const postId = req.params._id;
   if (type === "unlike") {
     async.parallel([
       // update post itself
@@ -44,7 +75,8 @@ exports.handleLikePost = (req, res, next) => {
         );
       },
     ], (err) => {
-      if (err) return res.json({ errorMsg: "Error when handling like." });
+      if (err) return next(HttpError.internal("Error when handling like toggle."));
+      return res.sendStatus(200);
     });
   } else if (type === "like" && isSelfLike) {
     async.parallel([
@@ -60,8 +92,9 @@ exports.handleLikePost = (req, res, next) => {
           callback,
         );
       },
-    ], (err, results) => {
-      if (err) return res.json({ errorMsg: "Error when handling like." });
+    ], (err) => {
+      if (err) return next(HttpError.internal("Error when handling like toggle."));
+      return res.sendStatus(200);
     });
   } else if (type === "like" && !isSelfLike) {
     async.parallel([
@@ -81,23 +114,25 @@ exports.handleLikePost = (req, res, next) => {
               type: "like",
               post: postId,
             });
-            user.save((err1) => {
-              if (err1) return res.json({ errorMsg: "Error when handling like." });
+            user.save((saveErr) => {
+              if (saveErr) return next(HttpError.internal("Error when handling like toggle."));
             });
           },
         );
       },
-    ], (err, results) => {
-      if (err) return res.json({ errorMsg: "Error when handling like." });
+    ], (err) => {
+      if (err) return next(HttpError.internal("Error when handling like toggle."));
+      return res.sendStatus(200);
     });
   }
 };
 
 // Skip validation and sanitization
-exports.addComment = (req, res, next) => {
+exports.updatePostComments = (req, res, next) => {
   const {
-    type, commenterId, postId, authorId, isSelfComment, content,
+    type, commenterId, authorId, isSelfComment, content,
   } = req.body;
+  const postId = req.params._id;
 
   Post.findOne({ _id: postId }).exec((err, post) => {
     if (type === "comment" && isSelfComment) {
@@ -115,9 +150,9 @@ exports.addComment = (req, res, next) => {
             callback,
           );
         },
-      ], (err1) => {
-        if (err1) return res.json({ errorMsg: "Error when adding your comment. Please try again." });
-        return res.json({ successMsg: "Added comment!" });
+      ], (queryErr) => {
+        if (queryErr) return next(HttpError.internal("Error when adding your comment"));
+        return res.sendStatus(200);
       });
     } else {
       async.parallel([
@@ -139,51 +174,17 @@ exports.addComment = (req, res, next) => {
                 post: postId,
                 commentContent: content,
               });
-              user.save((err1) => {
-                if (err1) {
-                  return res.json({ errorMsg: "Error when adding your comment. Please try again." });
-                }
-                return res.json({ successMsg: "Added comment!" });
+              user.save((saveErr) => {
+                if (saveErr) return next(HttpError.internal("Error when adding your comment."));
+                return res.sendStatus(200);
               });
             },
           );
         },
-      ], (err1, results) => {
-        if (err1) return res.json({ errorMsg: "Error when adding your comment. Please try again." });
-        return res.json({ successMsg: "Added comment!" });
+      ], (queryErr1) => {
+        if (queryErr1) return next(HttpError.internal("Error when adding your comment."));
+        return res.sendStatus(200);
       });
     }
-  });
-};
-
-exports.getPostInfo = (req, res, next) => {
-  Post
-    .findById(req.params._id)
-    .populate("author likes comments.commenter", "username displayName photoURL")
-    .lean()
-    .exec((err, data) => {
-      if (err) return res.json({ errorMsg: "Error when retrieving this post. No post found" });
-      return res.json(data);
-    });
-};
-
-exports.deletePost = (req, res, next) => {
-  async.parallel([
-    // update post itself
-    function (callback) {
-      Post
-        .findByIdAndRemove(req.params._id, callback);
-    },
-    // update postSnippets
-    function (callback) {
-      User.updateOne(
-        { _id: req.body.authorId },
-        { $pull: { postSnippets: { _id: mongoose.Types.ObjectId(req.params._id) } } },
-        callback,
-      );
-    },
-  ], (err) => {
-    if (err) return res.json({ errorMsg: "Error when deleting post" });
-    return res.json({ successMsg: "Deleted!" });
   });
 };
