@@ -51,7 +51,7 @@ app.use(passport.initialize());
 app.get("/login/google", passport.authenticate("google", { scope: ["email", "profile"], session: false }));
 app.get("/google/callback", passport.authenticate("google", { failureRedirect: "/googleLoginFailure", session: false }), loginWithGoogle);
 app.get("/googleLoginFailure", (req, res) => {
-  res.send("<h1>Google Login Failure</h1>");
+  res.status(500).send("<h1>Google Login Failure</h1>");
 });
 
 app.get("/", extractToken, getHomeData);
@@ -73,8 +73,8 @@ app.put("/posts/:_id/comments", updatePostComments);
 // Room controllers
 app.post("/rooms", createRoom);
 app.get("/rooms/:_id", getRoom);
-app.post("/rooms/:_id", addMessage);
-app.delete("/rooms/:_id", deleteRoom);
+app.post("/rooms/:_id", addMessage); // TODO
+app.delete("/rooms/:_id", deleteRoom); // TODO
 
 // Helper token function
 function extractToken(req, res, next) {

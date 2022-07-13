@@ -1,9 +1,8 @@
 const async = require("async");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Room = require("../models/room");
+const HttpError = require("../HttpError");
 
 exports.createRoom = (req, res, next) => {
   const { selfId, otherId } = req.body;
@@ -21,6 +20,7 @@ exports.createRoom = (req, res, next) => {
         .exec(callback);
     },
   ], (err, users) => {
+    if (err) return next(HttpError.internal("Error when creating chat room."));
     const selfUser = users[0];
     const otherUser = users[1];
     const pos = selfUser.rooms.findIndex((room) => room.members.other.toString() === otherId);
@@ -57,41 +57,13 @@ exports.createRoom = (req, res, next) => {
         function (callback) {
           Room.create({ _id: roomId, messages: [] }, callback);
         },
-      ], (err1, result) => {
-        if (err1) return res.json({ errorMsg: "Error when creating chat room. Please try again." });
+      ], (saveErr) => {
+        if (saveErr) return next(HttpError.internal("Error when creating chat room."));
         res.redirect(`/rooms/${roomId}/?justCreated=true`);
       });
     } else {
       res.redirect(`/rooms/${selfUser.rooms[pos]._id}/?justCreated=false`);
     }
-  });
-};
-
-exports.deleteRoom = (req, res, next) => {
-  const { selfId, otherId } = req.body;
-  async.parallel([
-    // update room collection itself
-    function (callback) {
-      Room.findByIdAndRemove(req.params._id, callback);
-    },
-    // update rooms in user collection
-    function (callback) {
-      User.updateOne(
-        { _id: selfId },
-        { $pull: { rooms: { _id: mongoose.Types.ObjectId(req.params._id) } } },
-        callback,
-      );
-    },
-    function (callback) {
-      User.updateOne(
-        { _id: otherId },
-        { $pull: { rooms: { _id: mongoose.Types.ObjectId(req.params._id) } } },
-        callback,
-      );
-    },
-  ], (err, results) => {
-    if (err) return res.json({ errorMsg: "Error when deleting room" });
-    return res.json({ successMsg: "Deleted null rooms!" });
   });
 };
 
@@ -101,8 +73,8 @@ exports.getRoom = (req, res, next) => {
     .populate("messages.from", "username displayName photoURL")
     .lean()
     .exec((err, data) => {
-      if (err) return res.json({ errorMsg: "Error when retrieving this room's messages." });
-      return res.json({ ...data, justCreated: (req.query.justCreated === "true") });
+      if (err) return next(HttpError.notFound("Error when retrieving this room's messages."));
+      return res.status(200).json({ ...data, justCreated: (req.query.justCreated === "true") });
     });
 };
 
@@ -140,7 +112,7 @@ exports.addMessage = (req, res, next) => {
         ).populate("rooms.members.other", "username displayName photoURL").exec(callback);
     },
   ], (err, results) => {
-    if (err) return res.json({ errorMsg: "Error when adding message" });
+    if (err) return next(HttpError.internal("Error when adding message."));
 
     const room = results[0];
     const msg = {
@@ -151,14 +123,42 @@ exports.addMessage = (req, res, next) => {
       storageURL,
     };
     room.messages.push(msg); // save message to the room founded above
-    room.save((err1, updatedRoom) => {
-      if (err1) return res.json({ errorMsg: "Error when adding message" });
-      updatedRoom.populate("messages.from", "username displayName photoURL", (err2, populatedRoom) => {
-        if (err2) return res.json({ errorMsg: "Error when adding message" });
-        console.log("emit many times?");
+    room.save((saveErr, updatedRoom) => {
+      if (saveErr) return next(HttpError.internal("Error when adding message."));
+      updatedRoom.populate("messages.from", "username displayName photoURL", (populateErr, populatedRoom) => {
+        if (populateErr) return next(HttpError.internal("Error when adding message."));
+        // console.log("emit many times?");
         io.emit("messaging", { populatedRoom, to });
-        return res.json({ successMsg: "Sent message successfully" });
+        return res.sendStatus(200);
       });
     });
+  });
+};
+
+exports.deleteRoom = (req, res, next) => {
+  const { selfId, otherId } = req.body;
+  async.parallel([
+    // update room collection itself
+    function (callback) {
+      Room.findByIdAndRemove(req.params._id, callback);
+    },
+    // update rooms in user collection
+    function (callback) {
+      User.updateOne(
+        { _id: selfId },
+        { $pull: { rooms: { _id: mongoose.Types.ObjectId(req.params._id) } } },
+        callback,
+      );
+    },
+    function (callback) {
+      User.updateOne(
+        { _id: otherId },
+        { $pull: { rooms: { _id: mongoose.Types.ObjectId(req.params._id) } } },
+        callback,
+      );
+    },
+  ], (err) => {
+    if (err) return next(HttpError.notFound("Error when deleting room."));
+    return res.sendStatus(200);
   });
 };

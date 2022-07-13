@@ -205,6 +205,7 @@ exports.updateUserFollows = (req, res, next) => {
         ], (queryErr, newsfeed) => {
           if (queryErr) return next(HttpError.internal("Error when handling follow toggle/querying newsfeed upon change in following list."));
           io.emit("newsfeedChange", { refreshedNewsfeed: newsfeed, for: selfId });
+          return res.sendStatus(200);
         });
       });
     });
@@ -221,6 +222,7 @@ exports.updateUserFollows = (req, res, next) => {
     ], (err) => {
       if (err) return next(HttpError.internal("Error when handling follow toggle."));
       io.emit("newsfeedChange", { removedPostsOf: otherId, for: selfId });
+      return res.sendStatus(200);
     });
   }
 };

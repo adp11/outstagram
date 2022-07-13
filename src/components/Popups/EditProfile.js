@@ -123,10 +123,10 @@ function EditProfile() {
               )}
             </label>
           </div>
-          <div className="form-row">
+          {/* <div className="form-row">
             <label className="bold" htmlFor="username">Username</label>
             <input id="username" onChange={(e) => { setUsername(e.target.value); }} type="text" defaultValue={userData && userData.username} />
-          </div>
+          </div> */}
           <div className="form-row">
             <label className="bold" htmlFor="fullname">Full Name</label>
             <input id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} type="text" defaultValue={userData && userData.displayName} disabled={userData.provider !== "local"} />
