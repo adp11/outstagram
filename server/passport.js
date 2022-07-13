@@ -1,9 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
-const async = require("async");
 const mongoose = require("mongoose");
 const User = require("./models/user");
-const Post = require("./models/post");
 
 // Set up passport
 const GOOGLE_CLIENT_ID = "858662058213-upqh7moacqonn13vg1dj0goq3pulu4vr.apps.googleusercontent.com";
@@ -35,7 +33,7 @@ passport.use(new GoogleStrategy(
         // console.log("result in passport strategy", updatedUser);
         if (err) return done(err);
         req.data = updatedUser;
-        return done(null, profile);
+        return done(null, updatedUser);
       },
     );
   }),

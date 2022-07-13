@@ -63,6 +63,10 @@ function SignupForm() {
       });
   }
 
+  function logInProvider() {
+    window.open("http://localhost:4000/login/google", "_self");
+  }
+
   return (
     <div className="auth-container">
       <div className="signup-container">
@@ -73,10 +77,10 @@ function SignupForm() {
             Sign up to see photos from and chat with your friends
           </p>
           {/* eslint-disable-next-line */}
-          {/* <div onClick={logInProvider} className="login-provider grey bold">
+          <div onClick={logInProvider} className="login-provider grey bold">
             <img src={`${window.location.origin}/images/google.png`} alt="google icon" style={{ width: "20px", height: "20px" }} />
             Log in with Google
-          </div> */}
+          </div>
         </div>
 
         <div style={{ fontWeight: "600", color: "#8e8e8e" }}>OR</div>

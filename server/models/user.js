@@ -29,7 +29,7 @@ const RoomInfoSchema = new Schema(
 const UserSchema = new Schema(
   {
     username: { type: String, required: true },
-    password: { type: String },
+    password: { type: String }, // not required because of oauth
     displayName: { type: String, required: true },
 
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
@@ -44,9 +44,8 @@ const UserSchema = new Schema(
     unreadNotifs: { type: Number, min: 0, default: 0 },
 
     provider: { type: String, required: true, enum: ["google", "local"] },
-    providerId: { type: String },
+    providerId: { type: String }, // not required because of oauth
   },
 );
 
-// Export model
 module.exports = mongoose.model("User", UserSchema);

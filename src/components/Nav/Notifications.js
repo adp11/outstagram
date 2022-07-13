@@ -26,7 +26,6 @@ function Notifications() {
         },
         body: JSON.stringify({
           type: "follow",
-          selfId: userData._id,
           otherId: fromId,
         }),
       };
@@ -39,12 +38,11 @@ function Notifications() {
         },
         body: JSON.stringify({
           type: "unfollow",
-          selfId: userData._id,
           otherId: fromId,
         }),
       };
     }
-    fetch("http://localhost:4000/follow", options)
+    fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
       .then((response) => response.json())
       .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
   }

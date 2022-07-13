@@ -113,6 +113,7 @@ function EditProfile() {
                 style={{ visibility: "hidden" }}
                 accept="image/*"
                 capture="camera"
+                disabled={userData.provider !== "local"}
               />
               )}
               {!previewImageURL && (
@@ -128,7 +129,7 @@ function EditProfile() {
           </div>
           <div className="form-row">
             <label className="bold" htmlFor="fullname">Full Name</label>
-            <input id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} type="text" defaultValue={userData && userData.displayName} />
+            <input id="fullname" onChange={(e) => { setDisplayName(e.target.value); }} type="text" defaultValue={userData && userData.displayName} disabled={userData.provider !== "local"} />
           </div>
           <div className="form-row">
             <label className="bold" htmlFor="bio">Bio</label>

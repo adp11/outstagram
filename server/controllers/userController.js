@@ -3,21 +3,69 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const Post = require("../models/post");
+const HttpError = require("../HttpError");
+
+exports.loginWithGoogle = (req, res, next) => {
+  // console.log("profile data passed from google strategy", req.data);
+  jwt.sign({ id: req.data._id }, "secretkey", (err, token) => {
+    if (err) return next(HttpError.internal("Error when signing JWT."));
+    res.cookie("jwtToken", token, { httpOnly: true });
+    // console.log("token (from google) is ", token);
+    // res.redirect("/success");
+    res.redirect("http://localhost:3000");
+  });
+};
+
+exports.getHomeData = (req, res, next) => {
+  console.log("in getHomeData");
+  jwt.verify(req.jwtToken, "secretkey", (tokenErr, authData) => {
+    if (tokenErr) return next(HttpError.forbidden("JWT verification failed."));
+
+    // query user data based on payload id
+    User.findById(authData.id)
+      .populate("followers following rooms.members.other", "username displayName photoURL")
+      .select("-notifications")
+      .lean()
+      .exec((queryErr, user) => {
+        if (queryErr) return next(HttpError.internal("Database query error."));
+        if (!user) return next(HttpError.internal("Database query error."));
+
+        // query all users, newsfeed, and send back with self-user
+        async.parallel({
+          users: (callback) => {
+            User.find().select("username displayName photoURL").lean().exec(callback);
+          },
+          newsfeed: (callback) => {
+            Post
+              .find({ author: { $in: user.following.concat(user._id) } })
+              .populate("author likes comments.commenter", "username displayName photoURL")
+              .lean()
+              .sort("-createdAt")
+              .exec(callback);
+          },
+        }, (queryErr1, results) => {
+          if (queryErr1) return next(HttpError.internal("Database query error."));
+          res.status(200).json({
+            user, users: results.users, newsfeed: results.newsfeed,
+          });
+        });
+      });
+  });
+};
 
 exports.signupUser = (req, res, next) => {
   const { username, password, fullname } = req.body;
-  const io = req.app.get("socketio");
 
   User.findOne({ username })
     .populate("followers following rooms.members.other", "username displayName photoURL")
     .select("-notifications")
     .lean()
-    .exec((err, user) => {
-      if (err) return next(err);
-      if (user) return res.json({ errorMsg: "The username is already in use by another account." });
+    .exec((queryErr, user) => {
+      if (queryErr) return next(HttpError.internal("Database query error."));
+      if (user) return next(HttpError.badRequest("The username is already in use by another account."));
 
-      bcrypt.hash(password, 10, (err1, hashedPassword) => {
-        if (err1) return res.json({ errorMsg: "Error when hashing your password. Please try again." });
+      bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
+        if (hashErr) return next(HttpError.internal("Error when hashing your password."));
         const user = new User({
           username,
           password: hashedPassword,
@@ -25,16 +73,18 @@ exports.signupUser = (req, res, next) => {
           provider: "local",
         });
 
-        user.save((err2) => {
-          if (err2) return res.json({ errorMsg: "Error when creating your account. Please try again." });
+        user.save((saveErr) => {
+          if (saveErr) return next(HttpError.internal("Error when creating your account."));
 
           // query all users and send back with token and self-user
-          User.find().select("username displayName photoURL").lean().exec((err3, users) => {
-            jwt.sign(user, "secretkey", { expiresIn: 60 * 15 }, (err4, token) => {
+          User.find().select("username displayName photoURL").lean().exec((queryErr1, users) => {
+            if (queryErr1) return next(HttpError.internal("Database query error."));
+            jwt.sign(user, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+              if (err) return next(HttpError.internal("Error when signing JWT."));
               res.cookie("jwtToken", token, { httpOnly: true });
-              console.log("token generated", token);
-              res.json({
-                user, users, newsfeed: [], token,
+              // console.log("token generated", token);
+              res.status(200).json({
+                user, users, newsfeed: [],
               });
             });
           });
@@ -44,7 +94,6 @@ exports.signupUser = (req, res, next) => {
 };
 
 exports.loginUser = (req, res, next) => {
-  const io = req.app.get("socketio");
   const { username, password } = req.body;
   // console.log("req.headers", req.headers);
 
@@ -52,12 +101,13 @@ exports.loginUser = (req, res, next) => {
     .populate("followers following rooms.members.other", "username displayName photoURL")
     .select("-notifications")
     .lean()
-    .exec((err, user) => {
-      if (err) return next(err);
-      if (!user) return res.json({ errorMsg: "The username you entered doesn't belong to an account. Please check your username and try again." });
+    .exec((queryErr, user) => {
+      if (queryErr) return next(HttpError.internal("Database query error."));
+      if (!user) return next(HttpError.badRequest("The username you entered doesn't belong to an account. Please check your username and try again."));
 
-      bcrypt.compare(password, user.password, (err1, response) => {
-        if (!response) return res.json({ errorMsg: "Sorry, your password was incorrect. Please double-check your password." });
+      bcrypt.compare(password, user.password, (pswdErr, response) => {
+        if (pswdErr) return next(HttpError.internal("Error when comparing your password."));
+        if (!response) return next(HttpError.badRequest("Sorry, your password was incorrect. Please double-check your password."));
 
         // query all users, newsfeed, and send back with token and self-user
         async.parallel({
@@ -72,61 +122,19 @@ exports.loginUser = (req, res, next) => {
               .sort("-createdAt")
               .exec(callback);
           },
-        }, (err3, results) => {
-          if (err3) {
-            console.log("error in querying newsfeed");
-          } else {
-            jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err4, token) => {
-              res.cookie("jwtToken", token, { httpOnly: true });
-              console.log("token generated", token);
-              res.json({
-                user, users: results.users, newsfeed: results.newsfeed, token,
-              });
+        }, (queryErr1, results) => {
+          if (queryErr1) return next(HttpError.internal("Database query error."));
+          jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+            if (err) return next(HttpError.internal("Error when signing JWT."));
+            res.cookie("jwtToken", token, { httpOnly: true });
+            // console.log("token generated", token);
+            res.status(200).json({
+              user, users: results.users, newsfeed: results.newsfeed,
             });
-          }
+          });
         });
       });
     });
-};
-
-exports.getHomeData = (req, res, next) => {
-  jwt.verify(req.jwtToken, "secretkey", (err, authData) => {
-    if (err) res.sendStatus(403);
-    else {
-      // query user data based on payload id
-      User.findById(authData.id)
-        .populate("followers following rooms.members.other", "username displayName photoURL")
-        .select("-notifications")
-        .lean()
-        .exec((err1, user) => {
-          if (err1) return res.sendStatus(403);
-          if (!user) return res.sendStatus(403);
-
-          // query all users, newsfeed, and send back with self-user
-          async.parallel({
-            users: (callback) => {
-              User.find().select("username displayName photoURL").lean().exec(callback);
-            },
-            newsfeed: (callback) => {
-              Post
-                .find({ author: { $in: user.following.concat(user._id) } })
-                .populate("author likes comments.commenter", "username displayName photoURL")
-                .lean()
-                .sort("-createdAt")
-                .exec(callback);
-            },
-          }, (err3, results) => {
-            if (err3) {
-              console.log("error in querying newsfeed");
-            } else {
-              res.json({
-                user, users: results.users, newsfeed: results.newsfeed,
-              });
-            }
-          });
-        });
-    }
-  });
 };
 
 exports.getUserProfile = (req, res, next) => {
@@ -136,8 +144,8 @@ exports.getUserProfile = (req, res, next) => {
     .select("-password -rooms -unreadChatNotifs -unreadNotifs -notifications")
     .lean()
     .exec((err, data) => {
-      if (err) return res.json({ errorMsg: "Error when retrieving this user's profile. No user found" });
-      return res.json(data);
+      if (err) return next(HttpError.notFound("Error when retrieving this user's profile. No user found."));
+      return res.status(200).json(data);
     });
 };
 
@@ -150,13 +158,14 @@ exports.updateUserProfile = (req, res, next) => {
       username, photoURL, displayName, bio,
     },
   }, (err) => {
-    if (err) return res.json({ errorMsg: "Error when editing profile. Please try again later!" });
-    return res.json({ successMsg: "Edited profile!" });
+    if (err) return next(HttpError.internal("Error when editing profile. Please try again later."));
+    return res.sendStatus(200);
   });
 };
 
-exports.handleFollowToggle = (req, res, next) => {
-  const { type, selfId, otherId } = req.body;
+exports.handleUserFollow = (req, res, next) => {
+  const { type, otherId } = req.body;
+  const selfId = req.params._id;
   const io = req.app.get("socketio");
 
   if (type === "follow") {
@@ -170,15 +179,15 @@ exports.handleFollowToggle = (req, res, next) => {
         to: otherId,
         type: "follow",
       });
-      user.save((err1) => {
-        if (err1) return res.json({ errorMsg: "Error when handling follow toggle." });
+      user.save((saveErr) => {
+        if (saveErr) return next(HttpError.internal("Error when handling follow toggle."));
         // if success, do waterfall updates
         async.waterfall([
           // update self's following
           function (callback) {
-            User.findByIdAndUpdate(selfId, { $push: { following: otherId } }, { new: true }, (err, updatedUser) => {
-              if (err) return err;
-              callback(null, updatedUser);
+            User.findByIdAndUpdate(selfId, { $push: { following: otherId } }, { new: true }, (queryErr, updatedUser) => {
+              if (queryErr) callback(queryErr);
+              else callback(null, updatedUser);
             });
           },
           // update newsfeed in frontend
@@ -188,12 +197,13 @@ exports.handleFollowToggle = (req, res, next) => {
               .populate("author likes comments.commenter", "username displayName photoURL")
               .lean()
               .sort("-createdAt")
-              .exec((err, newsfeed) => {
-                callback(null, newsfeed);
+              .exec((queryErr, newsfeed) => {
+                if (queryErr) callback(queryErr);
+                else callback(null, newsfeed);
               });
           },
-        ], (err2, newsfeed) => {
-          if (err2) return res.json({ errorMsg: "Error when handling follow toggle/querying newsfeed upon change in following list." });
+        ], (queryErr, newsfeed) => {
+          if (queryErr) return next(HttpError.internal("Error when handling follow toggle/querying newsfeed upon change in following list."));
           io.emit("newsfeedChange", { refreshedNewsfeed: newsfeed, for: selfId });
         });
       });
@@ -209,7 +219,7 @@ exports.handleFollowToggle = (req, res, next) => {
         User.findByIdAndUpdate(otherId, { $pull: { followers: selfId } }, callback);
       },
     ], (err) => {
-      if (err) return res.json({ errorMsg: "Error when handling follow toggle." });
+      if (err) return next(HttpError.internal("Error when handling follow toggle."));
       io.emit("newsfeedChange", { removedPostsOf: otherId, for: selfId });
     });
   }
@@ -222,29 +232,29 @@ exports.getUserNotifications = (req, res, next) => {
     .select("notifications")
     .lean()
     .exec((err, data) => {
-      if (err) return res.json({ errorMsg: "Error when retrieving this user's notifications." });
-      return res.json(data.notifications);
+      if (err) return next(HttpError.internal("Error when retrieving this user's notifications."));
+      return res.status(200).json(data.notifications);
     });
 };
 
 exports.updateUserNotifications = (req, res, next) => {
-  console.log("req.body", req.body);
-  console.log("req.params._id", req.params._id);
+  // console.log("req.body", req.body);
+  // console.log("req.params._id", req.params._id);
   if (req.body.type === "chat") {
     User
-      .findByIdAndUpdate(req.params._id, { unreadChatNotifs: 0 }, (err, results) => {
+      .findByIdAndUpdate(req.params._id, { unreadChatNotifs: 0 }, (err) => {
         // console.log(err, ".....", results);
-        if (err) return res.json({ errorMsg: "Error when updating chat notifications." });
-        console.log("returning success for type CHAT");
-        return res.json({ successMsg: "reset notifs!" });
+        if (err) return next(HttpError.internal("Error when updating chat notifications."));
+        // console.log("returning success for type CHAT");
+        return res.sendStatus(200);
       });
   } else {
     User
-      .findByIdAndUpdate(req.params._id, { unreadNotifs: 0 }, (err, results) => {
+      .findByIdAndUpdate(req.params._id, { unreadNotifs: 0 }, (err) => {
         // console.log(err, ".....", results);
-        if (err) return res.json({ errorMsg: "Error when updating notifications." });
-        console.log("returning success for type NONE");
-        return res.json({ successMsg: "reset notifs!" });
+        if (err) return next(HttpError.internal("Error when updating notifications."));
+        // console.log("returning success for type NONE");
+        return res.sendStatus(200);
       });
   }
 };

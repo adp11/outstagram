@@ -18,7 +18,7 @@
         "react",
         "only-warn"
     ],
-    
+
     "rules": {
         "max-len": "off",
         "linebreak-style": "off",
@@ -27,6 +27,7 @@
         "quotes": [2, "double", { "avoidEscape": true }],
         "no-nested-ternary": "off",
         "no-underscore-dangle": "off",
-        "no-alert": "off"
+        "no-alert": "off",
+        "no-use-before-define": "off"
     }
 }

@@ -72,28 +72,6 @@ function LoginForm() {
 
   function logInProvider() {
     window.open("http://localhost:4000/login/google", "_self");
-    // const options = {
-    //   method: "GET",
-    //   mode: "cors",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // };
-
-    // fetch("http://localhost:4000/login/google", options)
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log("data from server", data);
-
-    //     // if (/^\/p\//.test(window.location.pathname)) {
-    //     //   setIsFullPostActive(true);
-    //     //   setIsFullPostByLink(true);
-    //     // }
-    //     // setUserDataHelper(data.user);
-    //     // setAllUserData(data.users);
-    //     // setNewsfeedHelper(data.newsfeed);
-    //     // setIsLoggedIn(true);
-    //   });
   }
 
   return (
@@ -118,10 +96,8 @@ function LoginForm() {
         <div className="grey bold">OR</div>
         {/* eslint-disable-next-line */}
         <div className="login-provider grey bold" onClick={logInProvider}>
-          {/* <a href="http://localhost:4000/login/google"> */}
           <img src={`${window.location.origin}/images/google.png`} alt="google icon" style={{ width: "20px", height: "20px" }} />
           Log in with Google
-          {/* </a> */}
         </div>
       </div>
       <div className="signup-box">

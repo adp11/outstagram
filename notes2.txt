@@ -40,11 +40,11 @@
 
 
 check all features/ real app flow rigorous test with 3 users - DONE
-clean up server and notice error handle logic
+add jwt - DONE
+add GoogleAuth - DONE
+check backend design, API principles, error handle logic
 check socket/real time stuff (stuff that got added later)
-add jwt
-add GoogleAuth
-check backend design
+
 deploy/production (heroku, backend compatible (port, URL), firebase/mongo refresh, .env)
 presentation (on Github, on URL itself, on personal website, demo/visitor's perspective)
 remove unused npm pkgs to be lightweight
