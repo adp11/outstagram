@@ -6,7 +6,7 @@ const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 
 function LoginForm() {
   const {
-    darkMode, setIsLoggedIn, setIsFullPostActive, setIsFullPostByLink, setUserDataHelper, setAllUserData, setNewsfeedHelper,
+    darkMode, setIsLoggedIn, setIsFullPostActive, setIsFullPostByLink, setUserDataHelper, setAllUserData, setNewsfeedHelper, setJwtChecked,
   } = useContext(UserContext);
   const { setIsLoginFormActive } = useContext(AuthContext);
 
@@ -26,22 +26,22 @@ function LoginForm() {
     "Sorry, your password was incorrect. Please double-check your password.",
   ];
 
-  const options = {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      username: userAuthInfo.username,
-      password: userAuthInfo.password,
-    }),
-  };
-
   function loginEmailPassword(e) {
+    const options = {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        username: userAuthInfo.username,
+        password: userAuthInfo.password,
+      }),
+    };
+
     e.preventDefault();
     setIsLoading(true);
-
     fetch("http://localhost:4000/login", options)
       .then((response) => response.json())
       .then((data) => {
@@ -64,9 +64,36 @@ function LoginForm() {
           setAllUserData(data.users);
           setNewsfeedHelper(data.newsfeed);
           setIsLoggedIn(true);
+          setJwtChecked(true);
         }
         setIsLoading(false);
       });
+  }
+
+  function logInProvider() {
+    window.open("http://localhost:4000/login/google", "_self");
+    // const options = {
+    //   method: "GET",
+    //   mode: "cors",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // };
+
+    // fetch("http://localhost:4000/login/google", options)
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log("data from server", data);
+
+    //     // if (/^\/p\//.test(window.location.pathname)) {
+    //     //   setIsFullPostActive(true);
+    //     //   setIsFullPostByLink(true);
+    //     // }
+    //     // setUserDataHelper(data.user);
+    //     // setAllUserData(data.users);
+    //     // setNewsfeedHelper(data.newsfeed);
+    //     // setIsLoggedIn(true);
+    //   });
   }
 
   return (
@@ -90,10 +117,12 @@ function LoginForm() {
 
         <div className="grey bold">OR</div>
         {/* eslint-disable-next-line */}
-        {/* <div onClick={logInProvider} className="login-provider grey bold">
+        <div className="login-provider grey bold" onClick={logInProvider}>
+          {/* <a href="http://localhost:4000/login/google"> */}
           <img src={`${window.location.origin}/images/google.png`} alt="google icon" style={{ width: "20px", height: "20px" }} />
           Log in with Google
-        </div> */}
+          {/* </a> */}
+        </div>
       </div>
       <div className="signup-box">
         Don't have an account?

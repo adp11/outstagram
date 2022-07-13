@@ -29,7 +29,7 @@ const RoomInfoSchema = new Schema(
 const UserSchema = new Schema(
   {
     username: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String },
     displayName: { type: String, required: true },
 
     followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
@@ -42,6 +42,9 @@ const UserSchema = new Schema(
     bio: { type: String, default: "" },
     unreadChatNotifs: { type: Number, min: 0, default: 0 },
     unreadNotifs: { type: Number, min: 0, default: 0 },
+
+    provider: { type: String, required: true, enum: ["google", "local"] },
+    providerId: { type: String },
   },
 );
 

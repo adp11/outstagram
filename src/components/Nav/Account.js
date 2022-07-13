@@ -6,7 +6,7 @@ const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
 
 function Account() {
   const {
-    userData, darkMode, setIsLoggedIn, setVisitedUserDataHelper, setIsProfilePageNotFoundActive, setDarkMode,
+    userData, darkMode, setIsLoggedIn, setVisitedUserDataHelper, setIsProfilePageNotFoundActive, setDarkMode, setJwtChecked,
   } = useContext(UserContext);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const navigate = useNavigate();
@@ -30,6 +30,7 @@ function Account() {
   function logOut() {
     setIsDropdownActive(!isDropdownActive);
     setIsLoggedIn(false);
+    setJwtChecked(false);
     navigate("/");
   }
 

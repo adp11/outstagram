@@ -17,6 +17,7 @@ import PageNotFound from "./components/PageNotFound";
 import LikeList from "./components/Popups/LikeList";
 import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
+import WaitingPage from "./components/WaitingPage";
 
 function App() {
   // bool states
@@ -35,6 +36,7 @@ function App() {
   const [isFullImageActive, setIsFullImageActive] = useState(false);
   const [isFullPostByLink, setIsFullPostByLink] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [jwtChecked, setJwtChecked] = useState(null);
 
   // data states (some states need to reset before unmounting/closing to prevent subtle bugs that later involve reference to those states' value)
   const [userData, setUserData] = useState(null);
@@ -84,10 +86,46 @@ function App() {
 
   const providerValue = useMemo(
     () => ({
-      socketRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode, setNewsfeedHelper, setUserDataHelper, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode,
+      socketRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode, setNewsfeedHelper, setUserDataHelper, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode, setJwtChecked,
     }),
     [userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode],
   );
+
+  useEffect(() => {
+    function getHomeData() {
+      const options = {
+        method: "get",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      };
+
+      fetch("http://localhost:4000/", options)
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("data.user.photoURL", data.user.photoURL);
+          setUserDataHelper(data.user);
+          setAllUserData(data.users);
+          setNewsfeedHelper(data.newsfeed);
+          setIsLoggedIn(true);
+          setJwtChecked(true);
+        })
+        .catch((error) => {
+          console.log("Error:", error);
+          setJwtChecked(false);
+        });
+    }
+
+    console.log("how many times auto login?");
+    getHomeData();
+    // handle access full post by link (not navigation)
+    if (/^\/p\//.test(window.location.pathname)) {
+      setIsFullPostActive(true);
+      setIsFullPostByLink(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -120,7 +158,6 @@ function App() {
         4. If new posts added to db, set() by adding if those's authors ... (last "else if")
       */
         socketRef.current.on("newsfeedChange", (data) => {
-          console.log("newsfeedChange", data);
           if (data.removedPostId) {
             setNewsfeedHelper(newsfeedRef.current.filter((post) => post._id !== data.removedPostId));
           } else if (data.for === userDataRef.current._id) { // first half
@@ -193,9 +230,11 @@ function App() {
               top: (isAddPostActive || isEditProfileActive || isFullPostActive || isLikeListActive || (isFollowListActive.followers || isFollowListActive.following)) && `-${scrollY.current}px`,
             }}
           >
-            {!isLoggedIn && <Auth />}
-            {isLoggedIn && <Nav />}
-            {isLoggedIn && (
+
+            {(!isLoggedIn && jwtChecked === false) && <Auth />}
+            {(!isLoggedIn && jwtChecked === null) && <WaitingPage />}
+            {(isLoggedIn && jwtChecked) && <Nav />}
+            {(isLoggedIn && jwtChecked) && (
             <Routes>
               {/* eslint-disable-next-line */}
               <Route path="/" element={(<><Newsfeed /><ProfilePreview /></>)} />

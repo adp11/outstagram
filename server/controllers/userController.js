@@ -22,26 +22,20 @@ exports.signupUser = (req, res, next) => {
           username,
           password: hashedPassword,
           displayName: fullname,
-          followers: [],
-          following: [],
-          rooms: [],
+          provider: "local",
         });
 
         user.save((err2) => {
           if (err2) return res.json({ errorMsg: "Error when creating your account. Please try again." });
 
-          io.on("connection", (socket) => {
-            console.log("new connection between 1 client and 1 socketId", socket.id);
-            socket.on("disconnect", () => {
-              console.log("close connection (client did)", socket.id);
-            });
-          });
-
           // query all users and send back with token and self-user
           User.find().select("username displayName photoURL").lean().exec((err3, users) => {
-            jwt.sign(user, "secretkey", (err4, token) => {
+            jwt.sign(user, "secretkey", { expiresIn: 60 * 15 }, (err4, token) => {
               res.cookie("jwtToken", token, { httpOnly: true });
-              res.json({ user, users, newsfeed: [] });
+              console.log("token generated", token);
+              res.json({
+                user, users, newsfeed: [], token,
+              });
             });
           });
         });
@@ -52,6 +46,7 @@ exports.signupUser = (req, res, next) => {
 exports.loginUser = (req, res, next) => {
   const io = req.app.get("socketio");
   const { username, password } = req.body;
+  // console.log("req.headers", req.headers);
 
   User.findOne({ username })
     .populate("followers following rooms.members.other", "username displayName photoURL")
@@ -63,13 +58,6 @@ exports.loginUser = (req, res, next) => {
 
       bcrypt.compare(password, user.password, (err1, response) => {
         if (!response) return res.json({ errorMsg: "Sorry, your password was incorrect. Please double-check your password." });
-
-        io.on("connection", (socket) => {
-          console.log("new connection between 1 client and 1 socketId", socket.id);
-          socket.on("disconnect", () => {
-            console.log("close connection (client did)", socket.id);
-          });
-        });
 
         // query all users, newsfeed, and send back with token and self-user
         async.parallel({
@@ -88,14 +76,57 @@ exports.loginUser = (req, res, next) => {
           if (err3) {
             console.log("error in querying newsfeed");
           } else {
-            jwt.sign(user, "secretkey", (err4, token) => {
-              res.cookie("token", token, { httpOnly: true });
-              res.json({ user, users: results.users, newsfeed: results.newsfeed });
+            jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err4, token) => {
+              res.cookie("jwtToken", token, { httpOnly: true });
+              console.log("token generated", token);
+              res.json({
+                user, users: results.users, newsfeed: results.newsfeed, token,
+              });
             });
           }
         });
       });
     });
+};
+
+exports.getHomeData = (req, res, next) => {
+  jwt.verify(req.jwtToken, "secretkey", (err, authData) => {
+    if (err) res.sendStatus(403);
+    else {
+      // query user data based on payload id
+      User.findById(authData.id)
+        .populate("followers following rooms.members.other", "username displayName photoURL")
+        .select("-notifications")
+        .lean()
+        .exec((err1, user) => {
+          if (err1) return res.sendStatus(403);
+          if (!user) return res.sendStatus(403);
+
+          // query all users, newsfeed, and send back with self-user
+          async.parallel({
+            users: (callback) => {
+              User.find().select("username displayName photoURL").lean().exec(callback);
+            },
+            newsfeed: (callback) => {
+              Post
+                .find({ author: { $in: user.following.concat(user._id) } })
+                .populate("author likes comments.commenter", "username displayName photoURL")
+                .lean()
+                .sort("-createdAt")
+                .exec(callback);
+            },
+          }, (err3, results) => {
+            if (err3) {
+              console.log("error in querying newsfeed");
+            } else {
+              res.json({
+                user, users: results.users, newsfeed: results.newsfeed,
+              });
+            }
+          });
+        });
+    }
+  });
 };
 
 exports.getUserProfile = (req, res, next) => {

@@ -4,7 +4,7 @@ import UserContext from "./Contexts/UserContext";
 
 function ProfilePreview() {
   const {
-    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo, setVisitedUserDataHelper, setIsProfilePageNotFoundActive,
+    userData, setIsLoggedIn, scrollY, setIsFollowListActive, setFollowListInfo, setVisitedUserDataHelper, setIsProfilePageNotFoundActive, setJwtChecked,
   } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -47,7 +47,7 @@ function ProfilePreview() {
           <div className="medium bold cut1">{userData.username}</div>
           <div className="medium grey">{userData.displayName}</div>
         </div>
-        <div className="logout-shortcut" onClick={() => { setIsLoggedIn(false); }}>
+        <div className="logout-shortcut" onClick={() => { setIsLoggedIn(false); setJwtChecked(false); }}>
           Log out
         </div>
       </div>

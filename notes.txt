@@ -91,12 +91,6 @@ make UI clean - DONE
 project presentation on Github for resume (folder structure, readme)
 hosting service (netlify)
 
-after backend:
-add more realtime listening, less dependent on client data/frontend update logic - DONE
-1st quick real app flow test
-select what to public/hide
-rigorous manual testing again
-remove unused npm pkgs to be lightweight
 
                                         TRIVIAL/IGNORED/NOT IMPLEMENTED:
 add post small image container resize 
@@ -116,12 +110,16 @@ could've added more realtime listening for remote db (e.g. userData, allUserData
 could've added limit, orderBy in Firebase but please notice a) detachments/memory leaks and b) potential realtime listening bug (e.g. when adding) (because only a set number of items inside the collection is being listened, but not the entire collection)
 could've made styling rules more organized and systematic
 
---backend
-could've used async/await more and avoided callback hell
-could've handled errors more properly
-could've been more conditional/specific when emitting realtime data from backend (both for userDataChange and newsfeedChange). could've not used mongodb change stream at all; io.emit after operations in controllers
-could've chosen what fields to load and leave when fetching (only load data that are needed/clicked)
-could've been more thoughtful for querying
 
 code clean while building (don't EVER save for later)
-avoid long breaks (10+ days) at all costs 
+avoid long breaks (10+ days) at all costs
+
+                                        NOTES ABOUT BACKEND:
+could've used async/await more and avoided callback hell
+could've handled errors more properly (visual feedback + server response)
+could've been more conditional/specific when could've not used mongodb change stream at all; io.emit after certain operations in controllers (less generic, less emits, less logic work on frontend, more optimized). should've used socket rooms
+could've chosen what fields to load and leave when fetching (only load data that are needed/clicked)
+could've been more thoughtful for querying
+now feel the need for writing tests and explaining complex code blocks
+delete token when loggging out (set to 1970)
+

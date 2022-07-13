@@ -187,6 +187,7 @@ function FullPost() {
   }
 
   useEffect(() => {
+    console.log("in full post");
     function escape(e) {
       if (e.key === "Escape") {
         setIsFullPostActive(false);
@@ -211,6 +212,7 @@ function FullPost() {
       fetch(`http://localhost:4000/posts/${params.postId}`, options)
         .then((response) => response.json())
         .then((data) => {
+          console.log("fullpsot data", data);
           if (data.errorMsg) {
             setIsFullPostActive(false);
             setIsPostPageNotFoundActive(true);
