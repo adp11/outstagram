@@ -83,7 +83,6 @@ function App() {
   }
 
   const socketRef = useRef(null);
-
   const providerValue = useMemo(
     () => ({
       socketRef, userData, allUserData, newsfeed, visitedUserData, beforeFullPost, fullPostInfo, likeListInfo, followListInfo, isLikeListActive, isFollowListActive, isFullPostActive, isFullPostByLink, isSearchChatActive, scrollY, isFullImageActive, darkMode, setNewsfeedHelper, setUserDataHelper, setIsLoggedIn, setIsAddPostActive, setIsEditProfileActive, setVisitedUserDataHelper, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, setAllUserData, setLikeListInfo, setIsLikeListActive, setFollowListInfo, setIsFollowListActive, setIsProfilePageNotFoundActive, setIsPostPageNotFoundActive, setIsFullPostByLink, setIsSearchChatActive, setIsFullImageActive, setDarkMode, setJwtChecked,
@@ -103,17 +102,28 @@ function App() {
       };
 
       fetch("http://localhost:4000/", options)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
-          console.log("data.user.photoURL", data.user.photoURL);
+          console.log("data from json()", data);
+          if (/^\/p\//.test(window.location.pathname)) {
+            setIsFullPostActive(true);
+            setIsFullPostByLink(true);
+          }
           setUserDataHelper(data.user);
           setAllUserData(data.users);
           setNewsfeedHelper(data.newsfeed);
           setIsLoggedIn(true);
           setJwtChecked(true);
         })
-        .catch((error) => {
-          console.log("Error:", error);
+        .catch((err) => {
+          console.log("error happened in catch", err.message);
           setJwtChecked(false);
         });
     }
@@ -121,10 +131,6 @@ function App() {
     console.log("how many times auto login?");
     getHomeData();
     // handle access full post by link (not navigation)
-    if (/^\/p\//.test(window.location.pathname)) {
-      setIsFullPostActive(true);
-      setIsFullPostByLink(true);
-    }
   }, []);
 
   useEffect(() => {

@@ -129,7 +129,7 @@ exports.addMessage = (req, res, next) => {
         if (populateErr) return next(HttpError.internal("Error when adding message."));
         // console.log("emit many times?");
         io.emit("messaging", { populatedRoom, to });
-        return res.sendStatus(200);
+        return res.status(200).json("Success");
       });
     });
   });
@@ -159,6 +159,6 @@ exports.deleteRoom = (req, res, next) => {
     },
   ], (err) => {
     if (err) return next(HttpError.notFound("Error when deleting room."));
-    return res.sendStatus(200);
+    return res.status(200).json("Success");
   });
 };

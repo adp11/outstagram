@@ -18,6 +18,7 @@ function LikeList() {
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           type: "unfollow",
           otherId: followId,
@@ -37,8 +38,21 @@ function LikeList() {
       };
     }
     fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
-      .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
+      });
   }
 
   function handleCloseFullPost() {
@@ -75,17 +89,26 @@ function LikeList() {
         },
       };
       fetch(`http://localhost:4000/users/${_id}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) {
-            setIsProfilePageNotFoundActive(true);
-            navigate(`/u/${_id}`);
-          } else {
-            setIsLikeListActive(false);
-            setLikeListInfo({});
-            setVisitedUserDataHelper(data);
-            navigate(`/u/${_id}`);
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setIsLikeListActive(false);
+          setLikeListInfo({});
+          setVisitedUserDataHelper(data);
+          navigate(`/u/${_id}`);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setIsProfilePageNotFoundActive(true);
+          navigate(`/u/${_id}`);
+          alert(err.message);
         });
     }
   }

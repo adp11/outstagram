@@ -19,7 +19,7 @@ exports.addPost = (req, res, next) => {
 
     User.findByIdAndUpdate(req.body.author, { $push: { postSnippets: postSnippet } }, (queryErr) => {
       if (queryErr) return next(HttpError.internal("Database query error."));
-      return res.sendStatus(200);
+      return res.status(200).json("Success");
     });
   });
 };
@@ -51,7 +51,7 @@ exports.deletePost = (req, res, next) => {
     },
   ], (err) => {
     if (err) return next(HttpError.internal("Error when deleting post."));
-    return res.sendStatus(200);
+    return res.status(200).json("Success");
   });
 };
 
@@ -76,7 +76,7 @@ exports.updatePostLikes = (req, res, next) => {
       },
     ], (err) => {
       if (err) return next(HttpError.internal("Error when handling like toggle."));
-      return res.sendStatus(200);
+      return res.status(200).json("Success");
     });
   } else if (type === "like" && isSelfLike) {
     async.parallel([
@@ -94,7 +94,7 @@ exports.updatePostLikes = (req, res, next) => {
       },
     ], (err) => {
       if (err) return next(HttpError.internal("Error when handling like toggle."));
-      return res.sendStatus(200);
+      return res.status(200).json("Success");
     });
   } else if (type === "like" && !isSelfLike) {
     async.parallel([
@@ -122,7 +122,7 @@ exports.updatePostLikes = (req, res, next) => {
       },
     ], (err) => {
       if (err) return next(HttpError.internal("Error when handling like toggle."));
-      return res.sendStatus(200);
+      return res.status(200).json("Success");
     });
   }
 };
@@ -152,7 +152,7 @@ exports.updatePostComments = (req, res, next) => {
         },
       ], (queryErr) => {
         if (queryErr) return next(HttpError.internal("Error when adding your comment"));
-        return res.sendStatus(200);
+        return res.status(200).json("Success");
       });
     } else {
       async.parallel([
@@ -176,14 +176,14 @@ exports.updatePostComments = (req, res, next) => {
               });
               user.save((saveErr) => {
                 if (saveErr) return next(HttpError.internal("Error when adding your comment."));
-                return res.sendStatus(200);
+                return res.status(200).json("Success");
               });
             },
           );
         },
       ], (queryErr1) => {
         if (queryErr1) return next(HttpError.internal("Error when adding your comment."));
-        return res.sendStatus(200);
+        return res.status(200).json("Success");
       });
     }
   });

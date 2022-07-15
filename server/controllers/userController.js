@@ -7,7 +7,7 @@ const HttpError = require("../HttpError");
 
 exports.loginWithGoogle = (req, res, next) => {
   // console.log("profile data passed from google strategy", req.data);
-  jwt.sign({ id: req.data._id }, "secretkey", (err, token) => {
+  jwt.sign({ id: req.data._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
     if (err) return next(HttpError.internal("Error when signing JWT."));
     res.cookie("jwtToken", token, { httpOnly: true });
     // console.log("token (from google) is ", token);
@@ -28,7 +28,7 @@ exports.getHomeData = (req, res, next) => {
       .lean()
       .exec((queryErr, user) => {
         if (queryErr) return next(HttpError.internal("Database query error."));
-        if (!user) return next(HttpError.internal("Database query error."));
+        if (!user) return next(HttpError.notFound("User authentication failed."));
 
         // query all users, newsfeed, and send back with self-user
         async.parallel({
@@ -79,7 +79,7 @@ exports.signupUser = (req, res, next) => {
           // query all users and send back with token and self-user
           User.find().select("username displayName photoURL").lean().exec((queryErr1, users) => {
             if (queryErr1) return next(HttpError.internal("Database query error."));
-            jwt.sign(user, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+            jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
               if (err) return next(HttpError.internal("Error when signing JWT."));
               res.cookie("jwtToken", token, { httpOnly: true });
               // console.log("token generated", token);
@@ -106,7 +106,7 @@ exports.loginUser = (req, res, next) => {
       if (!user) return next(HttpError.badRequest("The username you entered doesn't belong to an account. Please check your username and try again."));
 
       bcrypt.compare(password, user.password, (pswdErr, response) => {
-        if (pswdErr) return next(HttpError.internal("Error when comparing your password."));
+        if (pswdErr) return next(HttpError.badRequest("Sorry, your password was incorrect. Please double-check your password."));
         if (!response) return next(HttpError.badRequest("Sorry, your password was incorrect. Please double-check your password."));
 
         // query all users, newsfeed, and send back with token and self-user
@@ -159,7 +159,7 @@ exports.updateUserProfile = (req, res, next) => {
     },
   }, (err) => {
     if (err) return next(HttpError.internal("Error when editing profile. Please try again later."));
-    return res.sendStatus(200);
+    return res.status(200).json("Success");
   });
 };
 
@@ -205,7 +205,7 @@ exports.updateUserFollows = (req, res, next) => {
         ], (queryErr, newsfeed) => {
           if (queryErr) return next(HttpError.internal("Error when handling follow toggle/querying newsfeed upon change in following list."));
           io.emit("newsfeedChange", { refreshedNewsfeed: newsfeed, for: selfId });
-          return res.sendStatus(200);
+          return res.status(200).json("Success");
         });
       });
     });
@@ -222,7 +222,7 @@ exports.updateUserFollows = (req, res, next) => {
     ], (err) => {
       if (err) return next(HttpError.internal("Error when handling follow toggle."));
       io.emit("newsfeedChange", { removedPostsOf: otherId, for: selfId });
-      return res.sendStatus(200);
+      return res.status(200).json("Success");
     });
   }
 };
@@ -248,7 +248,7 @@ exports.updateUserNotifications = (req, res, next) => {
         // console.log(err, ".....", results);
         if (err) return next(HttpError.internal("Error when updating chat notifications."));
         // console.log("returning success for type CHAT");
-        return res.sendStatus(200);
+        return res.status(200).json("Success");
       });
   } else {
     User
@@ -256,7 +256,7 @@ exports.updateUserNotifications = (req, res, next) => {
         // console.log(err, ".....", results);
         if (err) return next(HttpError.internal("Error when updating notifications."));
         // console.log("returning success for type NONE");
-        return res.sendStatus(200);
+        return res.status(200).json("Success");
       });
   }
 };

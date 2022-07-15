@@ -24,10 +24,21 @@ function Nav() {
         }),
       };
       fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
-          if (data.errorMsg) alert(data.errorMsg);
-          else console.log("reset unreadChatNotifs to 0");
+          console.log("data from json()", data);
+          console.log("reset unreadChatNotifs to 0");
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          alert(err.message);
         });
     }
   }

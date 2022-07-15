@@ -46,14 +46,18 @@ function SearchChat() {
       }),
     };
     fetch("http://localhost:4000/rooms", options)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
-        if (data.errorMsg) {
-          alert(data.errorMsg);
-          setIsLoading(false);
-          setIsSearchChatActive(false);
-        } else if (data.justCreated) {
-          // update activeRoomList by pushing
+        console.log("data from json()", data);
+        if (data.justCreated) {
+        // update activeRoomList by pushing
           const tempActiveRoomList = [...activeRoomList];
           tempActiveRoomList.unshift({
             _id: data._id,
@@ -78,7 +82,7 @@ function SearchChat() {
           setIsLoading(false);
           navigate(`/r/${data._id}`);
         } else if (!data.justCreated) {
-          // update activeRoomList by replacing
+        // update activeRoomList by replacing
           const tempActiveRoomList = [...activeRoomList];
           const toBeRemoved = tempActiveRoomList.findIndex((room) => room._id === data._id);
           const theRoom = tempActiveRoomList[toBeRemoved];
@@ -101,6 +105,12 @@ function SearchChat() {
           setIsLoading(false);
           navigate(`/r/${data._id}`);
         }
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        setIsLoading(false);
+        setIsSearchChatActive(false);
+        alert(err.message);
       });
   }
 

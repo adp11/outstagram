@@ -54,12 +54,21 @@ function Newsfeed() {
       };
 
       fetch(`http://localhost:4000/posts/${postInfo._id}/comments`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) alert(data.errorMsg);
-          else {
-            setPostComments({ ...postComments, [postInfo._id]: "" });
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setPostComments({ ...postComments, [postInfo._id]: "" });
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          alert(err.message);
         });
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -98,8 +107,21 @@ function Newsfeed() {
       };
     }
     fetch(`http://localhost:4000/posts/${postInfo._id}/likes`, options)
-      .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
+      });
   }
 
   function handleVisitProfile(_id) {
@@ -115,15 +137,24 @@ function Newsfeed() {
         },
       };
       fetch(`http://localhost:4000/users/${_id}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) {
-            setIsProfilePageNotFoundActive(true);
-            navigate(`/u/${_id}`);
-          } else {
-            setVisitedUserDataHelper(data);
-            navigate(`/u/${_id}`);
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setVisitedUserDataHelper(data);
+          navigate(`/u/${_id}`);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setIsProfilePageNotFoundActive(true);
+          navigate(`/u/${_id}`);
+          alert(err.message);
         });
     }
   }

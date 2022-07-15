@@ -52,13 +52,22 @@ function AddPost() {
         };
 
         fetch("http://localhost:4000/posts", options)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.errorMsg) {
-              setAddPostError(data.errorMsg);
-            } else {
-              setIsAddPostActive(false);
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then(({ message }) => {
+                throw new Error(message || response.status);
+              });
             }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("data from json()", data);
+            setIsAddPostActive(false);
+          })
+          .catch((err) => {
+            console.log("error happened in catch", err);
+            setAddPostError(err.message);
+            alert(err.message);
           });
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);

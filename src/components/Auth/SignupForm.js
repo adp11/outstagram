@@ -20,7 +20,7 @@ function SignupForm() {
     username: "",
   });
 
-  const errorMsgs = [
+  const errorMessages = [
     "The username is already in use by another account.",
     "Error when hashing your password. Please try again.",
     "Error when creating your account. Please try again.",
@@ -44,20 +44,33 @@ function SignupForm() {
     setIsLoading(true);
 
     fetch("http://localhost:4000/signup", options)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
-        if (errorMsgs.indexOf(data.errorMsg) > -1) {
-          setSignUpError(errorMsgs[errorMsgs.indexOf(data.errorMsg)]);
+        console.log("data from json()", data);
+        if (/^\/p\//.test(window.location.pathname)) {
+          setIsFullPostActive(true);
+          setIsFullPostByLink(true);
+        }
+        setUserDataHelper(data.user);
+        setAllUserData(data.users);
+        setNewsfeedHelper(data.newsfeed);
+        setIsLoggedIn(true);
+        setJwtChecked(true);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        if (errorMessages.indexOf(err.message) > -1) {
+          setSignUpError(errorMessages[errorMessages.indexOf(err.message)]);
         } else {
-          if (/^\/p\//.test(window.location.pathname)) {
-            setIsFullPostActive(true);
-            setIsFullPostByLink(true);
-          }
-          setUserDataHelper(data.user);
-          setAllUserData(data.users);
-          setNewsfeedHelper(data.newsfeed);
-          setIsLoggedIn(true);
-          setJwtChecked(true);
+          alert(err.message);
         }
         setIsLoading(false);
       });

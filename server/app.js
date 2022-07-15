@@ -50,9 +50,7 @@ app.use(passport.initialize());
 // User controllers
 app.get("/login/google", passport.authenticate("google", { scope: ["email", "profile"], session: false }));
 app.get("/google/callback", passport.authenticate("google", { failureRedirect: "/googleLoginFailure", session: false }), loginWithGoogle);
-app.get("/googleLoginFailure", (req, res) => {
-  res.status(500).send("<h1>Google Login Failure</h1>");
-});
+app.get("/googleLoginFailure", (req, res) => res.status(500).send("<h1>Google Login Failure</h1>"));
 
 app.get("/", extractToken, getHomeData);
 app.post("/signup", signupUser);
@@ -107,11 +105,12 @@ app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
+  // console.log("err passed from somewhere above", err);
   if (err instanceof HttpError) {
-    return res.status(err.code).json({ errorMessage: err.message });
+    return res.status(err.code).json({ message: err.message });
   }
 
-  return res.status(503).json({ errorMessage: "Something went wrong" });
+  return res.status(503).json({ message: "Something went wrong" });
 });
 
 // Port and server setup
@@ -142,16 +141,16 @@ const userChangeStream = User.watch().on("change", (data) => {
       .populate("followers following rooms.members.other", "username displayName photoURL")
       .select("-notifications")
       .lean()
-      .exec((err3, populatedData) => {
-        if (err3) console.log("cannot retrieve existing user upon user data change");
+      .exec((err, populatedData) => {
+        if (err) console.log("cannot retrieve existing user upon user data change");
         else io.emit("userDataChange", { user: populatedData });
       });
   } else if (data.operationType === "insert") { // change because there's new user
     User.findById(data.documentKey._id)
       .select("username displayName photoURL")
       .lean()
-      .exec((err3, data) => {
-        if (err3) console.log("cannot retrieve new user upon user data change");
+      .exec((err) => {
+        if (err) console.log("cannot retrieve new user upon user data change");
         else io.emit("userDataChange", { addedUser: data });
       });
   }
@@ -165,8 +164,8 @@ const postChangeStream = Post.watch().on("change", (data) => {
     Post.findById(data.documentKey._id)
       .populate("author likes comments.commenter", "username displayName photoURL")
       .lean()
-      .exec((err2, populatedData) => {
-        if (err2) console.log("cannot retrieve post upon post data change");
+      .exec((err, populatedData) => {
+        if (err) console.log("cannot retrieve post upon post data change");
         else io.emit("newsfeedChange", populatedData);
       });
   }

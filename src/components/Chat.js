@@ -71,6 +71,7 @@ function Chat() {
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           _id: messageId,
           from: userData._id,
@@ -82,25 +83,36 @@ function Chat() {
       };
 
       fetch(`http://localhost:4000/rooms/${whichRoomActive.roomId}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) { alert(data.errorMsg); } else if (data.successMsg) {
-            // set new messages (use frontend data)
-            setMessages(messages.concat({
-              _id: messageId,
-              from: {
-                _id: userData._id,
-                photoURL: userData.photoURL,
-                username: userData.username,
-                displayName: userData.displayName,
-              },
-              message: "[img]",
-              imageURL: publicImageURL,
-              storageURL: fileSnapshot.metadata.fullPath,
-            }));
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setMessages(messages.concat({
+            _id: messageId,
+            from: {
+              _id: userData._id,
+              photoURL: userData.photoURL,
+              username: userData.username,
+              displayName: userData.displayName,
+            },
+            message: "[img]",
+            imageURL: publicImageURL,
+            storageURL: fileSnapshot.metadata.fullPath,
+          }));
           setPreviewImageURL(null);
           setIsLoading(false);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setPreviewImageURL(null);
+          setIsLoading(false);
+          alert(err.message);
         });
     } catch (error) {
       setSendImageError(`Uploading Error: ${error}`);
@@ -138,25 +150,34 @@ function Chat() {
       }),
     };
     fetch(`http://localhost:4000/rooms/${whichRoomActive.roomId}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) alert(data.errorMsg);
-        else if (data.successMsg) {
-          setTexts({ ...texts, [whichRoomActive.roomId]: "" });
-          // if set new activeRoomList (use frontend data), it would be here
-
-          // set new messages (use frontend data)
-          setMessages(messages.concat({
-            _id: messageId,
-            from: {
-              _id: userData._id,
-              photoURL: userData.photoURL,
-              username: userData.username,
-              displayName: userData.displayName,
-            },
-            message: lastMessageSent,
-          }));
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setTexts({ ...texts, [whichRoomActive.roomId]: "" });
+        // if set new activeRoomList (use frontend data), it would be here
+
+        // set new messages (use frontend data)
+        setMessages(messages.concat({
+          _id: messageId,
+          from: {
+            _id: userData._id,
+            photoURL: userData.photoURL,
+            username: userData.username,
+            displayName: userData.displayName,
+          },
+          message: lastMessageSent,
+        }));
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
       });
   }
 
@@ -169,15 +190,24 @@ function Chat() {
       },
     };
     fetch(`http://localhost:4000/users/${_id}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) {
-          setIsProfilePageNotFoundActive(true);
-          navigate(`/u/${_id}`);
-        } else {
-          setVisitedUserDataHelper(data);
-          navigate(`/u/${_id}`);
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setVisitedUserDataHelper(data);
+        navigate(`/u/${_id}`);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        setIsProfilePageNotFoundActive(true);
+        navigate(`/u/${_id}`);
+        alert(err.message);
       });
   }
 
@@ -190,8 +220,16 @@ function Chat() {
       },
     };
     fetch(`http://localhost:4000/rooms/${room._id}`, options)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
+        console.log("data from json()", data);
         setMessages(data.messages);
         setWhichRoomActiveHelper({
           roomId: room._id,
@@ -200,6 +238,10 @@ function Chat() {
           otherDisplayname: room.members.other.displayName,
         });
         navigate(`/r/${room._id}`);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
       });
   }
 
@@ -250,8 +292,21 @@ function Chat() {
             }),
           };
           fetch(`http://localhost:4000/rooms/${room._id}`, options)
-            .then((response) => response.json())
-            .then((data) => { console.log(data.successMsg); });
+            .then((response) => {
+              if (!response.ok) {
+                return response.json().then(({ message }) => {
+                  throw new Error(message || response.status);
+                });
+              }
+              return response.json();
+            })
+            .then((data) => {
+              console.log("data from json()", data);
+            })
+            .catch((err) => {
+              console.log("error happened in catch", err);
+              alert(err.message);
+            });
         }
       });
 
@@ -262,15 +317,26 @@ function Chat() {
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           type: "chat",
         }),
       };
       fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
-          if (data.errorMsg) alert(data.errorMsg);
-          else console.log("reset unreadChatNotifs to 0");
+          console.log("data from json()", data);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          alert(err.message);
         });
     };
   }, []);

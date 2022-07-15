@@ -30,20 +30,29 @@ function Profile() {
     };
 
     fetch(`http://localhost:4000/posts/${postId}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) {
-          setIsPostPageNotFoundActive(true);
-          navigate(`/p/${postId}`);
-        } else {
-          setBeforeFullPost({
-            newsfeed: false,
-            profile: true,
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
           });
-          setIsFullPostActive(true);
-          setFullPostInfoRef(data);
-          navigate(`/p/${postId}`);
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setBeforeFullPost({
+          newsfeed: false,
+          profile: true,
+        });
+        setIsFullPostActive(true);
+        setFullPostInfoRef(data);
+        navigate(`/p/${postId}`);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        setIsPostPageNotFoundActive(true);
+        navigate(`/p/${postId}`);
+        alert(err.message);
       });
   }
 
@@ -75,8 +84,21 @@ function Profile() {
       };
     }
     fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
-      .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
+      });
   }
 
   function handleViewFollowList(followListInfo, type) {
@@ -126,13 +148,22 @@ function Profile() {
           },
         };
         fetch(`http://localhost:4000/users/${params.uid}`, options)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.errorMsg) {
-              setIsProfilePageNotFoundActive(true);
-            } else {
-              setVisitedUserDataHelper(data);
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then(({ message }) => {
+                throw new Error(message || response.status);
+              });
             }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("data from json()", data);
+            setVisitedUserDataHelper(data);
+          })
+          .catch((err) => {
+            console.log("error happened in catch", err);
+            setIsProfilePageNotFoundActive(true);
+            alert(err.message);
           });
       }
     }

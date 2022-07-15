@@ -68,17 +68,26 @@ function FullPost() {
       }),
     };
     fetch(`http://localhost:4000/posts/${postId}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) alert(data.errorMsg);
-        else {
-          const imageRef = ref(storage, filePath);
-          deleteObject(imageRef).then(() => {
-            // File deleted successfully (could've set a snackbar for visual feedback)
-          }).catch((error) => {
-            alert(error);
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
           });
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        const imageRef = ref(storage, filePath);
+        deleteObject(imageRef).then(() => {
+          // File deleted successfully (could've set a snackbar for visual feedback)
+        }).catch((error) => {
+          alert(error);
+        });
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
       });
   }
 
@@ -102,12 +111,21 @@ function FullPost() {
       };
 
       fetch(`http://localhost:4000/posts/${fullPostInfo._id}/comments`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) alert(data.errorMsg);
-          else {
-            setPostComments({ ...postComments, [fullPostInfo._id]: "" });
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setPostComments({ ...postComments, [fullPostInfo._id]: "" });
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          alert(err.message);
         });
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -146,8 +164,21 @@ function FullPost() {
       };
     }
     fetch(`http://localhost:4000/posts/${fullPostInfo._id}/likes`, options)
-      .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
+      });
   }
 
   function handleVisitProfile(_id) {
@@ -164,15 +195,24 @@ function FullPost() {
         },
       };
       fetch(`http://localhost:4000/users/${_id}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) {
-            setIsProfilePageNotFoundActive(true);
-            navigate(`/u/${_id}`);
-          } else {
-            setVisitedUserDataHelper(data);
-            navigate(`/u/${_id}`);
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setVisitedUserDataHelper(data);
+          navigate(`/u/${_id}`);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setIsProfilePageNotFoundActive(true);
+          navigate(`/u/${_id}`);
+          alert(err.message);
         });
     }
   }
@@ -207,20 +247,28 @@ function FullPost() {
         },
       };
       fetch(`http://localhost:4000/posts/${params.postId}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("fullpsot data", data);
-          if (data.errorMsg) {
-            setIsFullPostActive(false);
-            setIsPostPageNotFoundActive(true);
-          } else {
-            setBeforeFullPost({
-              newsfeed: true,
-              profile: false,
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
             });
-            setIsFullPostActive(true);
-            setFullPostInfoRef(data);
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setBeforeFullPost({
+            newsfeed: true,
+            profile: false,
+          });
+          setIsFullPostActive(true);
+          setFullPostInfoRef(data);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setIsFullPostActive(false);
+          setIsPostPageNotFoundActive(true);
+          alert(err.message);
         });
     }
   }, [fullPostInfo]);

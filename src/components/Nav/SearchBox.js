@@ -22,16 +22,25 @@ function SearchBox() {
       },
     };
     fetch(`http://localhost:4000/users/${_id}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) {
-          setIsSearchActive(false);
-          navigate(`/u/${_id}`);
-        } else {
-          setIsSearchActive(false);
-          setVisitedUserDataHelper(data);
-          navigate(`/u/${_id}`);
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setIsSearchActive(false);
+        setVisitedUserDataHelper(data);
+        navigate(`/u/${_id}`);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        setIsSearchActive(false);
+        navigate(`/u/${_id}`);
+        alert(err.message);
       });
   }
 

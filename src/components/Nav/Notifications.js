@@ -43,8 +43,21 @@ function Notifications() {
       };
     }
     fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
-      .then((response) => response.json())
-      .then((data) => { if (data.errorMsg) alert(data.errorMsg); });
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
+      });
   }
 
   function updateUnreadNotifs() {
@@ -60,10 +73,20 @@ function Notifications() {
         }),
       };
       fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
-          if (data.errorMsg) alert(data.errorMsg);
-          else console.log("reset unreadChatNotifs to 0");
+          console.log("data from json()", data);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          alert(err.message);
         });
     }
   }
@@ -80,14 +103,23 @@ function Notifications() {
       },
     };
     fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) alert(data.errorMsg);
-        else {
-          setNotificationList(data);
-          setIsLoading(false);
-          updateUnreadNotifs();
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setNotificationList(data);
+        setIsLoading(false);
+        updateUnreadNotifs();
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        alert(err.message);
       });
   }
 
@@ -104,15 +136,24 @@ function Notifications() {
         },
       };
       fetch(`http://localhost:4000/users/${_id}`, options)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.errorMsg) {
-            setIsProfilePageNotFoundActive(true);
-            navigate(`/u/${_id}`);
-          } else {
-            setVisitedUserDataHelper(data);
-            navigate(`/u/${_id}`);
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("data from json()", data);
+          setVisitedUserDataHelper(data);
+          navigate(`/u/${_id}`);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setIsProfilePageNotFoundActive(true);
+          navigate(`/u/${_id}`);
+          alert(err.message);
         });
     }
   }
@@ -129,20 +170,29 @@ function Notifications() {
     };
 
     fetch(`http://localhost:4000/posts/${postId}`, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.errorMsg) {
-          setIsPostPageNotFoundActive(true);
-          navigate(`/p/${postId}`);
-        } else {
-          setBeforeFullPost({
-            newsfeed: true,
-            profile: false,
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
           });
-          setIsFullPostActive(true);
-          setFullPostInfoRef(data);
-          navigate(`/p/${postId}`);
         }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("data from json()", data);
+        setBeforeFullPost({
+          newsfeed: true,
+          profile: false,
+        });
+        setIsFullPostActive(true);
+        setFullPostInfoRef(data);
+        navigate(`/p/${postId}`);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        setIsPostPageNotFoundActive(true);
+        navigate(`/p/${postId}`);
+        alert(err.message);
       });
   }
 

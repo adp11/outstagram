@@ -21,7 +21,7 @@ function LoginForm() {
     passwordError: false,
   });
 
-  const errorMsgs = [
+  const errorMessages = [
     "The username you entered doesn't belong to an account. Please check your username and try again.",
     "Sorry, your password was incorrect. Please double-check your password.",
   ];
@@ -43,28 +43,41 @@ function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     fetch("http://localhost:4000/login", options)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then(({ message }) => {
+            throw new Error(message || response.status);
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
-        if (errorMsgs.indexOf(data.errorMsg) === 0) {
+        console.log("data from json()", data);
+        if (/^\/p\//.test(window.location.pathname)) {
+          setIsFullPostActive(true);
+          setIsFullPostByLink(true);
+        }
+        setUserDataHelper(data.user);
+        setAllUserData(data.users);
+        setNewsfeedHelper(data.newsfeed);
+        setIsLoggedIn(true);
+        setJwtChecked(true);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.log("error happened in catch", err);
+        if (errorMessages.indexOf(err.message) === 0) {
           setLoginError({
             usernameError: true,
             passwordError: false,
           });
-        } else if (errorMsgs.indexOf(data.errorMsg) === 1) {
+        } else if (errorMessages.indexOf(err.message) === 1) {
           setLoginError({
             usernameError: false,
             passwordError: true,
           });
         } else {
-          if (/^\/p\//.test(window.location.pathname)) {
-            setIsFullPostActive(true);
-            setIsFullPostByLink(true);
-          }
-          setUserDataHelper(data.user);
-          setAllUserData(data.users);
-          setNewsfeedHelper(data.newsfeed);
-          setIsLoggedIn(true);
-          setJwtChecked(true);
+          alert(err.message);
         }
         setIsLoading(false);
       });

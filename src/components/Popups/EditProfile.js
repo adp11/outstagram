@@ -52,10 +52,22 @@ function EditProfile() {
       };
 
       fetch(`http://localhost:4000/users/${userData._id}`, options)
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then(({ message }) => {
+              throw new Error(message || response.status);
+            });
+          }
+          return response.json();
+        })
         .then((data) => {
-          if (data.errorMsg) setEditProfileError(data.errorMsg);
-          else setIsEditProfileActive(false);
+          console.log("data from json()", data);
+          setIsEditProfileActive(false);
+        })
+        .catch((err) => {
+          console.log("error happened in catch", err);
+          setEditProfileError(err.message);
+          alert(err.message);
         });
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);
