@@ -3,11 +3,12 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const Post = require("../models/post");
-const HttpError = require("../HttpError");
+const HttpError = require("../models/HttpError");
+require("dotenv").config();
 
 exports.loginWithGoogle = (req, res, next) => {
   // console.log("profile data passed from google strategy", req.data);
-  jwt.sign({ id: req.data._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+  jwt.sign({ id: req.data._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
     if (err) return next(HttpError.internal("Error when signing JWT."));
     res.cookie("jwtToken", token, { httpOnly: true });
     // console.log("token (from google) is ", token);
@@ -18,7 +19,7 @@ exports.loginWithGoogle = (req, res, next) => {
 
 exports.getHomeData = (req, res, next) => {
   // console.log("in getHomeData");
-  jwt.verify(req.jwtToken, "secretkey", (tokenErr, authData) => {
+  jwt.verify(req.jwtToken, process.env.JWT_KEY, (tokenErr, authData) => {
     if (tokenErr) return next(HttpError.forbidden("JWT verification failed."));
 
     // query user data based on payload id
@@ -79,7 +80,7 @@ exports.signupUser = (req, res, next) => {
           // query all users and send back with token and self-user
           User.find().select("username displayName photoURL").lean().exec((queryErr1, users) => {
             if (queryErr1) return next(HttpError.internal("Database query error."));
-            jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+            jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
               if (err) return next(HttpError.internal("Error when signing JWT."));
               res.cookie("jwtToken", token, { httpOnly: true });
               // console.log("token generated", token);
@@ -124,7 +125,7 @@ exports.loginUser = (req, res, next) => {
           },
         }, (queryErr1, results) => {
           if (queryErr1) return next(HttpError.internal("Database query error."));
-          jwt.sign({ id: user._id }, "secretkey", { expiresIn: 60 * 15 }, (err, token) => {
+          jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
             if (err) return next(HttpError.internal("Error when signing JWT."));
             res.cookie("jwtToken", token, { httpOnly: true });
             // console.log("token generated", token);

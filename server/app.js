@@ -6,26 +6,25 @@ const http = require("http");
 const { Server } = require("socket.io");
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
+
 const passport = require("passport");
+const compression = require("compression");
+const helmet = require("helmet");
 require("./passport");
-const jwt = require("jsonwebtoken");
 
 const app = express();
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const HttpError = require("./HttpError");
-
-// Set up DB connection
-const mongoDB = "mongodb+srv://adp11:locpp2001@cluster0.yv9iv.mongodb.net/outstagram2?retryWrites=true&w=majority";
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
+const HttpError = require("./models/HttpError");
 
 // Import models
 const User = require("./models/user");
 const Post = require("./models/post");
+require("dotenv").config();
+require("./db");
+
+console.log("mongo", process.env.DB_KEY);
 
 // Import controllers
 const {
@@ -44,6 +43,8 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(helmet());
+app.use(compression());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(passport.initialize());
 
@@ -71,8 +72,8 @@ app.put("/posts/:_id/comments", updatePostComments);
 // Room controllers
 app.post("/rooms", createRoom);
 app.get("/rooms/:_id", getRoom);
-app.post("/rooms/:_id", addMessage); // TODO
-app.delete("/rooms/:_id", deleteRoom); // TODO
+app.post("/rooms/:_id", addMessage);
+app.delete("/rooms/:_id", deleteRoom);
 
 // Helper token function
 function extractToken(req, res, next) {

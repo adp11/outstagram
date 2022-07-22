@@ -2,7 +2,8 @@ const async = require("async");
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const Room = require("../models/room");
-const HttpError = require("../HttpError");
+const HttpError = require("../models/HttpError");
+require("dotenv").config();
 
 exports.createRoom = (req, res, next) => {
   const { selfId, otherId } = req.body;

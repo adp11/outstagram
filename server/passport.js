@@ -2,15 +2,14 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
 const mongoose = require("mongoose");
 const User = require("./models/user");
+require("dotenv").config();
 
+console.log("google", process.env.GOOGLE_CLIENT_ID);
 // Set up passport
-const GOOGLE_CLIENT_ID = "858662058213-upqh7moacqonn13vg1dj0goq3pulu4vr.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET = "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";
-
 passport.use(new GoogleStrategy(
   {
-    clientID: GOOGLE_CLIENT_ID,
-    clientSecret: GOOGLE_CLIENT_SECRET,
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "/google/callback",
     passReqToCallback: true,
   },
