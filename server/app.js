@@ -9,7 +9,6 @@ const cors = require("cors");
 
 const passport = require("passport");
 const compression = require("compression");
-const helmet = require("helmet");
 require("./passport");
 
 const app = express();
@@ -24,8 +23,6 @@ const Post = require("./models/post");
 require("dotenv").config();
 require("./db");
 
-console.log("mongo", process.env.DB_KEY);
-
 // Import controllers
 const {
   getHomeData, signupUser, loginUser, loginWithGoogle, getUserProfile, updateUserProfile, updateUserFollows, getUserNotifications, updateUserNotifications,
@@ -38,14 +35,12 @@ const {
 } = require("./controllers/roomController");
 
 // Middleware functions
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(helmet());
 app.use(compression());
-app.use(express.static(path.join(__dirname, "public")));
 app.use(passport.initialize());
 
 // User controllers
@@ -53,51 +48,33 @@ app.get("/login/google", passport.authenticate("google", { scope: ["email", "pro
 app.get("/google/callback", passport.authenticate("google", { failureRedirect: "/googleLoginFailure", session: false }), loginWithGoogle);
 app.get("/googleLoginFailure", (req, res) => res.status(500).send("<h1>Google Login Failure</h1>"));
 
-app.get("/", extractToken, getHomeData);
-app.post("/signup", signupUser);
-app.post("/login", loginUser);
-app.get("/users/:_id", getUserProfile);
-app.put("/users/:_id", updateUserProfile);
-app.put("/users/:_id/follows", updateUserFollows);
-app.get("/users/:_id/notifications", getUserNotifications);
-app.put("/users/:_id/notifications", updateUserNotifications);
+app.get("/api/homeData", extractToken, getHomeData);
+app.post("/api/signup", signupUser);
+app.post("/api/login", loginUser);
+app.get("/api/users/:_id", getUserProfile);
+app.put("/api/users/:_id", updateUserProfile);
+app.put("/api/users/:_id/follows", updateUserFollows);
+app.get("/api/users/:_id/notifications", getUserNotifications);
+app.put("/api/users/:_id/notifications", updateUserNotifications);
 
 // Post controllers
-app.post("/posts", addPost);
-app.get("/posts/:_id", getPost);
-app.delete("/posts/:_id", deletePost);
-app.put("/posts/:_id/likes", updatePostLikes);
-app.put("/posts/:_id/comments", updatePostComments);
+app.post("/api/posts", addPost);
+app.get("/api/posts/:_id", getPost);
+app.delete("/api/posts/:_id", deletePost);
+app.put("/api/posts/:_id/likes", updatePostLikes);
+app.put("/api/posts/:_id/comments", updatePostComments);
 
 // Room controllers
-app.post("/rooms", createRoom);
-app.get("/rooms/:_id", getRoom);
-app.post("/rooms/:_id", addMessage);
-app.delete("/rooms/:_id", deleteRoom);
+app.post("/api/rooms", createRoom);
+app.get("/api/rooms/:_id", getRoom);
+app.post("/api/rooms/:_id", addMessage);
+app.delete("/api/rooms/:_id", deleteRoom);
 
-// Helper token function
-function extractToken(req, res, next) {
-  // console.log("req.headers", req.headers);
-  let jwtToken;
-  req.headers.cookie.split(" ").some((cookie) => {
-    const equalPosition = cookie.indexOf("=");
-    if (cookie.substring(0, equalPosition) === "jwtToken") {
-      const semiColonPosition = cookie.indexOf(";");
-      if (semiColonPosition > -1) {
-        jwtToken = cookie.substring(equalPosition + 1, cookie.length - 1);
-      } else {
-        jwtToken = cookie.substring(equalPosition + 1);
-      }
-      return true;
-    }
-    return false;
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "..", "client", "build")));
+  app.get(["/", "/u/:_id", "/p/:_id"], (req, res) => {
+    res.sendFile(path.resolve(__dirname, "..", "client", "build", "index.html"));
   });
-
-  // console.log("token extracted", jwtToken);
-  if (jwtToken) {
-    req.jwtToken = jwtToken;
-    next();
-  } else { res.sendStatus(403); }
 }
 
 // API error handler
@@ -106,7 +83,6 @@ app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // console.log("err passed from somewhere above", err);
   if (err instanceof HttpError) {
     return res.status(err.code).json({ message: err.message });
   }
@@ -115,7 +91,7 @@ app.use((err, req, res, next) => {
 });
 
 // Port and server setup
-const port = normalizePort(process.env.PORT || "4000");
+const port = normalizePort(process.env.PORT || "5000");
 app.set("port", port);
 
 const server = http.createServer(app); // Create HTTP server.
@@ -128,13 +104,13 @@ server.on("listening", onListening);
 // Socket setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
   },
 });
 
 app.set("socketio", io);
 
-// Realtime listening to User collection
+// Realtime listening to User collection (need to close when in dev mode)
 const userChangeStream = User.watch().on("change", (data) => {
   // change in existing user
   if (data.operationType === "update") {
@@ -172,27 +148,30 @@ const postChangeStream = Post.watch().on("change", (data) => {
   }
 });
 
-// stop realtime listening under 3 conditions
-// listen for TERM signal .e.g. kill
-process.on("SIGTERM", async () => {
-  console.log("closing realtime mongo");
-  await userChangeStream.close();
-  await postChangeStream.close();
-});
+// Helper token function
+function extractToken(req, res, next) {
+  // console.log("req.headers", req.headers);
+  let jwtToken;
+  req.headers.cookie.split(" ").some((cookie) => {
+    const equalPosition = cookie.indexOf("=");
+    if (cookie.substring(0, equalPosition) === "jwtToken") {
+      const semiColonPosition = cookie.indexOf(";");
+      if (semiColonPosition > -1) {
+        jwtToken = cookie.substring(equalPosition + 1, cookie.length - 1);
+      } else {
+        jwtToken = cookie.substring(equalPosition + 1);
+      }
+      return true;
+    }
+    return false;
+  });
 
-// listen for INT signal e.g. Ctrl-C
-process.on("SIGINT", async () => {
-  console.log("closing realtime mongo");
-  await userChangeStream.close();
-  await postChangeStream.close();
-});
-
-// or even exit event
-process.on("exit", async () => {
-  console.log("closing realtime mongo");
-  await userChangeStream.close();
-  await postChangeStream.close();
-});
+  // console.log("token extracted", jwtToken);
+  if (jwtToken) {
+    req.jwtToken = jwtToken;
+    next();
+  } else { res.sendStatus(403); }
+}
 
 // Normalize a port into a number, string, or false.
 function normalizePort(val) {

@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const User = require("./models/user");
 require("dotenv").config();
 
-console.log("google", process.env.GOOGLE_CLIENT_ID);
 // Set up passport
 passport.use(new GoogleStrategy(
   {
@@ -28,8 +27,6 @@ passport.use(new GoogleStrategy(
       { $setOnInsert: newUser },
       { new: true, upsert: true },
       (err, updatedUser) => {
-        // console.log("error in passport strategy", err);
-        // console.log("result in passport strategy", updatedUser);
         if (err) return done(err);
         req.data = updatedUser;
         return done(null, updatedUser);

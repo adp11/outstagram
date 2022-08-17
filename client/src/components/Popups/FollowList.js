@@ -4,6 +4,8 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import UserContext from "../Contexts/UserContext";
 
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+
 // Notice: many CSS inline rules in LikeList/FollowList
 function FollowList() {
   const {
@@ -42,7 +44,7 @@ function FollowList() {
         }),
       };
     }
-    fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
+    fetch(`${SERVER_URL}/api/users/${userData._id}/follows`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -77,7 +79,7 @@ function FollowList() {
           "Content-Type": "application/json",
         },
       };
-      fetch(`http://localhost:4000/users/${_id}`, options)
+      fetch(`${SERVER_URL}/api/users/${_id}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

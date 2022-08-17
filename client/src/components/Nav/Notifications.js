@@ -4,6 +4,7 @@ import { computeHowLongAgo } from "../../utils";
 import UserContext from "../Contexts/UserContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function Notifications() {
   const {
@@ -42,7 +43,7 @@ function Notifications() {
         }),
       };
     }
-    fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
+    fetch(`${SERVER_URL}/api/users/${userData._id}/follows`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -72,7 +73,7 @@ function Notifications() {
           type: "standard",
         }),
       };
-      fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
+      fetch(`${SERVER_URL}/api/users/${userData._id}/notifications`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -102,7 +103,7 @@ function Notifications() {
         "Content-Type": "application/json",
       },
     };
-    fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
+    fetch(`${SERVER_URL}/api/users/${userData._id}/notifications`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -135,7 +136,7 @@ function Notifications() {
           "Content-Type": "application/json",
         },
       };
-      fetch(`http://localhost:4000/users/${_id}`, options)
+      fetch(`${SERVER_URL}/api/users/${_id}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -169,7 +170,7 @@ function Notifications() {
       },
     };
 
-    fetch(`http://localhost:4000/posts/${postId}`, options)
+    fetch(`${SERVER_URL}/api/posts/${postId}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {

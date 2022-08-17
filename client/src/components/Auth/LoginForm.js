@@ -3,6 +3,7 @@ import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function LoginForm() {
   const {
@@ -42,7 +43,7 @@ function LoginForm() {
 
     e.preventDefault();
     setIsLoading(true);
-    fetch("http://localhost:4000/login", options)
+    fetch(`${SERVER_URL}/api/login`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -84,7 +85,7 @@ function LoginForm() {
   }
 
   function logInProvider() {
-    window.open("http://localhost:4000/login/google", "_self");
+    window.open(`${SERVER_URL}/login/google`, "_self");
   }
 
   return (

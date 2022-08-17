@@ -15,6 +15,7 @@ import SearchChat from "./Popups/SearchChat";
 import FullImage from "./Popups/FullImage";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function Chat() {
   const {
@@ -82,7 +83,7 @@ function Chat() {
         }),
       };
 
-      fetch(`http://localhost:4000/rooms/${whichRoomActive.roomId}`, options)
+      fetch(`${SERVER_URL}/api/rooms/${whichRoomActive.roomId}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -149,7 +150,7 @@ function Chat() {
         message: lastMessageSent,
       }),
     };
-    fetch(`http://localhost:4000/rooms/${whichRoomActive.roomId}`, options)
+    fetch(`${SERVER_URL}/api/rooms/${whichRoomActive.roomId}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -189,7 +190,7 @@ function Chat() {
         "Content-Type": "application/json",
       },
     };
-    fetch(`http://localhost:4000/users/${_id}`, options)
+    fetch(`${SERVER_URL}/api/users/${_id}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -219,7 +220,7 @@ function Chat() {
         "Content-Type": "application/json",
       },
     };
-    fetch(`http://localhost:4000/rooms/${room._id}`, options)
+    fetch(`${SERVER_URL}/api/rooms/${room._id}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -291,7 +292,7 @@ function Chat() {
               otherId: room.members.other._id,
             }),
           };
-          fetch(`http://localhost:4000/rooms/${room._id}`, options)
+          fetch(`${SERVER_URL}/api/rooms/${room._id}`, options)
             .then((response) => {
               if (!response.ok) {
                 return response.json().then(({ message }) => {
@@ -322,7 +323,7 @@ function Chat() {
           type: "chat",
         }),
       };
-      fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
+      fetch(`${SERVER_URL}/api/users/${userData._id}/notifications`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

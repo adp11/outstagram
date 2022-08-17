@@ -10,6 +10,7 @@ import Snackbar from "./Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
 const DUMMY_AVATAR_URL = "https://dummyimage.com/200x200/979999/000000.png&text=...";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function EditProfile() {
   const { userData, setIsEditProfileActive } = useContext(UserContext);
@@ -51,7 +52,7 @@ function EditProfile() {
         }),
       };
 
-      fetch(`http://localhost:4000/users/${userData._id}`, options)
+      fetch(`${SERVER_URL}/api/users/${userData._id}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

@@ -8,12 +8,12 @@ require("dotenv").config();
 
 exports.loginWithGoogle = (req, res, next) => {
   // console.log("profile data passed from google strategy", req.data);
-  jwt.sign({ id: req.data._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
+  jwt.sign({ id: req.data._id }, process.env.JWT_KEY, { expiresIn: 60 * 60 }, (err, token) => {
     if (err) return next(HttpError.internal("Error when signing JWT."));
     res.cookie("jwtToken", token, { httpOnly: true });
     // console.log("token (from google) is ", token);
     // res.redirect("/success");
-    res.redirect("http://localhost:3000");
+    res.redirect(process.env.CLIENT_URL);
   });
 };
 
@@ -80,7 +80,7 @@ exports.signupUser = (req, res, next) => {
           // query all users and send back with token and self-user
           User.find().select("username displayName photoURL").lean().exec((queryErr1, users) => {
             if (queryErr1) return next(HttpError.internal("Database query error."));
-            jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
+            jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 60 }, (err, token) => {
               if (err) return next(HttpError.internal("Error when signing JWT."));
               res.cookie("jwtToken", token, { httpOnly: true });
               // console.log("token generated", token);
@@ -125,7 +125,7 @@ exports.loginUser = (req, res, next) => {
           },
         }, (queryErr1, results) => {
           if (queryErr1) return next(HttpError.internal("Database query error."));
-          jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 15 }, (err, token) => {
+          jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: 60 * 60 }, (err, token) => {
             if (err) return next(HttpError.internal("Error when signing JWT."));
             res.cookie("jwtToken", token, { httpOnly: true });
             // console.log("token generated", token);

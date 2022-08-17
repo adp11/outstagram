@@ -5,6 +5,8 @@ import Account from "./Account";
 import SearchBox from "./SearchBox";
 import UserContext from "../Contexts/UserContext";
 
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+
 function Nav() {
   const {
     userData, darkMode, isSearchChatActive, scrollY, isFullImageActive, setIsAddPostActive,
@@ -23,7 +25,7 @@ function Nav() {
           type: "chat",
         }),
       };
-      fetch(`http://localhost:4000/users/${userData._id}/notifications`, options)
+      fetch(`${SERVER_URL}/api/users/${userData._id}/notifications`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

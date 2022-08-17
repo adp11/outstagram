@@ -1,9 +1,6 @@
 {
-  "name": "server",
+  "name": "outstagram",
   "version": "0.1.0",
-  "engines": {
-    "node": "16.13.2"
-  },
   "private": true,
   "dependencies": {
     "async": "^3.2.4",

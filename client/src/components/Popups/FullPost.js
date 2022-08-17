@@ -9,6 +9,7 @@ import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 // FullPost can come from 4 sources: abrupt access, visited profile, self profile, and newsfeed
 function FullPost() {
@@ -67,7 +68,7 @@ function FullPost() {
         authorId,
       }),
     };
-    fetch(`http://localhost:4000/posts/${postId}`, options)
+    fetch(`${SERVER_URL}/api/posts/${postId}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -110,7 +111,7 @@ function FullPost() {
         }),
       };
 
-      fetch(`http://localhost:4000/posts/${fullPostInfo._id}/comments`, options)
+      fetch(`${SERVER_URL}/api/posts/${fullPostInfo._id}/comments`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -163,7 +164,7 @@ function FullPost() {
         }),
       };
     }
-    fetch(`http://localhost:4000/posts/${fullPostInfo._id}/likes`, options)
+    fetch(`${SERVER_URL}/api/posts/${fullPostInfo._id}/likes`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -194,7 +195,7 @@ function FullPost() {
           "Content-Type": "application/json",
         },
       };
-      fetch(`http://localhost:4000/users/${_id}`, options)
+      fetch(`${SERVER_URL}/api/users/${_id}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -246,7 +247,7 @@ function FullPost() {
           "Content-Type": "application/json",
         },
       };
-      fetch(`http://localhost:4000/posts/${params.postId}`, options)
+      fetch(`${SERVER_URL}/api/posts/${params.postId}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

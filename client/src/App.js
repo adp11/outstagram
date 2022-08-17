@@ -19,6 +19,8 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 import WaitingPage from "./components/WaitingPage";
 
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+
 function App() {
   // bool states
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -101,7 +103,7 @@ function App() {
         credentials: "include",
       };
 
-      fetch("http://localhost:4000/", options)
+      fetch(`${SERVER_URL}/api/homeData`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -136,7 +138,7 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       // client side socket connect
-      socketRef.current = io("http://localhost:4000");
+      socketRef.current = io(`${SERVER_URL}`);
 
       socketRef.current.on("connect", () => {
         console.log("socket connected when logged in and realtime is on from App.js", socketRef.current.id);

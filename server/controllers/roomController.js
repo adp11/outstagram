@@ -60,10 +60,10 @@ exports.createRoom = (req, res, next) => {
         },
       ], (saveErr) => {
         if (saveErr) return next(HttpError.internal("Error when creating chat room."));
-        res.redirect(`/rooms/${roomId}/?justCreated=true`);
+        res.redirect(`/api/rooms/${roomId}/?justCreated=true`);
       });
     } else {
-      res.redirect(`/rooms/${selfUser.rooms[pos]._id}/?justCreated=false`);
+      res.redirect(`/api/rooms/${selfUser.rooms[pos]._id}/?justCreated=false`);
     }
   });
 };
@@ -74,6 +74,7 @@ exports.getRoom = (req, res, next) => {
     .populate("messages.from", "username displayName photoURL")
     .lean()
     .exec((err, data) => {
+      console.log("err in chat", err);
       if (err) return next(HttpError.notFound("Error when retrieving this room's messages."));
       return res.status(200).json({ ...data, justCreated: (req.query.justCreated === "true") });
     });

@@ -9,6 +9,7 @@ import Snackbar from "./Snackbar";
 import { storage } from "../../firebase";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function AddPost() {
   const { userData, setIsAddPostActive } = useContext(UserContext);
@@ -51,7 +52,7 @@ function AddPost() {
           }),
         };
 
-        fetch("http://localhost:4000/posts", options)
+        fetch(`${SERVER_URL}/api/posts`, options)
           .then((response) => {
             if (!response.ok) {
               return response.json().then(({ message }) => {

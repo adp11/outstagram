@@ -4,6 +4,7 @@ import UserContext from "../Contexts/UserContext";
 import ChatContext from "../Contexts/ChatContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function SearchChat() {
   const { userData, allUserData, setIsSearchChatActive } = useContext(UserContext);
@@ -45,7 +46,7 @@ function SearchChat() {
         otherId: otherInfo._id,
       }),
     };
-    fetch("http://localhost:4000/rooms", options)
+    fetch(`${SERVER_URL}/api/rooms`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -106,12 +107,12 @@ function SearchChat() {
           navigate(`/r/${data._id}`);
         }
       })
-      .catch((err) => {
-        console.log("error happened in catch", err);
-        setIsLoading(false);
-        setIsSearchChatActive(false);
-        alert(err.message);
-      });
+      // .catch((err) => {
+      //   console.log("error happened in catch", err);
+      //   setIsLoading(false);
+      //   setIsSearchChatActive(false);
+      //   // alert(err.message);
+      // });
   }
 
   return (

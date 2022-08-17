@@ -4,6 +4,7 @@ import UserContext from "../Contexts/UserContext";
 import Snackbar from "../Popups/Snackbar";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function SignupForm() {
   const {
@@ -43,7 +44,7 @@ function SignupForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    fetch("http://localhost:4000/signup", options)
+    fetch(`${SERVER_URL}/api/signup`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -77,7 +78,7 @@ function SignupForm() {
   }
 
   function logInProvider() {
-    window.open("http://localhost:4000/login/google", "_self");
+    window.open(`${SERVER_URL}/login/google`, "_self");
   }
 
   return (

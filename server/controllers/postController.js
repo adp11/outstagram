@@ -5,7 +5,6 @@ const Post = require("../models/post");
 const HttpError = require("../models/HttpError");
 require("dotenv").config();
 
-console.log("mongo", process.env.DB_KEY);
 // Skip validation and sanitization
 exports.addPost = (req, res, next) => {
   const post = new Post(req.body);

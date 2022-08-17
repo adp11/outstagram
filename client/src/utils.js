@@ -6,12 +6,6 @@ const WEEK_IN_MIN = 1440 * 7;
 const DAY_IN_MIN = 1440;
 const HOUR_IN_MIN = 60;
 
-function capitalizeFirebaseAuthError(message) {
-  const words = message.split("-");
-  words[0] = words[0].substring(words[0].indexOf("/") + 1);
-  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-}
-
 function computeHowLongAgo(mongoTime, abbreviation = true) {
   const unixTime = Math.floor(new Date(mongoTime).getTime() / 1000);
   const diff = differenceInMinutes(new Date(), new Date(unixTime * 1000));
@@ -52,15 +46,6 @@ function binarySearch(arr, key, start, end, field) {
   return binarySearch(arr, key, start, mid - 1, field);
 }
 
-function insert(arr, element, field) {
-  if (arr.length === 0) {
-    arr.push(element);
-  } else {
-    const pos = binarySearch(arr, element, 0, arr.length - 1, field);
-    arr.splice(pos, 0, element);
-  }
-}
-
 // quick sort
 function partition(array, left, right) {
   const mongoTime = array[(left + right) >>> 1].updatedAt;
@@ -96,5 +81,5 @@ function quickSort(items) {
 }
 
 export {
-  capitalizeFirebaseAuthError, computeHowLongAgo, quickSort,
+  computeHowLongAgo, quickSort,
 };

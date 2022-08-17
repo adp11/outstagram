@@ -43,6 +43,9 @@ code {
 .App {
   margin: 0;
   width: 100vw;
+}
+
+body {
   background-color: var(--color-base-bg1);
 }
 
@@ -498,9 +501,6 @@ input[type="search"] {
   padding: 14px;
   border: 1px #efefef solid;
 }
-
-
-
 
 /* Full post ---------------------------------- */
 .FullPost {

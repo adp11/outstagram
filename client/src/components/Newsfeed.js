@@ -4,6 +4,8 @@ import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Popups/Snackbar";
 import { computeHowLongAgo } from "../utils";
 
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+
 function Newsfeed() {
   const {
     newsfeed, setIsFullPostActive, setBeforeFullPost, setFullPostInfoRef, scrollY, userData, setVisitedUserDataHelper, setIsLikeListActive, setLikeListInfo, setIsProfilePageNotFoundActive,
@@ -53,7 +55,7 @@ function Newsfeed() {
         }),
       };
 
-      fetch(`http://localhost:4000/posts/${postInfo._id}/comments`, options)
+      fetch(`${SERVER_URL}/api/posts/${postInfo._id}/comments`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {
@@ -106,7 +108,7 @@ function Newsfeed() {
         }),
       };
     }
-    fetch(`http://localhost:4000/posts/${postInfo._id}/likes`, options)
+    fetch(`${SERVER_URL}/api/posts/${postInfo._id}/likes`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -136,7 +138,7 @@ function Newsfeed() {
           "Content-Type": "application/json",
         },
       };
-      fetch(`http://localhost:4000/users/${_id}`, options)
+      fetch(`${SERVER_URL}/api/users/${_id}`, options)
         .then((response) => {
           if (!response.ok) {
             return response.json().then(({ message }) => {

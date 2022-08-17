@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
+const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
 
 function Profile() {
   const {
@@ -29,7 +30,7 @@ function Profile() {
       },
     };
 
-    fetch(`http://localhost:4000/posts/${postId}`, options)
+    fetch(`${SERVER_URL}/api/posts/${postId}`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -83,7 +84,7 @@ function Profile() {
         }),
       };
     }
-    fetch(`http://localhost:4000/users/${userData._id}/follows`, options)
+    fetch(`${SERVER_URL}/api/users/${userData._id}/follows`, options)
       .then((response) => {
         if (!response.ok) {
           return response.json().then(({ message }) => {
@@ -147,7 +148,7 @@ function Profile() {
             "Content-Type": "application/json",
           },
         };
-        fetch(`http://localhost:4000/users/${params.uid}`, options)
+        fetch(`${SERVER_URL}/api/users/${params.uid}`, options)
           .then((response) => {
             if (!response.ok) {
               return response.json().then(({ message }) => {
