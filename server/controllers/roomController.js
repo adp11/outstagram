@@ -74,7 +74,6 @@ exports.getRoom = (req, res, next) => {
     .populate("messages.from", "username displayName photoURL")
     .lean()
     .exec((err, data) => {
-      console.log("err in chat", err);
       if (err) return next(HttpError.notFound("Error when retrieving this room's messages."));
       return res.status(200).json({ ...data, justCreated: (req.query.justCreated === "true") });
     });
@@ -129,7 +128,6 @@ exports.addMessage = (req, res, next) => {
       if (saveErr) return next(HttpError.internal("Error when adding message."));
       updatedRoom.populate("messages.from", "username displayName photoURL", (populateErr, populatedRoom) => {
         if (populateErr) return next(HttpError.internal("Error when adding message."));
-        // console.log("emit many times?");
         io.emit("messaging", { populatedRoom, to });
         return res.status(200).json("Success");
       });

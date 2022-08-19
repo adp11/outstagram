@@ -113,7 +113,6 @@ function App() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           if (/^\/p\//.test(window.location.pathname)) {
             setIsFullPostActive(true);
             setIsFullPostByLink(true);
@@ -125,12 +124,10 @@ function App() {
           setJwtChecked(true);
         })
         .catch((err) => {
-          console.log("error happened in catch", err.message);
           setJwtChecked(false);
         });
     }
 
-    console.log("how many times auto login?");
     getHomeData();
     // handle access full post by link (not navigation)
   }, []);
@@ -141,20 +138,16 @@ function App() {
       socketRef.current = io(`${SERVER_URL}`);
 
       socketRef.current.on("connect", () => {
-        console.log("socket connected when logged in and realtime is on from App.js", socketRef.current.id);
         // Logic: 2 cases for operationType "update" but only 1 case for operationType "insert". It is EITHER those first two OR the last one
         socketRef.current.on("userDataChange", (data) => {
           if (data.user && data.user._id === userDataRef.current._id) {
-            console.log("self user change");
             setUserDataHelper(data.user);
           }
 
           // could be current user visiting someone else' profile OR self profile
           if (data.user && visitedUserDataRef.current && data.user._id === visitedUserDataRef.current._id) {
-            console.log("visited user change");
             setVisitedUserDataHelper(data.user);
           } else if (data.addedUser) { // new user signed up/added
-            console.log("new user added");
             setAllUserData((prevAllUserData) => [...prevAllUserData, data.addedUser]);
           }
         });
@@ -170,10 +163,8 @@ function App() {
             setNewsfeedHelper(newsfeedRef.current.filter((post) => post._id !== data.removedPostId));
           } else if (data.for === userDataRef.current._id) { // first half
             if (data.refreshedNewsfeed) {
-              console.log("newsfeed refreshed all");
               setNewsfeedHelper(data.refreshedNewsfeed);
             } else {
-              console.log("newsfeed got some removed");
               setNewsfeedHelper(newsfeedRef.current.filter((post) => post.author._id !== data.removedPostsOf));
             }
           } else if (data.for === undefined) { // second half
@@ -182,12 +173,10 @@ function App() {
             if (userDataRef.current._id === data.author._id || dataAuthorInFollowing) {
               const dataChangePos = newsfeedRef.current.findIndex((post) => post._id === data._id);
               if (dataChangePos > -1) {
-                console.log("post modified in newsfeed");
                 const tempNewsfeed = [...newsfeedRef.current];
                 tempNewsfeed.splice(dataChangePos, 1, data);
                 setNewsfeedHelper(tempNewsfeed);
               } else {
-                console.log("post added in newsfeed");
                 setNewsfeedHelper([data].concat(newsfeedRef.current));
               }
             }
@@ -200,7 +189,6 @@ function App() {
       });
     } else {
       if (socketRef.current) {
-        console.log("closing socket from client", socketRef.current.id);
         socketRef.current.disconnect();
       }
       setUserDataHelper(null);

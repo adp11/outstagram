@@ -78,17 +78,13 @@ function FullPost() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         const imageRef = ref(storage, filePath);
         deleteObject(imageRef).then(() => {
           // File deleted successfully (could've set a snackbar for visual feedback)
         }).catch((error) => {
-          alert(error);
         });
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -121,12 +117,9 @@ function FullPost() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setPostComments({ ...postComments, [fullPostInfo._id]: "" });
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
-          alert(err.message);
         });
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -174,11 +167,8 @@ function FullPost() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -205,15 +195,12 @@ function FullPost() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setVisitedUserDataHelper(data);
           navigate(`/u/${_id}`);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsProfilePageNotFoundActive(true);
           navigate(`/u/${_id}`);
-          alert(err.message);
         });
     }
   }
@@ -225,7 +212,6 @@ function FullPost() {
   }
 
   useEffect(() => {
-    console.log("in full post");
     function escape(e) {
       if (e.key === "Escape") {
         setIsFullPostActive(false);
@@ -257,7 +243,6 @@ function FullPost() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setBeforeFullPost({
             newsfeed: true,
             profile: false,
@@ -266,10 +251,8 @@ function FullPost() {
           setFullPostInfoRef(data);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsFullPostActive(false);
           setIsPostPageNotFoundActive(true);
-          alert(err.message);
         });
     }
   }, [fullPostInfo]);

@@ -54,7 +54,6 @@ function SignupForm() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         if (/^\/p\//.test(window.location.pathname)) {
           setIsFullPostActive(true);
           setIsFullPostByLink(true);
@@ -67,11 +66,9 @@ function SignupForm() {
         setIsLoading(false);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         if (errorMessages.indexOf(err.message) > -1) {
           setSignUpError(errorMessages[errorMessages.indexOf(err.message)]);
         } else {
-          alert(err.message);
         }
         setIsLoading(false);
       });

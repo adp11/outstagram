@@ -62,13 +62,10 @@ function AddPost() {
             return response.json();
           })
           .then((data) => {
-            console.log("data from json()", data);
             setIsAddPostActive(false);
           })
           .catch((err) => {
-            console.log("error happened in catch", err);
             setAddPostError(err.message);
-            alert(err.message);
           });
       } catch (error) {
         setAddPostError(`Uploading Error: ${error}`);

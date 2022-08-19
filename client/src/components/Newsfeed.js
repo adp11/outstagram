@@ -65,12 +65,9 @@ function Newsfeed() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setPostComments({ ...postComments, [postInfo._id]: "" });
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
-          alert(err.message);
         });
     } else {
       setSubmitCommentError("Posting empty comments error");
@@ -118,11 +115,8 @@ function Newsfeed() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -148,15 +142,12 @@ function Newsfeed() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setVisitedUserDataHelper(data);
           navigate(`/u/${_id}`);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsProfilePageNotFoundActive(true);
           navigate(`/u/${_id}`);
-          alert(err.message);
         });
     }
   }

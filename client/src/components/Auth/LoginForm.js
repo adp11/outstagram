@@ -53,7 +53,6 @@ function LoginForm() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         if (/^\/p\//.test(window.location.pathname)) {
           setIsFullPostActive(true);
           setIsFullPostByLink(true);
@@ -66,7 +65,6 @@ function LoginForm() {
         setIsLoading(false);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         if (errorMessages.indexOf(err.message) === 0) {
           setLoginError({
             usernameError: true,
@@ -78,7 +76,6 @@ function LoginForm() {
             passwordError: true,
           });
         } else {
-          alert(err.message);
         }
         setIsLoading(false);
       });

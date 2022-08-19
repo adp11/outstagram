@@ -18,7 +18,6 @@ function FollowList() {
 
   function handleFollowToggle(followId, type) {
     let options;
-    console.log("in handlefollowtoggle, is doing", type);
     if (type === "unfollow") {
       options = {
         method: "PUT",
@@ -54,11 +53,8 @@ function FollowList() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -89,7 +85,6 @@ function FollowList() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setIsFollowListActive({
             followers: false,
             following: false,
@@ -99,10 +94,8 @@ function FollowList() {
           navigate(`/u/${_id}`);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsProfilePageNotFoundActive(true);
           navigate(`/u/${_id}`);
-          alert(err.message);
         });
     }
   }

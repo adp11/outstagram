@@ -40,7 +40,6 @@ function Profile() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setBeforeFullPost({
           newsfeed: false,
           profile: true,
@@ -50,10 +49,8 @@ function Profile() {
         navigate(`/p/${postId}`);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         setIsPostPageNotFoundActive(true);
         navigate(`/p/${postId}`);
-        alert(err.message);
       });
   }
 
@@ -94,11 +91,8 @@ function Profile() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -158,13 +152,10 @@ function Profile() {
             return response.json();
           })
           .then((data) => {
-            console.log("data from json()", data);
             setVisitedUserDataHelper(data);
           })
           .catch((err) => {
-            console.log("error happened in catch", err);
             setIsProfilePageNotFoundActive(true);
-            alert(err.message);
           });
       }
     }

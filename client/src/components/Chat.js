@@ -93,7 +93,6 @@ function Chat() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setMessages(messages.concat({
             _id: messageId,
             from: {
@@ -110,10 +109,8 @@ function Chat() {
           setIsLoading(false);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setPreviewImageURL(null);
           setIsLoading(false);
-          alert(err.message);
         });
     } catch (error) {
       setSendImageError(`Uploading Error: ${error}`);
@@ -160,7 +157,6 @@ function Chat() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setTexts({ ...texts, [whichRoomActive.roomId]: "" });
         // if set new activeRoomList (use frontend data), it would be here
 
@@ -177,8 +173,6 @@ function Chat() {
         }));
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -200,15 +194,12 @@ function Chat() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setVisitedUserDataHelper(data);
         navigate(`/u/${_id}`);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         setIsProfilePageNotFoundActive(true);
         navigate(`/u/${_id}`);
-        alert(err.message);
       });
   }
 
@@ -230,7 +221,6 @@ function Chat() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setMessages(data.messages);
         setWhichRoomActiveHelper({
           roomId: room._id,
@@ -241,8 +231,6 @@ function Chat() {
         navigate(`/r/${room._id}`);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -302,11 +290,8 @@ function Chat() {
               return response.json();
             })
             .then((data) => {
-              console.log("data from json()", data);
             })
             .catch((err) => {
-              console.log("error happened in catch", err);
-              alert(err.message);
             });
         }
       });
@@ -333,11 +318,8 @@ function Chat() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
-          alert(err.message);
         });
     };
   }, []);

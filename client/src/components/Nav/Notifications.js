@@ -53,11 +53,8 @@ function Notifications() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -83,11 +80,8 @@ function Notifications() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
-          alert(err.message);
         });
     }
   }
@@ -113,14 +107,11 @@ function Notifications() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setNotificationList(data);
         setIsLoading(false);
         updateUnreadNotifs();
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -146,15 +137,12 @@ function Notifications() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setVisitedUserDataHelper(data);
           navigate(`/u/${_id}`);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsProfilePageNotFoundActive(true);
           navigate(`/u/${_id}`);
-          alert(err.message);
         });
     }
   }
@@ -180,7 +168,6 @@ function Notifications() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setBeforeFullPost({
           newsfeed: true,
           profile: false,
@@ -190,10 +177,8 @@ function Notifications() {
         navigate(`/p/${postId}`);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         setIsPostPageNotFoundActive(true);
         navigate(`/p/${postId}`);
-        alert(err.message);
       });
   }
 

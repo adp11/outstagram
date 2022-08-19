@@ -62,13 +62,10 @@ function EditProfile() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setIsEditProfileActive(false);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setEditProfileError(err.message);
-          alert(err.message);
         });
     } catch (error) {
       setEditProfileError(`Uploading Error: ${error}`);

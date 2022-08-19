@@ -56,7 +56,6 @@ function SearchChat() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         if (data.justCreated) {
         // update activeRoomList by pushing
           const tempActiveRoomList = [...activeRoomList];
@@ -106,13 +105,13 @@ function SearchChat() {
           setIsLoading(false);
           navigate(`/r/${data._id}`);
         }
-      })
-      // .catch((err) => {
-      //   console.log("error happened in catch", err);
-      //   setIsLoading(false);
-      //   setIsSearchChatActive(false);
-      //   // alert(err.message);
-      // });
+      });
+    // .catch((err) => {
+    //   console.log("error happened in catch", err);
+    //   setIsLoading(false);
+    //   setIsSearchChatActive(false);
+    //   // alert(err.message);
+    // });
   }
 
   return (

@@ -33,16 +33,13 @@ function SearchBox() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
         setIsSearchActive(false);
         setVisitedUserDataHelper(data);
         navigate(`/u/${_id}`);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
         setIsSearchActive(false);
         navigate(`/u/${_id}`);
-        alert(err.message);
       });
   }
 

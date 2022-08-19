@@ -49,11 +49,8 @@ function LikeList() {
         return response.json();
       })
       .then((data) => {
-        console.log("data from json()", data);
       })
       .catch((err) => {
-        console.log("error happened in catch", err);
-        alert(err.message);
       });
   }
 
@@ -100,17 +97,14 @@ function LikeList() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
           setIsLikeListActive(false);
           setLikeListInfo({});
           setVisitedUserDataHelper(data);
           navigate(`/u/${_id}`);
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
           setIsProfilePageNotFoundActive(true);
           navigate(`/u/${_id}`);
-          alert(err.message);
         });
     }
   }

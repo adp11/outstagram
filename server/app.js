@@ -150,7 +150,6 @@ const postChangeStream = Post.watch().on("change", (data) => {
 
 // Helper token function
 function extractToken(req, res, next) {
-  // console.log("req.headers", req.headers);
   let jwtToken;
   req.headers.cookie.split(" ").some((cookie) => {
     const equalPosition = cookie.indexOf("=");
@@ -166,7 +165,6 @@ function extractToken(req, res, next) {
     return false;
   });
 
-  // console.log("token extracted", jwtToken);
   if (jwtToken) {
     req.jwtToken = jwtToken;
     next();

@@ -35,12 +35,8 @@ function Nav() {
           return response.json();
         })
         .then((data) => {
-          console.log("data from json()", data);
-          console.log("reset unreadChatNotifs to 0");
         })
         .catch((err) => {
-          console.log("error happened in catch", err);
-          alert(err.message);
         });
     }
   }
