@@ -3,7 +3,7 @@ import UserContext from "../Contexts/UserContext";
 import AuthContext from "../Contexts/AuthContext";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function LoginForm() {
   const {

@@ -19,7 +19,7 @@ import FollowList from "./components/Popups/FollowList";
 import Chat from "./components/Chat";
 import WaitingPage from "./components/WaitingPage";
 
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function App() {
   // bool states

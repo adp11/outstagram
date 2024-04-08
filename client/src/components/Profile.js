@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import UserContext from "./Contexts/UserContext";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function Profile() {
   const {

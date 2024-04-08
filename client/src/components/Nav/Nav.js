@@ -5,7 +5,7 @@ import Account from "./Account";
 import SearchBox from "./SearchBox";
 import UserContext from "../Contexts/UserContext";
 
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function Nav() {
   const {

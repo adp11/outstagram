@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserContext from "../Contexts/UserContext";
 
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function LikeList() {
   const {

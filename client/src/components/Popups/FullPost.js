@@ -9,7 +9,7 @@ import UserContext from "../Contexts/UserContext";
 import Snackbar from "./Snackbar";
 
 const IMAGE_PLACEHOLDER_URL = `${window.location.origin}/images/white_flag.gif`;
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 // FullPost can come from 4 sources: abrupt access, visited profile, self profile, and newsfeed
 function FullPost() {

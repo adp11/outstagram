@@ -1,14 +1,15 @@
 {
   "name": "outstagram",
   "version": "1.0.0",
-  "description": "This package.json is ONLY for instructing Heroku how to navigate through this repo for production.",
+  "description": "This package.json is used only to walk Render through this repo to deploy.",
   "engines": {
     "node": "16.13.2"
   },
   "scripts": {
-    "client-install": "npm install --prefix client",
-    "start": "cd server && npm install && node app.js",
-    "heroku-postbuild": "npm run client-install && DISABLE_ESLINT_PLUGIN=true npm run build --prefix client"
+    "install-client": "npm install --prefix client",
+    "install-server": "npm install --prefix server",
+    "build": "npm run install-client && npm run install-server && DISABLE_ESLINT_PLUGIN=true npm run build --prefix client",
+    "start": "cd server && node app.js"
   },
   "author": "Andrew Pham",
   "license": "ISC"

@@ -16,7 +16,7 @@ function Auth() {
         </AuthContext.Provider>
       </div>
 
-      {/* <footer style={{ color: "#8e8e8e", fontSize: "12px", margin: "50px 0" }}>
+      <footer style={{ color: "#8e8e8e", fontSize: "12px", margin: "50px 0" }}>
         <div>
           <a href="https://github.com/adp11">Github</a>
           <a href="https://www.linkedin.com/in/andrewph/">LinkedIn</a>
@@ -30,7 +30,7 @@ function Auth() {
             <a href="https://github.com/adp11">adp11</a>
           </span>
         </div>
-      </footer> */}
+      </footer>
     </div>
   );
 }

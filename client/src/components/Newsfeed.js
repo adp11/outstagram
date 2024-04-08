@@ -4,7 +4,7 @@ import UserContext from "./Contexts/UserContext";
 import Snackbar from "./Popups/Snackbar";
 import { computeHowLongAgo } from "../utils";
 
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function Newsfeed() {
   const {

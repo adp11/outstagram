@@ -15,7 +15,7 @@ import SearchChat from "./Popups/SearchChat";
 import FullImage from "./Popups/FullImage";
 
 const LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif?a";
-const SERVER_URL = "https://adp11-outstagram.herokuapp.com";
+const SERVER_URL = "https://outstagram.onrender.com";
 
 function Chat() {
   const {
