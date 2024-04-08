@@ -75,6 +75,11 @@ if (process.env.NODE_ENV === "production") {
   app.get(["/", "/u/:_id", "/p/:_id"], (req, res) => {
     res.sendFile(path.resolve(__dirname, "..", "client", "build", "index.html"));
   });
+
+  const https = require("https");
+  setInterval(() => {
+    https.get("https://outstagram.onrender.com");
+  }, 300000); // every 5 minutes (300000)
 }
 
 // API error handler
