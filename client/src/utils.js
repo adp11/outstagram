@@ -31,7 +31,7 @@ function computeHowLongAgo(mongoTime, abbreviation = true) {
       }
       return (abbreviation ? `${result}w` : result > 1 ? `${result} WEEKS AGO` : `${result} WEEK AGO`);
     }
-    return (abbreviation ? `${result}m` : result > 1 ? `${result} MONTHS AGO` : `${result} MONTH AGO`);
+    return (abbreviation ? `${result}mo` : result > 1 ? `${result} MONTHS AGO` : `${result} MONTH AGO`);
   }
   return (abbreviation ? `${result}y` : result > 1 ? `${result} YEARS AGO` : `${result} YEAR AGO`);
 }
