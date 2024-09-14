@@ -78,8 +78,8 @@ if (process.env.NODE_ENV === "production") {
 
   const https = require("https");
   setInterval(() => {
-    https.get("https://outstagram.onrender.com");
-  }, 300000); // every 5 minutes (300000)
+    https.get("https://outstagram.onrender.com/api/users/dummy_id");
+  }, 14 * 60 * 1000); // every 14 minutes
 }
 
 // API error handler
